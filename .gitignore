@@ -1,0 +1,15 @@
+node_modules
+dist
+.DS_Store
+tsconfig.tsbuildinfo
+__pycache__
+
+.references/
+test-results
+playwright-report
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+coverage

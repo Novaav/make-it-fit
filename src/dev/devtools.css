@@ -1,0 +1,10 @@
+.dev-tools { position: fixed; left: 8px; bottom: 8px; z-index: 20; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: #1e1b2e; color: #fff; border-radius: 10px; font: 0.8rem system-ui, sans-serif; opacity: 0.92; }
+.dev-tools button { margin: 0 3px; padding: 2px 8px; border-radius: 6px; border: 1px solid #aaa; background: #2c2842; color: #fff; cursor: pointer; }
+.dev-tools button[aria-current='true'] { background: #6a3fb5; }
+.dev-tools.testing { outline: 2px solid #f2b600; }
+.dev-tools .primary { background: #f2b600; color: #1e1b2e; border-color: #f2b600; font-weight: 700; padding: 4px 8px; }
+.test-banner { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 40; max-width: 92vw; padding: 3px 12px; background: #f2b600; color: #1e1b2e; font: 700 0.75rem system-ui, sans-serif; border-radius: 0 0 8px 8px; pointer-events: none; text-align: center; }
+.level-tab.test-done { border-style: dashed; border-color: #b58300; }
+.test-tag { margin: 0 0 6px; display: inline-block; padding: 1px 10px; border-radius: 999px; background: #f2b600; color: #1e1b2e; font: 700 0.75rem system-ui, sans-serif; }
+.dev-tools .toggle { margin: 0; font-weight: 700; background: transparent; border: 0; padding: 0; text-align: left; }
+.dev-tools { max-width: min(280px, 80vw); }
