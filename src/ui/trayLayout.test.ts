@@ -10,8 +10,9 @@ const footprint = (item: Item, col: number, row: number) =>
   uniqueRotations(item.cells).flatMap(({ shape }) => shape.map((c) => `${col + c.x},${row + c.y}`))
 const box = (item: Item) => Math.max(...item.cells.map((c) => c.x), ...item.cells.map((c) => c.y)) + 1
 
-describe.each(Object.keys(TRAY_LAYOUTS))('tray layout for level %s', (id) => {
-  const layout = TRAY_LAYOUTS[id]
+const cases = Object.entries(TRAY_LAYOUTS).flatMap(([id, ls]) => ls.map((layout) => [id, `${layout.cols}x${layout.rows}`, layout] as const))
+
+describe.each(cases)('tray layout for level %s, %s', (id, _name, layout) => {
   const level = levels.find((l) => l.id === id)!
 
   it('has exactly one slot per level item, with no stray slots', () => {
@@ -44,5 +45,14 @@ describe.each(Object.keys(TRAY_LAYOUTS))('tray layout for level %s', (id) => {
       level.items.flatMap((i) => footprint(i, layout.slots[i.id].col, layout.slots[i.id].row)),
     ).size
     expect(layout.cols * layout.rows).toBeLessThanOrEqual(used * 1.5 + 8)
+  })
+})
+
+describe('arrangements per level', () => {
+  it('every level has at least one arrangement, and distinct shapes', () => {
+    for (const ls of Object.values(TRAY_LAYOUTS)) {
+      expect(ls.length).toBeGreaterThan(0)
+      expect(new Set(ls.map((l) => `${l.cols}x${l.rows}`)).size).toBe(ls.length)
+    }
   })
 })
