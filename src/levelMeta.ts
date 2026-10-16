@@ -41,7 +41,7 @@ export const LEVEL_TITLES: Record<string, string> = {
  */
 export const BEST_OPTIONAL: Record<string, number> = { '01': 0, '02': 3, '03': 5 }
 
-/** Name of the top bonus tier: an optional achievement, never a requirement. */
-export const PERFECT_LABEL = 'Perfect pack'
+/** Name of the top bonus tier: an optional achievement, never a requirement. "Perfect pack" is reserved for Level 3. */
+export const maxBonusLabel = (levelId: string): string => (levelId === '03' ? 'Perfect pack' : 'Maximum bonus')
 
 export { WEIGHT_UNIT } from './weight'

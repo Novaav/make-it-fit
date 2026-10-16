@@ -53,7 +53,7 @@ Board 8×6 (48 cells), allowance **23 kg**, 5 required items (29 cells, 12.00 kg
 | Hotel bathrobe (`robe`) | optional | 5 (folded) | 1.3 kg |
 | Emergency socks (`emergency_socks`) | optional | 2 (line) | 150 g |
 
-Proven: maximum bonus **5** (the "Perfect pack", optional) with exactly **three** legal sets, each filling 47-48 cells: hotel lamp+ceramic foot+liquor+robe+socks (21.75 kg), hotel lamp+cheese+liquor+robe+socks (21.35 kg), ceramic foot+cheese+liquor+robe+socks (20.95 kg). 17 legal four-item sets and 29 of 35 triples are legal. Both constraints bind: 23 optional sets fit on the board but are over 23 kg. A real packing of the required items plus the gnome, ceramic foot and robe weighs exactly 23.000 kg (a unit test pins that exact-limit success).
+Proven: maximum bonus **5** (the "Perfect pack", optional; Level 2's top tier is labelled "Maximum bonus") with exactly **three** legal sets, each filling 47-48 cells: hotel lamp+ceramic foot+liquor+robe+socks (21.75 kg), hotel lamp+cheese+liquor+robe+socks (21.35 kg), ceramic foot+cheese+liquor+robe+socks (20.95 kg). 17 legal four-item sets and 29 of 35 triples are legal. Both constraints bind: 23 optional sets fit on the board but are over 23 kg. A real packing of the required items plus the gnome, ceramic foot and robe weighs exactly 23.000 kg (a unit test pins that exact-limit success).
 
 ## Progression (design judgment, unplaytested)
 L1 teaches fitting and rotation with no weights; L2 adds a visible ceiling and a bonus with many routes; L3 makes weight and space interlock on a 0-5 bonus ladder. Completing a level needs only the required items within the allowance.

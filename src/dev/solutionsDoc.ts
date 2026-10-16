@@ -1,4 +1,4 @@
-import { BEST_OPTIONAL, ITEM_NAMES, LEVEL_TITLES, PERFECT_LABEL } from '../levelMeta'
+import { BEST_OPTIONAL, ITEM_NAMES, LEVEL_TITLES, maxBonusLabel } from '../levelMeta'
 import { formatWeight } from '../weight'
 import { createGame, isWon, loadLevels, optionalPlacedCount, place, placementCells, totalWeight } from '../engine'
 import { referenceSolution } from './solutions'
@@ -59,7 +59,7 @@ export function renderSolutionsDoc(): string {
     if (optional.length) {
       const bonus = placements.filter((p) => !level.items.find((i) => i.id === p.itemId)!.required)
       out.push(
-        `- **Maximum bonus solution**: all required items plus ${bonus.map((p) => ITEM_NAMES[p.itemId]).join(' and ')} (bonus ${optionalPlacedCount(state)} of ${BEST_OPTIONAL[level.id]}, the "${PERFECT_LABEL}" tier; total weight ${formatWeight(totalWeight(state))}). This is the verified maximum for the level; other sets can reach it too.`,
+        `- **Maximum bonus solution**: all required items plus ${bonus.map((p) => ITEM_NAMES[p.itemId]).join(' and ')} (bonus ${optionalPlacedCount(state)} of ${BEST_OPTIONAL[level.id]}, the "${maxBonusLabel(level.id)}" tier; total weight ${formatWeight(totalWeight(state))}). This is the verified maximum for the level; other sets can reach it too.`,
       )
     }
     out.push('', '| Item | Required | Weight | Rotation (presses) | Position (column,row) | Letter |', '|---|---|---|---|---|---|')

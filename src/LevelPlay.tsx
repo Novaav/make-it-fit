@@ -26,7 +26,7 @@ import { ItemArt } from './components/ItemArt'
 import { WeightLabel, hasLabelZone } from './art/WeightLabel'
 import { dragTarget, sameTarget, type DragGeometry } from './ui/drag'
 import { TRAY_LAYOUTS } from './ui/trayLayout'
-import { BEST_OPTIONAL, ITEM_NAMES, LEVEL_TITLES, PERFECT_LABEL } from './levelMeta'
+import { BEST_OPTIONAL, ITEM_NAMES, LEVEL_TITLES, maxBonusLabel } from './levelMeta'
 import { formatKg, formatWeight } from './weight'
 
 const name = (id: string) => ITEM_NAMES[id] ?? id
@@ -539,7 +539,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               {solved ? (
                 <>
                   <b>✓ Packed!</b>{' '}
-                  {optionalItems.length > 0 ? (bonusMaxed ? `${PERFECT_LABEL}!` : '★ extras are optional.') : ''}
+                  {optionalItems.length > 0 ? (bonusMaxed ? `${maxBonusLabel(LEVEL.id)}!` : '★ extras are optional.') : ''}
                 </>
               ) : (
                 liveHint ?? goalText
@@ -572,7 +572,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                 <span className={`pill bonus${bonusMaxed ? ' max' : ''}`}>
                   <span className="pill-label">★ Bonus</span>
                   <b>{optionalCount}/{bestBonus}</b>
-                  {bonusMaxed && <span className="max-tag">{PERFECT_LABEL}</span>}
+                  {bonusMaxed && <span className="max-tag">{maxBonusLabel(LEVEL.id)}</span>}
                 </span>
               )}
               {solved && (
@@ -727,7 +727,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               {optionalItems.length > 0 && (
                 <li className={`bonus-result${bonusMaxed ? ' max' : ''}`}>
                   <span className="ok" aria-hidden="true">★</span> Bonus <b>{optionalCount}/{bestBonus}</b>
-                  {bonusMaxed ? <span className="max-tag">{PERFECT_LABEL}!</span> : <span className="sub"> (optional extras)</span>}
+                  {bonusMaxed ? <span className="max-tag">{maxBonusLabel(LEVEL.id)}!</span> : <span className="sub"> (optional extras)</span>}
                 </li>
               )}
             </ul>

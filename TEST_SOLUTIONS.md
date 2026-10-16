@@ -49,7 +49,7 @@ row 5  B . . . .
 - Required items (4): Party outfit, Toiletries, Red-soled heels, Pocket massager.
 - Optional items (6): Party speaker, Disco ball, Framed photo of the ex, Inflatable flamingo, Feather boa, Ring light and tripod.
 - **Required-only solution**: pack the 4 required items from the table (weight 3.6 kg).
-- **Maximum bonus solution**: all required items plus Disco ball and Feather boa and Party speaker (bonus 3 of 3, the "Perfect pack" tier; total weight 6.9 kg). This is the verified maximum for the level; other sets can reach it too.
+- **Maximum bonus solution**: all required items plus Disco ball and Feather boa and Party speaker (bonus 3 of 3, the "Maximum bonus" tier; total weight 6.9 kg). This is the verified maximum for the level; other sets can reach it too.
 
 | Item | Required | Weight | Rotation (presses) | Position (column,row) | Letter |
 |---|---|---|---|---|---|

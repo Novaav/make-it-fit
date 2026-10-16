@@ -87,6 +87,9 @@ test('Level 1: solving it shows the success dialog, Next level moves on, progres
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('heading', { name: 'Packed!' })).toBeVisible()
   await expect(dialog).toContainText('Required items 5/5')
+  await expect(dialog).not.toContainText('Bonus') // Level 1 has no bonus
+  await expect(dialog).not.toContainText('Perfect pack')
+  await expect(dialog).not.toContainText('Maximum bonus')
   await expect(dialog.getByRole('button', { name: 'Next level' })).toBeFocused()
   expect(await board(page).boundingBox()).toEqual(boardBefore) // success state never shifts the layout
   await expect(tab(page, 2)).toBeEnabled()
@@ -134,7 +137,7 @@ test('success dialog: focus is managed, Escape keeps packing, and it does not re
   await expect(dialog).toHaveCount(0)
 })
 
-test('after completion the bonus can still be improved up to a Perfect pack (Level 2)', async ({ page }) => {
+test('after completion the bonus can still be improved up to the Maximum bonus (Level 2)', async ({ page }) => {
   await page.getByRole('button', { name: 'L2', exact: true }).click()
   await page.getByRole('button', { name: 'Fill required only' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Keep packing' }).click()
@@ -143,19 +146,21 @@ test('after completion the bonus can still be improved up to a Perfect pack (Lev
   await expect(objective).toContainText('Packed!')
   await expect(bonus).toContainText('0/3')
   await expect(objective.locator('.pill.weight')).toContainText('3.6/7 kg')
-  await expect(objective).not.toContainText('Perfect pack')
+  await expect(objective).not.toContainText('Maximum bonus')
   await packStep(page, { id: 'disco_ball', rotations: 0, col: 2, row: 2 })
   await expect(bonus).toContainText('1/3')
   await expect(objective.locator('.pill.weight')).toContainText('5.1/7 kg')
   await expect(objective).toContainText('★ extras are optional.') // bonus is never presented as something missed
   await packStep(page, { id: 'boa', rotations: 0, col: 0, row: 4 })
   await expect(bonus).toContainText('2/3')
-  await expect(bonus).not.toContainText('Perfect pack')
+  await expect(bonus).not.toContainText('Maximum bonus')
   await packStep(page, { id: 'speaker', rotations: 0, col: 4, row: 4 })
   await expect(bonus).toContainText('3/3')
-  await expect(bonus).toContainText('Perfect pack')
+  await expect(bonus).toContainText('Maximum bonus')
+  await expect(bonus).not.toContainText('Perfect pack')
   await expect(objective.locator('.pill.weight')).toContainText('6.9/7 kg')
-  await expect(objective).toContainText('Perfect pack!')
+  await expect(objective).toContainText('Maximum bonus!')
+  await expect(objective).not.toContainText('Perfect pack')
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
@@ -218,13 +223,14 @@ test('dev tools never record progress or unlock levels', async ({ page }) => {
   await expect(tab(page, 1)).toHaveAttribute('aria-current', 'page')
 })
 
-test('Level 2 allowance: a Perfect pack is within 7 kg; going over blocks "Packed!" and Undo restores it', async ({ page }) => {
+test('Level 2 allowance: the Maximum bonus is within 7 kg; going over blocks "Packed!" and Undo restores it', async ({ page }) => {
   await page.getByRole('button', { name: 'L2', exact: true }).click()
   await page.getByRole('button', { name: 'Fill max bonus' }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toContainText('Within the allowance 6.9/7 kg')
   await expect(dialog).toContainText('Bonus 3/3')
-  await expect(dialog).toContainText('Perfect pack!')
+  await expect(dialog).toContainText('Maximum bonus!')
+  await expect(dialog).not.toContainText('Perfect pack')
   await expect(dialog.locator('.bonus-result')).not.toContainText('/6')
   await dialog.getByRole('button', { name: 'Keep packing' }).click()
   const objective = page.getByRole('region', { name: 'Objective' })
@@ -339,6 +345,8 @@ test.describe('dev workflow: Test win & continue', () => {
     await testWin(page)
     const last = page.getByRole('dialog')
     await expect(last).toContainText('Bonus 5/5')
+    await expect(last).toContainText('Perfect pack!')
+    await expect(last).not.toContainText('Maximum bonus')
     await expect(last.getByRole('button', { name: 'Play again' })).toBeVisible() // last level: no next
     expect(await stored(page)).toBeNull()
 
