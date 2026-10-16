@@ -188,6 +188,55 @@ for (const [w, h] of [[1440, 900], [1280, 720]] as const) {
   }
 }
 
+// Responsive matrix: the chosen arrangement must work at desktop, tablet, phone and landscape-phone sizes.
+for (const [w, h] of [[1440, 900], [1280, 720], [1100, 700], [1024, 768], [768, 1024], [430, 932], [390, 844], [360, 740], [844, 390]] as const) {
+  for (const id of ['L1', 'L2', 'L3']) {
+    test(`layout ${w}×${h} ${id}: no horizontal scroll, suitcase and tools on screen, weight chips never clipped`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: h })
+      const toggle = page.getByRole('button', { name: /Dev tools/ })
+      if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
+      await page.getByRole('button', { name: id, exact: true }).click()
+      await toggle.click() // collapse so the dev panel cannot cover the game
+      await page.waitForTimeout(100)
+      expect(await pageHasNoHorizontalScroll(page)).toBe(true)
+      const vp = page.viewportSize()!
+      const inView = (b: { x: number; y: number; width: number; height: number }) => b.x >= -0.5 && b.x + b.width <= vp.width + 0.5 && b.y >= -0.5 && b.y + b.height <= vp.height + 0.5
+      // the whole suitcase and the tool buttons are visible without scrolling the page
+      expect(inView((await board(page).boundingBox())!), 'board on screen').toBe(true)
+      for (const name of ['Rotate', 'Reset']) expect(inView((await page.getByRole('button', { name, exact: true }).boundingBox())!), `${name} on screen`).toBe(true)
+      // every weight chip lies inside the tray and the page horizontally (the Level 3 bathrobe chip used to hang off the edge)
+      const tray = (await page.getByLabel('Items to pack').boundingBox())!
+      for (const chip of await page.locator('.in-tray .chip-w').all()) {
+        const b = (await chip.boundingBox())!
+        expect(b.x, 'chip left edge').toBeGreaterThanOrEqual(Math.max(tray.x, 0) - 0.5)
+        expect(b.x + b.width, 'chip right edge').toBeLessThanOrEqual(Math.min(tray.x + tray.width, vp.width) + 0.5)
+      }
+    })
+  }
+}
+
+test('phone: the suitcase and the tool buttons stay pinned while the Level 3 tray scrolls', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const toggle = page.getByRole('button', { name: /Dev tools/ })
+  if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
+  await page.getByRole('button', { name: 'L3', exact: true }).click()
+  await toggle.click()
+  const scrollable = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight)
+  expect(scrollable).toBeGreaterThan(200) // the tray really is longer than the screen
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  await page.waitForTimeout(100)
+  const b = (await board(page).boundingBox())!
+  expect(b.y).toBeGreaterThanOrEqual(0)
+  expect(b.y + b.height).toBeLessThanOrEqual(844)
+  for (const name of ['Rotate', 'Undo']) {
+    const r = (await page.getByRole('button', { name, exact: true }).boundingBox())!
+    expect(r.y + r.height).toBeLessThanOrEqual(844)
+  }
+  // a tray item scrolled to the bottom can still be dragged onto the pinned suitcase
+  await dragItem(page, 'emergency_socks', 0, 0)
+  await expect(piece(page, 'emergency_socks')).toHaveAttribute('aria-label', /packed at column 1, row 1/)
+})
+
 test('reduced motion removes the dialog animation', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.getByRole('button', { name: 'L1', exact: true }).click()
