@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { memo, type CSSProperties, type ReactNode } from 'react'
 import type { Item, Orientation, Shape } from '../engine'
 import { artTransform } from '../ui/geometry'
 
@@ -233,7 +233,7 @@ interface Props {
 }
 
 /** Temporary vector art. Sized by its parent; keeps the cell aspect ratio. */
-export function ItemArt({ item, orientation, className, style }: Props) {
+export const ItemArt = memo(function ItemArt({ item, orientation, className, style }: Props) {
   const w = Math.max(...item.cells.map((c) => c.x)) + 1
   const h = Math.max(...item.cells.map((c) => c.y)) + 1
   const { tx, ty, angle } = artTransform(w, h, orientation)
@@ -252,4 +252,4 @@ export function ItemArt({ item, orientation, className, style }: Props) {
       <g transform={`translate(${tx} ${ty}) rotate(${angle})`}>{art(item)}</g>
     </svg>
   )
-}
+})

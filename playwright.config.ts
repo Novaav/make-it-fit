@@ -13,7 +13,7 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: { channel: 'chrome', headless: true, viewport: { width: 1280, height: 900 }, trace: 'off' },
   projects: [
-    { name: 'dev', testMatch: /game\.spec\.ts/, use: { baseURL: DEV } },
+    { name: 'dev', testMatch: /(game|drag-performance)\.spec\.ts/, use: { baseURL: DEV } },
     { name: 'prod', testMatch: /prod\.spec\.ts/, use: { baseURL: PROD } },
   ],
   webServer: [

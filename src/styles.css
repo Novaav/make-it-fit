@@ -110,7 +110,7 @@ h1 { margin: 0; font-size: 1.5rem; letter-spacing: 0.05em; text-transform: upper
 .piece.lifted, .slot.lifted .piece { opacity: 0.25; }
 .piece.carrying { z-index: 2; pointer-events: none; transition: left 70ms ease-out, top 70ms ease-out; filter: drop-shadow(0 8px 8px rgba(60, 40, 20, 0.4)); }
 .piece.carrying.bad { opacity: 0.85; }
-.ghost { position: fixed; z-index: 10; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 10px 10px rgba(60, 40, 20, 0.4)); }
+.ghost { position: fixed; left: 0; top: 0; z-index: 10; transform: translate(-50%, -50%); will-change: transform; pointer-events: none; filter: drop-shadow(0 10px 10px rgba(60, 40, 20, 0.4)); }
 
 .side { width: calc(var(--cell) * var(--tcols) + 40px); max-width: 100%; }
 .tray { background: rgba(255, 250, 240, 0.55); border: 2px solid transparent; border-radius: 18px; padding: 10px 16px 12px; }
