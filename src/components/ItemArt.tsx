@@ -2,10 +2,9 @@ import { memo, useId, type CSSProperties, type ReactNode } from 'react'
 import type { Item, Orientation, Shape } from '../engine'
 import { artTransform } from '../ui/geometry'
 import { ITEM_NAMES } from '../levelMeta'
-import { ITEM_ART } from '../art/level1'
+import { ITEM_ART } from '../art/items'
 
 const CREAM = '#fff6e6'
-const GOLD = '#e8c96a'
 
 /** Rounded union of the shape's cells: dark outline pass, then colour pass. */
 function Silhouette({ cells, color, outline }: { cells: Shape; color: string; outline: string }) {
@@ -70,38 +69,6 @@ function UnionDash({ cells }: { cells: Shape }) {
 function art(item: Item): ReactNode {
   const s = item.cells
   switch (item.id) {
-    case 'outfit':
-      return (
-        <>
-          <Silhouette cells={s} color="#d97aa6" outline="#8f3d66" />
-          <path d="M1.27 0.04Q1.5 0.36 1.73 0.04Z" fill={CREAM} />
-          <path d="M1.03 0.14V0.5M1.97 0.14V0.5" stroke="#8f3d66" strokeWidth={0.04} {...line} />
-          <path d="M1.5 0.7l0.06 0.14 0.14 0.06-0.14 0.06-0.06 0.14-0.06-0.14-0.14-0.06 0.14-0.06Z" fill={GOLD} />
-          <path d="M1.5 1.45l0.05 0.11 0.11 0.05-0.11 0.05-0.05 0.11-0.05-0.11-0.11-0.05 0.11-0.05Z" fill={GOLD} />
-          <path d="M1.2 1.82H1.8" stroke="#8f3d66" strokeWidth={0.04} strokeDasharray="0.08 0.08" {...line} />
-        </>
-      )
-    case 'disco_ball':
-      return (
-        <>
-          <path d="M1 0V0.14" stroke="#7a7a8c" strokeWidth={0.05} {...line} />
-          <circle cx={1} cy={1.05} r={0.9} fill="#c9d3e6" stroke="#6b7690" strokeWidth={0.1} />
-          <g stroke="#6b7690" strokeWidth={0.03} fill="none">
-            <ellipse cx={1} cy={1.05} rx={0.45} ry={0.9} />
-            <path d="M0.12 1.05H1.88M0.25 0.6H1.75M0.25 1.5H1.75" />
-          </g>
-          <path d="M0.55 0.55l0.05 0.12 0.12 0.05-0.12 0.05-0.05 0.12-0.05-0.12-0.12-0.05 0.12-0.05Z" fill="#fff" />
-        </>
-      )
-    case 'heels':
-      return (
-        <>
-          <Silhouette cells={s} color="#d9534f" outline="#8e2b29" />
-          <path d="M0.3 0.28h0.4M0.3 0.52h0.4M2.3 0.28h0.4M2.3 0.52h0.4" stroke={CREAM} strokeWidth={0.05} {...line} />
-          <path d="M0.55 1.55V1.9M2.45 1.55V1.9" stroke={CREAM} strokeWidth={0.08} {...line} />
-          <path d="M0.7 0.5Q1.5 1 2.3 0.5" stroke={CREAM} strokeWidth={0.05} {...line} />
-        </>
-      )
     case 'cutout':
       return (
         <>

@@ -360,5 +360,5 @@ const shoes: ItemArtDef = {
   ),
 }
 
-export const ITEM_ART: Record<string, ItemArtDef> = { shirt, jeans, charger, toiletries, shoes }
+export const LEVEL1_ART: Record<string, ItemArtDef> = { shirt, jeans, charger, toiletries, shoes }
 export { INK }

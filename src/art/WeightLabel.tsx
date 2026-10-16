@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { Item, Orientation } from '../engine'
 import { artPoint } from '../ui/geometry'
-import { ITEM_ART } from './level1'
+import { ITEM_ART } from './items'
 import { formatKg } from '../weight'
 
 /**
