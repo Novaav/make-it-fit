@@ -58,7 +58,15 @@ export default function App() {
     <div className="app">
       <header className="masthead">
         <div className="brand">
-          <h1>Make It Fit</h1>
+          <svg className="brand-mark" viewBox="0 0 44 40" width="44" height="40" aria-hidden="true">
+            <path d="M15 9V6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3" fill="none" stroke="#2b2433" strokeWidth="2.6" strokeLinecap="round" />
+            <rect x="2" y="9" width="40" height="28" rx="6" fill="#2a7480" stroke="#2b2433" strokeWidth="2.6" />
+            <rect x="8" y="15" width="12" height="9" rx="2" fill="#e8806b" stroke="#2b2433" strokeWidth="1.8" />
+            <rect x="22" y="15" width="14" height="9" rx="2" fill="#e3b04f" stroke="#2b2433" strokeWidth="1.8" />
+            <rect x="8" y="26" width="18" height="6" rx="2" fill="#b7a4db" stroke="#2b2433" strokeWidth="1.8" />
+            <path d="M28 26h8v6h-8z" fill="none" stroke="#fff8e9" strokeWidth="1.6" strokeDasharray="3 2" />
+          </svg>
+          <h1>Make <span className="wm-it">It</span> Fit</h1>
           <p className="tagline">Bad decisions. Limited luggage.</p>
         </div>
         <nav className="levels" aria-label="Levels">

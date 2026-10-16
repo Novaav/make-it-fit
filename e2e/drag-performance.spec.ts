@@ -203,9 +203,10 @@ test('rotating mid-drag keeps the single carried object following the pointer an
 })
 
 test('scrolling during a drag does not leave the snap target stale', async ({ page }) => {
-  // Short desktop window: the page scrolls, and both the tray and the board stay on screen.
-  await page.setViewportSize({ width: 1280, height: 420 })
+  // The page is made scrollable (the layout itself fits one screen); both the tray and the board stay on screen.
+  await page.setViewportSize({ width: 1280, height: 720 })
   await page.reload()
+  await page.addStyleTag({ content: 'body { padding-bottom: 300px; }' })
   const shirt = (await piece(page, 'shirt').boundingBox())!
   await page.mouse.move(shirt.x + shirt.width / 2, shirt.y + shirt.height / 2)
   await page.mouse.down()
@@ -228,6 +229,8 @@ test.describe('touch', () => {
     await page.reload()
     const toggle = page.getByRole('button', { name: /Dev tools/ })
     if ((await toggle.getAttribute('aria-expanded')) === 'true') await toggle.click()
+    // On a phone the tray sits under the suitcase: scroll a little so its first row is clear of the pinned toolbar.
+    await page.evaluate(() => window.scrollTo(0, 150))
     const { box, cell } = await boardGeometry(page)
     const shirt = (await piece(page, 'shirt').boundingBox())!
     const cdp = await page.context().newCDPSession(page)
@@ -247,3 +250,29 @@ test.describe('touch', () => {
     expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore)
   })
 })
+
+// Regression: the boarding-pass notches hung outside the scrolling dialog and gave it a horizontal scrollbar (seen in Safari).
+for (const [w, h] of [[1440, 900], [768, 1024], [390, 844], [844, 390]] as const) {
+  test(`completion dialogs have no horizontal scroll and stay on screen at ${w}×${h}`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h })
+    await page.goto('/')
+    const toggle = page.getByRole('button', { name: /Dev tools/ })
+    for (const id of ['L1', 'L2', 'L3']) {
+      if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
+      await page.getByRole('button', { name: id, exact: true }).click()
+      await page.getByRole('button', { name: id === 'L1' ? 'Fill required only' : 'Fill max bonus' }).click()
+      const dialog = page.locator('.dialog')
+      await expect(dialog).toBeVisible()
+      const m = await page.locator('.dialog-scroll').evaluate((e) => ({ over: e.scrollWidth - e.clientWidth, outer: getComputedStyle(e.parentElement!).overflowX, doc: document.documentElement.scrollWidth - document.documentElement.clientWidth }))
+      expect(m.over, `${id} dialog content wider than its box`).toBeLessThanOrEqual(0)
+      expect(m.outer).toBe('visible')
+      expect(m.doc).toBe(0)
+      const b = (await dialog.boundingBox())!
+      expect(b.x).toBeGreaterThanOrEqual(0)
+      expect(b.x + b.width).toBeLessThanOrEqual(w)
+      expect(b.y).toBeGreaterThanOrEqual(0)
+      expect(b.y + b.height).toBeLessThanOrEqual(h)
+      await page.getByRole('dialog').getByRole('button', { name: 'Keep packing' }).click()
+    }
+  })
+}
