@@ -672,6 +672,24 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               </span>
             </div>
             <div className="tray-items">
+              {/* Outlines where packed items lay, so a half-empty tabletop still looks deliberate. */}
+              {LEVEL.items
+                .filter((item) => placedIds.has(item.id))
+                .flatMap((item) =>
+                  item.cells.map((c, i) => (
+                    <div
+                      key={`${item.id}-${i}`}
+                      className="ghost"
+                      aria-hidden="true"
+                      style={{ gridColumn: layout.slots[item.id].col + c.x, gridRow: layout.slots[item.id].row + c.y }}
+                    />
+                  )),
+                )}
+              {placedIds.size === LEVEL.items.length && (
+                <p className="tray-empty" aria-hidden="true">
+                  Everything is in the suitcase.
+                </p>
+              )}
               {LEVEL.items.map((item) => {
                 if (placedIds.has(item.id)) return null
                 const o = trayTurns[item.id] ?? 0
@@ -731,6 +749,10 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
             onClick={(e) => e.stopPropagation()}
             onKeyDown={dialogKeys}
           >
+            <div className="dialog-band" aria-hidden="true">
+              <span>Boarding pass</span>
+              <span>Gate {Number(LEVEL.id)}</span>
+            </div>
             <p className="dialog-kicker">Level {Number(LEVEL.id)} · {LEVEL_TITLES[LEVEL.id]}</p>
             {import.meta.env.DEV && devTainted.current && <p className="test-tag">TEST RUN — not saved</p>}
             <h2 id="done-title">Packed!</h2>
@@ -751,6 +773,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               )}
             </ul>
             {isLast && <p className="sub">That&apos;s every level. Suitcase closed, dignity optional.</p>}
+            <div className="barcode" aria-hidden="true" />
             <div className="dialog-actions">
               <button type="button" ref={primaryRef} className="primary" onClick={onNext ? onNext : () => { closeDialog(); doReset() }}>
                 {onNext ? 'Next level' : 'Play again'}

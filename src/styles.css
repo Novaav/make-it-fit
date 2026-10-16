@@ -36,7 +36,7 @@
   --brass: #c9b07a;
   --brass-dark: #8e7840;
   --stitch: #b89b6a;
-  --ok: #2a8553;
+  --ok: #1f7a47;
   --warn: #b3261e;
   --bonus: #5b34a8;
   --focus: #7a3fd1;
@@ -120,7 +120,7 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .objective {
   position: relative;
   margin: 0 0 34px;
-  padding: 12px 18px 10px 46px;
+  padding: 10px 16px 8px 46px;
   border: 2px solid var(--ink);
   border-radius: 8px 20px 20px 8px;
   background: var(--paper);
@@ -129,7 +129,7 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .objective::before { content: ''; position: absolute; left: 14px; top: 16px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink); background: var(--table); box-shadow: inset 2px 2px 0 rgba(43, 36, 51, 0.3); }
 .objective::after { content: ''; position: absolute; left: 20px; top: 28px; width: 3px; height: 14px; background: repeating-linear-gradient(180deg, var(--stitch) 0 3px, transparent 3px 5px); opacity: 0.7; }
 .level-title { margin: 0 0 3px; font-family: var(--display); color: var(--ink); font-size: 1.12rem; font-weight: 700; letter-spacing: 0.005em; line-height: 1.2; }
-.goal-line { margin: 0 0 8px; min-height: 2.6em; font-size: 0.95rem; line-height: 1.3; color: var(--muted); }
+.goal-line { margin: 0 0 6px; min-height: 2.6em; font-size: 0.95rem; line-height: 1.3; color: var(--muted); }
 .objective.solved .goal-line b { color: var(--ok); }
 .pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 36px; }
 .pill {
@@ -161,7 +161,7 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .sub { color: var(--muted); font-size: 0.85em; }
 .pill-action { min-height: 36px; padding: 0 16px; border: 2px solid var(--ok); border-radius: 8px; background: var(--ok); color: #fff; font-weight: 700; cursor: pointer; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.25); }
 .pill-action:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.over-note { margin: 6px 0 0; min-height: 1.3em; color: var(--warn); font-weight: 700; font-size: 0.9rem; }
+.over-note { margin: 4px 0 0; min-height: 1.2em; color: var(--warn); font-weight: 700; font-size: 0.9rem; }
 
 /* ---- the suitcase: hard shell, rolled rim, brass corners and latches, a leather handle, stitched lining ---- */
 .suitcase {
@@ -270,6 +270,8 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .tray h2 { margin: 0; padding: 2px 12px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--paper); background: var(--ink); border-radius: 4px 10px 10px 4px; transform: rotate(-1.5deg); }
 .tray-note { color: var(--muted); font-family: var(--display); font-style: italic; font-size: 0.88rem; text-align: right; }
 .tray-items { position: relative; display: grid; grid-template-columns: repeat(var(--tcols), var(--cell)); grid-template-rows: repeat(var(--trows), var(--cell)); }
+.ghost { margin: 1px; border: 2px dashed rgba(43, 36, 51, 0.22); border-radius: 7px; background: rgba(43, 36, 51, 0.04); pointer-events: none; }
+.tray-empty { grid-column: 1 / -1; grid-row: 1 / -1; align-self: center; justify-self: center; margin: 0; padding: 4px 14px; border: 2px solid rgba(43, 36, 51, 0.35); border-radius: 6px; background: rgba(255, 248, 233, 0.85); color: var(--muted); font-family: var(--display); font-style: italic; font-size: 1rem; transform: rotate(-2deg); pointer-events: none; }
 .slot { display: flex; align-items: flex-start; justify-content: flex-start; pointer-events: none; }
 .slot .piece { pointer-events: auto; }
 .piece { position: relative; }
@@ -308,6 +310,8 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .dialog::before, .dialog::after { content: ''; position: absolute; top: 56%; width: 22px; height: 22px; border-radius: 50%; background: rgba(43, 36, 51, 0.5); box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.35); }
 .dialog::before { left: -14px; }
 .dialog::after { right: -14px; }
+.dialog-band { display: flex; justify-content: space-between; margin: -24px -30px 16px; padding: 7px 30px; background: var(--case-rim); color: var(--paper); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; }
+.barcode { height: 24px; width: 62%; margin: 6px auto 0; opacity: 0.75; background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 4px, var(--ink) 4px 5px, transparent 5px 8px, var(--ink) 8px 11px, transparent 11px 13px); }
 .dialog-kicker { margin: 0; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.78rem; font-weight: 700; }
 .dialog h2 { display: inline-block; margin: 8px 0 14px; padding: 2px 16px; border: 4px double var(--ok); border-radius: 8px; font-size: 2.2rem; font-weight: 800; color: var(--ok); transform: rotate(-3deg); }
 .results { margin: 0 0 14px; padding: 0 0 14px; list-style: none; display: grid; gap: 8px; font-size: 1.05rem; text-align: left; width: max-content; max-width: 100%; margin-inline: auto; border-bottom: 2px dashed rgba(43, 36, 51, 0.28); }
@@ -352,8 +356,9 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .level:is([data-arrange='stack'], [data-arrange='wing']) .objective::after { display: none; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .level-title { font-size: 0.95rem; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .mini-bar { display: none; }
-.level:is([data-arrange='stack'], [data-arrange='wing']) .pill-label { font-size: 0.62rem; letter-spacing: 0.05em; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .pill-label { font-size: 0.58rem; letter-spacing: 0.03em; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill { gap: 4px; padding: 1px 7px; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .pill-action, .level:is([data-arrange='stack'], [data-arrange='wing']) .pill .max-tag { display: none; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill b { font-size: 1rem; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .goal-line { height: 34px; margin-bottom: 6px; overflow: hidden; font-size: 0.82rem; line-height: 17px; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pills { min-height: 0; gap: 6px; }
@@ -381,7 +386,8 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   h1 { font-size: 1.5rem; }
   .brand-mark { width: 34px; height: 31px; }
   .tagline { display: none; }
-  .level-tab { min-height: 36px; padding: 0 12px 0 26px; }
+  .level-tab { min-height: 40px; padding: 0 12px 0 26px; }
+  .toolbar button { min-height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .carried.snapped, .level-tab, .toolbar button { transition: none; }
