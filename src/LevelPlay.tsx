@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   clampOrigin,
   commitPlacement,
@@ -26,6 +26,9 @@ import { ItemArt } from './components/ItemArt'
 import { WeightLabel, hasLabelZone } from './art/WeightLabel'
 import { dragTarget, sameTarget, type DragGeometry } from './ui/drag'
 import { TRAY_LAYOUTS } from './ui/trayLayout'
+import { chooseArrangement } from './ui/fit'
+import { useViewport } from './ui/useViewport'
+import TableProps from './components/TableProps'
 import { BEST_OPTIONAL, ITEM_NAMES, LEVEL_TITLES, maxBonusLabel } from './levelMeta'
 import { formatKg, formatWeight } from './weight'
 
@@ -70,7 +73,9 @@ interface Props {
 }
 
 export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill }: Props) {
-  const layout = TRAY_LAYOUTS[LEVEL.id]
+  const viewport = useViewport()
+  const arrangement = useMemo(() => chooseArrangement(LEVEL, TRAY_LAYOUTS[LEVEL.id], viewport), [LEVEL, viewport])
+  const layout = arrangement.layout
   const [game, setGame] = useState<GameState>(() => createGame(LEVEL))
   const [carry, setCarryState] = useState<Carry | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
@@ -491,7 +496,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const itemById = (id: string) => LEVEL.items.find((i) => i.id === id)!
   // Anchor the weight chip on a cell the item really covers (bottom-most, then right-most),
   // not on the bounding-box corner, which is empty for T/U/L shapes.
-  const chips = (id: string, o: Orientation) => {
+  const chips = (id: string, o: Orientation, room = '0px') => {
     if (limit === undefined) return null
     // Redrawn items print the weight on a label zone built into the illustration; others still use a chip.
     if (hasLabelZone(id)) return <WeightLabel item={itemById(id)} orientation={o} grams={itemById(id).weight} bonus={!itemById(id).required} />
@@ -501,7 +506,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
       <span
         className={`chip-w${itemById(id).required ? '' : ' bonus'}`}
         data-weight={itemById(id).weight}
-        style={{ '--chip-x': anchor.x + 1, '--chip-y': anchor.y + 1 } as React.CSSProperties}
+        style={{ '--chip-x': anchor.x + 1, '--chip-y': anchor.y + 1, '--chip-room': room } as React.CSSProperties}
         aria-hidden="true"
       >
         {formatWeight(itemById(id).weight)}
@@ -524,11 +529,13 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
           '--rows': LEVEL.height,
           '--tcols': layout.cols,
           '--trows': layout.rows,
-          '--span': Math.max(LEVEL.width, layout.cols),
-          '--cell-max': `${Math.max(LEVEL.width, layout.cols) > 6 ? 72 : 80}px`,
+          '--cell': `${arrangement.cell}px`,
         } as React.CSSProperties
       }
+      data-level={LEVEL.id}
+      data-arrange={arrangement.mode}
     >
+      <TableProps />
       <main className="stage">
         <section className="case-wrap" aria-label={`Level ${Number(LEVEL.id)} suitcase`}>
           <section className={`objective${solved ? ' solved' : ''}`} aria-label="Objective">
@@ -585,8 +592,20 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               {overWeight ? `Over the allowance by ${formatWeight(weight - (limit ?? 0))} — take something out.` : ''}
             </p>
           </section>
-          <div className="suitcase">
+          <div className="case-stick">
+          <p className="case-strip" aria-hidden="true">
+            <span>Packed {packedCount}/{required.length}</span>
+            {limit !== undefined && <span className={overWeight ? 'over' : ''}>{formatKg(weight)}/{formatWeight(limit)}</span>}
+            {optionalItems.length > 0 && <span>★ {optionalCount}/{bestBonus}</span>}
+          </p>
+          <div className={`suitcase${overWeight ? ' strain' : ''}`}>
             <div className="handle" aria-hidden="true" />
+            <span className="hw corner tl" aria-hidden="true" />
+            <span className="hw corner tr" aria-hidden="true" />
+            <span className="hw corner bl" aria-hidden="true" />
+            <span className="hw corner br" aria-hidden="true" />
+            <span className="hw latch l" aria-hidden="true" />
+            <span className="hw latch r" aria-hidden="true" />
             <div
               ref={boardRef}
               className={`board${carry?.mode === 'keyboard' ? ' keyboard-active' : ''}`}
@@ -608,7 +627,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                     onClick={(e) => e.detail === 0 && pickUpWithKeyboard(p.itemId, 'board')}
                   >
                     <ItemArt item={itemById(p.itemId)} orientation={o} />
-                    {chips(p.itemId, o)}
+                    {chips(p.itemId, o, `calc(var(--cell) * ${p.x} + 26px)`)}
                   </button>
                 )
               })}
@@ -635,7 +654,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               </div>
             </div>
           </div>
-
+          </div>
         </section>
 
         <aside className="side">
@@ -675,7 +694,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                       onClick={(e) => e.detail === 0 && pickUpWithKeyboard(item.id, 'tray')}
                     >
                       <ItemArt item={item} orientation={o} />
-                      {chips(item.id, o)}
+                      {chips(item.id, o, `calc(var(--cell) * ${slot.col - 1} + 16px)`)}
                     </button>
                   </div>
                 )
