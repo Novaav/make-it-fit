@@ -9,8 +9,8 @@ interface Report { id: string; orientation: number; cells: Cell[] }
 const LEVELS = [
   // 4 shirt + 2 jeans + 2 charger + 1 toiletries + 4 shoes unique rotations
   { level: '01', ids: ['shirt', 'jeans', 'charger', 'toiletries', 'shoes'], reports: 13 },
-  // 4 outfit + 1 toiletries + 4 heels + 2 massager + 2 speaker + 1 disco ball + 2 frame + 2 flamingo + 2 boa + 4 ring light
-  { level: '02', ids: ['outfit', 'toiletries', 'heels', 'vibrator', 'speaker', 'disco_ball', 'frame', 'flamingo', 'boa', 'ringlight'], reports: 24 },
+  // 4 handbag + 4 outfit + 1 toiletries + 2 flamingo + 2 massager + 2 frame + 2 boa + 4 ring light + 1 disco ball + 4 DVDs
+  { level: '02', ids: ['handbag', 'outfit', 'toiletries', 'flamingo', 'vibrator', 'frame', 'boa', 'ringlight', 'disco_ball', 'dvds'], reports: 26 },
 ]
 
 for (const { level, ids, reports: expected } of LEVELS) test(`Level ${level}: illustrated items paint only their occupied cells, and every occupied cell holds art`, async ({ page }) => {

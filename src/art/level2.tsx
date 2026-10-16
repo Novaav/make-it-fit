@@ -589,5 +589,163 @@ const ringlight: ItemArtDef = {
   ),
 }
 
-export const LEVEL2_ART: Record<string, ItemArtDef> = { outfit, heels, vibrator, speaker, disco_ball, frame, flamingo, boa, ringlight }
+/* ---------- Louis Regretton handbag (7 cells: a 3x2 body with its handle in the cell above): absurdly expensive ---------- */
+const EMER = '#1f8a68'
+const EMER_D = '#0e4a37'
+const EMER_L = '#6fd1ac'
+const BAG_BODY = 'M.12 1.22Q.12 1.1 .26 1.1H2.74Q2.88 1.1 2.88 1.22L2.97 2.62Q2.99 2.94 2.68 2.94H.32Q.01 2.94 .03 2.62Z'
+
+const handbag: ItemArtDef = {
+  zone: { x: 1.5, y: 2.34, tone: 'dark' },
+  draw: (uid) => (
+    <>
+      <defs>
+        {/* puffy quilted pillows: each pillow is lit at its upper left */}
+        <pattern id={`${uid}-quilt`} width={0.34} height={0.34} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width={0.34} height={0.34} fill={EMER} />
+          <rect x={0.02} y={0.02} width={0.3} height={0.3} rx={0.1} fill={EMER_L} opacity={0.5} />
+          <rect x={0.07} y={0.07} width={0.2} height={0.2} rx={0.07} fill={EMER} opacity={0.55} />
+          <path d="M0 0H.34M0 0V.34" stroke={EMER_D} strokeWidth={0.026} />
+        </pattern>
+        <linearGradient id={`${uid}-gold`} x1={0} y1={0} x2={1} y2={1}>
+          <stop offset="0" stopColor="#fff4bf" />
+          <stop offset="0.45" stopColor="#f0cc5e" />
+          <stop offset="1" stopColor="#a8821f" />
+        </linearGradient>
+        <linearGradient id={`${uid}-shade`} x1={0} y1={0} x2={0} y2={1}>
+          <stop offset="0" stopColor="#fff" stopOpacity={0.16} />
+          <stop offset="0.6" stopColor="#fff" stopOpacity={0} />
+          <stop offset="1" stopColor="#031a12" stopOpacity={0.4} />
+        </linearGradient>
+      </defs>
+      {/* tissue paper bursting out of the top, because it is that expensive */}
+      <path d="M.7 1.14C.76 .86 .92 .78 1.04 .84C1.1 .62 1.4 .56 1.5 .72C1.62 .56 1.9 .62 1.96 .84C2.1 .78 2.26 .86 2.3 1.14Z" fill="#fff6e8" stroke="#b9a77d" strokeWidth={0.03} strokeLinejoin="round" />
+      <path d="M1.04 .84C1.08 .96 1.06 1.06 1.0 1.14M1.5 .72C1.52 .9 1.5 1.02 1.46 1.12M1.96 .84C1.92 .96 1.94 1.06 2.0 1.14" stroke="#d8c9a6" strokeWidth={0.02} {...line} />
+      {/* a chunky solid-gold hoop handle with bead collars */}
+      <path d="M1.02 1.18C1.0 .5 1.18 .1 1.5 .1C1.82 .1 2.0 .5 1.98 1.18" stroke="#5b4a22" strokeWidth={0.2} {...line} />
+      <path d="M1.02 1.18C1.0 .5 1.18 .1 1.5 .1C1.82 .1 2.0 .5 1.98 1.18" stroke={`url(#${uid}-gold)`} strokeWidth={0.15} {...line} />
+      <path d="M1.07 1.0C1.06 .52 1.2 .2 1.44 .17" stroke="#fffbe0" strokeWidth={0.035} opacity={0.9} {...line} />
+      {[1.02, 1.98].map((x) => (
+        <g key={x}>
+          <ellipse cx={x} cy={1.14} rx={0.13} ry={0.08} fill={`url(#${uid}-gold)`} stroke="#5b4a22" strokeWidth={0.03} />
+        </g>
+      ))}
+      {/* body: quilted pillows with a lit top edge and a shaded underside */}
+      <Inked d={BAG_BODY} fill={EMER} ink={EMER_D} w={0.045} />
+      <path d={BAG_BODY} fill={`url(#${uid}-quilt)`} />
+      <path d={BAG_BODY} fill={`url(#${uid}-shade)`} />
+      <path d="M.2 1.18H2.8" stroke="#bff0dc" strokeWidth={0.035} opacity={0.8} {...line} />
+      <Stitch d="M.2 1.3H2.8M.12 2.82H2.88" color="#c9f0dd" w={0.018} />
+      {/* gold zip along the top edge with a ridiculous coin pull */}
+      <path d="M.3 1.2H2.7" stroke="#5b4a22" strokeWidth={0.06} {...line} />
+      <path d="M.3 1.2H2.7" stroke={GOLD} strokeWidth={0.035} strokeDasharray="0.03 0.03" {...line} />
+      <path d="M2.7 1.2L2.8 1.5" stroke="#5b4a22" strokeWidth={0.03} {...line} />
+      <circle cx={2.8} cy={1.58} r={0.12} fill={`url(#${uid}-gold)`} stroke="#5b4a22" strokeWidth={0.03} />
+      <circle cx={2.8} cy={1.58} r={0.06} fill="none" stroke="#8a6c1c" strokeWidth={0.02} />
+      {/* the giant gold turn-lock with a diamond the size of a grape */}
+      <Inked d="M1.22 1.36H1.78Q1.9 1.36 1.9 1.48V1.72Q1.9 1.84 1.78 1.84H1.22Q1.1 1.84 1.1 1.72V1.48Q1.1 1.36 1.22 1.36Z" fill={`url(#${uid}-gold)`} ink="#5b4a22" w={0.04} />
+      <path d="M1.5 1.44L1.66 1.58L1.5 1.76L1.34 1.58Z" fill="#d6f4ff" stroke="#3d7a96" strokeWidth={0.025} strokeLinejoin="round" />
+      <path d="M1.34 1.58H1.66M1.5 1.44V1.76M1.42 1.5L1.5 1.58L1.58 1.5" stroke="#fff" strokeWidth={0.014} opacity={0.9} {...line} />
+      <Lod1>
+        <path d={star(1.76, 1.42, 0.06)} fill="#fff" />
+        <path d={star(1.2, 1.78, 0.04)} fill="#fff" opacity={0.8} />
+      </Lod1>
+      {/* gold feet studs along the bottom */}
+      {[0.28, 1.0, 2.0, 2.72].map((x) => (
+        <circle key={x} cx={x} cy={2.88} r={0.06} fill={`url(#${uid}-gold)`} stroke="#5b4a22" strokeWidth={0.02} />
+      ))}
+      {/* the receipt: a paper strip as long as the bag, hanging from the side pocket with a torn bottom */}
+      <g transform="rotate(5 0.5 2)">
+        <path d="M.22 1.5H.78V2.66L.72 2.72L.66 2.66L.6 2.72L.54 2.66L.48 2.72L.42 2.66L.36 2.72L.3 2.66L.22 2.7Z" fill="#fffaf0" stroke="#b6a77f" strokeWidth={0.02} strokeLinejoin="round" />
+        <path d="M.28 1.62H.72M.28 1.74H.66M.28 1.86H.7M.28 1.98H.6M.28 2.1H.68" stroke="#cbbfa0" strokeWidth={0.02} {...line} />
+        <path d="M.28 2.28H.72" stroke="#2b2433" strokeWidth={0.04} {...line} />
+        <Lod1>
+          <path d="M.3 2.44H.7M.3 2.54H.52" stroke="#c0392b" strokeWidth={0.05} {...line} />
+        </Lod1>
+      </g>
+      {/* the price tag on a gold string (the weight label sits on it) */}
+      <path d="M2.8 1.7C2.84 1.9 2.7 2.0 2.5 2.1" stroke="#8a6c1c" strokeWidth={0.02} {...line} />
+      <g transform="rotate(-3 1.5 2.34)">
+        <rect x={0.94} y={2.16} width={1.12} height={0.36} rx={0.04} fill="#fffaf0" stroke="#b6a77f" strokeWidth={0.02} />
+        <rect x={0.94} y={2.16} width={1.12} height={0.06} fill="#c0392b" />
+      </g>
+    </>
+  ),
+}
+
+/* ---------- Mom's Porn Collection (P pentomino): a taped-up box of vintage DVDs, labelled by Mom ---------- */
+const KRAFT = '#c99a63'
+const KRAFT_D = '#9b6f3a'
+const KRAFT_L = '#e1bb86'
+const DVD_COLORS = ['#c0392b', '#2f5d9b', '#d9a23a', '#3b8f6e', '#7a4aa8', '#2b2433', '#d86a8a']
+
+const dvds: ItemArtDef = {
+  zone: { x: 1.4, y: 1.78, tone: 'dark' },
+  draw: (uid) => (
+    <>
+      <defs>
+        <linearGradient id={`${uid}-cb`} x1={0} y1={0} x2={1} y2={1}>
+          <stop offset="0" stopColor={KRAFT_L} />
+          <stop offset="1" stopColor={KRAFT} />
+        </linearGradient>
+        <radialGradient id={`${uid}-disc`} cx={0.35} cy={0.3} r={0.9}>
+          <stop offset="0" stopColor="#fff" />
+          <stop offset="0.35" stopColor="#bfe3ff" />
+          <stop offset="0.6" stopColor="#f3c9ff" />
+          <stop offset="1" stopColor="#9bb3d6" />
+        </radialGradient>
+      </defs>
+      {/* the DVDs standing in the open box: a row of coloured spines */}
+      <rect x={0.12} y={0.08} width={1.76} height={0.62} rx={0.04} fill="#3a2a1a" />
+      {DVD_COLORS.concat(DVD_COLORS).slice(0, 11).map((c, i) => (
+        <g key={i} transform={`rotate(${((i * 37) % 7) - 3} ${0.2 + i * 0.15} 0.4)`}>
+          <rect x={0.16 + i * 0.15} y={0.06} width={0.13} height={0.58} rx={0.015} fill={c} stroke="#14101a" strokeWidth={0.015} />
+          <path d={`M${0.19 + i * 0.15} .14V.5`} stroke="#fff" strokeWidth={0.014} opacity={0.5} {...line} />
+          <rect x={0.17 + i * 0.15} y={0.1} width={0.11} height={0.05} fill="#fff6e6" opacity={0.9} />
+        </g>
+      ))}
+      {/* the cardboard box: open flaps, a front panel and shipping tape */}
+      <Inked d="M.06 .62H1.94V2.0Q1.94 2.08 1.86 2.08H.14Q.06 2.08 .06 2.0Z" fill={`url(#${uid}-cb)`} ink={KRAFT_D} w={0.04} />
+      <path d="M.06 .62L.02 .52L.2 .44M1.94 .62L1.98 .52L1.8 .44" stroke={KRAFT_D} strokeWidth={0.03} {...line} />
+      <path d="M.06 .62H1.94" stroke="#fff3d6" strokeWidth={0.025} opacity={0.6} {...line} />
+      <path d="M.1 1.9H1.9" stroke={KRAFT_D} strokeWidth={0.025} opacity={0.4} {...line} />
+      <rect x={0.84} y={0.62} width={0.32} height={0.44} fill="#f0e2c4" opacity={0.75} />
+      {/* Mom's own handwriting: MOM'S on a strip of masking tape, and the big marker label */}
+      <g transform="rotate(-3 1 .84)">
+        <rect x={0.34} y={0.7} width={1.32} height={0.24} fill="#f1e6c8" stroke="#bda96d" strokeWidth={0.015} />
+        <text x={1.0} y={0.89} textAnchor="middle" fontFamily="'Marker Felt','Segoe Print','Bradley Hand',cursive" fontWeight={700} fontSize={0.2} fill="#2b2433" textLength={0.9}>
+          MOM&apos;S
+        </text>
+      </g>
+      <text x={1.0} y={1.52} textAnchor="middle" fontFamily="'Arial Black','Helvetica Neue',Impact,sans-serif" fontWeight={900} fontSize={0.5} fill="#1a1620" stroke="#1a1620" strokeWidth={0.015} textLength={1.5} lengthAdjust="spacingAndGlyphs">
+        PORN
+      </text>
+      <Lod1>
+        <path d="M.3 1.62H1.7" stroke="#1a1620" strokeWidth={0.03} opacity={0.5} {...line} />
+      </Lod1>
+      {/* a shipping label printed with a weight (the label zone) */}
+      <g transform="rotate(2 1.4 1.78)">
+        <rect x={0.94} y={1.64} width={0.92} height={0.34} rx={0.03} fill="#fffaf0" stroke="#b6a77f" strokeWidth={0.018} />
+      </g>
+      {/* spilled out of the box: a leaning stack of cases and a loose disc */}
+      <g transform="rotate(-8 0.5 2.5)">
+        <rect x={0.14} y={2.12} width={0.74} height={0.78} rx={0.04} fill="#2f5d9b" stroke="#14101a" strokeWidth={0.03} />
+        <rect x={0.2} y={2.2} width={0.62} height={0.3} fill="#fff6e6" opacity={0.9} />
+        <text x={0.51} y={2.43} textAnchor="middle" fontFamily="'Arial Black',Impact,sans-serif" fontWeight={900} fontSize={0.19} fill="#2f5d9b">
+          DVD
+        </text>
+        <rect x={0.14} y={2.12} width={0.1} height={0.78} fill="#1f4372" />
+      </g>
+      <g transform="rotate(5 0.6 2.4)">
+        <rect x={0.2} y={2.02} width={0.7} height={0.2} rx={0.03} fill="#c0392b" stroke="#14101a" strokeWidth={0.025} />
+        <path d="M.28 2.12H.72" stroke="#fff6e6" strokeWidth={0.03} {...line} />
+      </g>
+      <circle cx={0.66} cy={2.66} r={0.2} fill={`url(#${uid}-disc)`} stroke="#6b7690" strokeWidth={0.025} />
+      <circle cx={0.66} cy={2.66} r={0.055} fill="#fff6e6" stroke="#6b7690" strokeWidth={0.02} />
+      <path d="M.52 2.56Q.62 2.48 .74 2.5" stroke="#fff" strokeWidth={0.03} opacity={0.9} {...line} />
+    </>
+  ),
+}
+
+export const LEVEL2_ART: Record<string, ItemArtDef> = { outfit, heels, handbag, dvds, vibrator, speaker, disco_ball, frame, flamingo, boa, ringlight }
 export { INK }
