@@ -8,8 +8,9 @@ export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
   workers: 2,
-  retries: 0,
-  reporter: [['list']],
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: { channel: 'chrome', headless: true, viewport: { width: 1280, height: 900 }, trace: 'off' },
   projects: [
     { name: 'dev', testMatch: /game\.spec\.ts/, use: { baseURL: DEV } },
