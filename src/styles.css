@@ -158,7 +158,8 @@ kbd { border: 1px solid rgba(0,0,0,0.25); border-bottom-width: 2px; border-radiu
   .masthead { justify-content: center; text-align: center; }
   .brand { justify-content: center; }
   .stage { flex-direction: column; align-items: center; }
-  .case-wrap { width: auto; }
+  /* Full width: with `auto` the column shrinks to its text, so a shorter hint ("Green — it fits here.") re-centred the board mid-drag. */
+  .case-wrap { width: 100%; }
   .suitcase { margin-inline: 0; }
 }
 @media (prefers-reduced-motion: reduce) {

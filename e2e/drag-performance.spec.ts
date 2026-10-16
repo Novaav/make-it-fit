@@ -118,3 +118,30 @@ test('scrolling during a drag does not leave the snap target stale', async ({ pa
   // a 3x2 shirt centred on that point has its top-left cell at column 2, row 2 (1-based)
   await expect(piece(page, 'shirt')).toHaveAttribute('aria-label', /packed at column 2, row 2/)
 })
+
+test.describe('touch', () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } })
+
+  test('a real touch drag (pointer type "touch") places an item and does not scroll the page', async ({ page }) => {
+    await page.reload()
+    const toggle = page.getByRole('button', { name: /Dev tools/ })
+    if ((await toggle.getAttribute('aria-expanded')) === 'true') await toggle.click()
+    const { box, cell } = await boardGeometry(page)
+    const shirt = (await piece(page, 'shirt').boundingBox())!
+    const cdp = await page.context().newCDPSession(page)
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', x?: number, y?: number) =>
+      cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x: x!, y: y! }] })
+    const scrollBefore = await page.evaluate(() => window.scrollY)
+    const boardBefore = (await board(page).boundingBox())!
+    const from = { x: shirt.x + shirt.width / 2, y: shirt.y + shirt.height / 2 }
+    const to = { x: box.x + 2.5 * cell, y: box.y + 2 * cell }
+    await touch('touchStart', from.x, from.y)
+    for (let i = 1; i <= 20; i++) await touch('touchMove', from.x + ((to.x - from.x) * i) / 20, from.y + ((to.y - from.y) * i) / 20)
+    // the board must not shift while the hint text changes mid-drag (it used to re-centre on phones)
+    expect(await board(page).boundingBox()).toEqual(boardBefore)
+    await page.waitForTimeout(60) // a real finger rests for a few frames before lifting
+    await touch('touchEnd')
+    await expect(piece(page, 'shirt')).toHaveAttribute('aria-label', /packed at column 2, row 2/)
+    expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore)
+  })
+})
