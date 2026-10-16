@@ -62,7 +62,7 @@ describe('Level 2 markup', () => {
     expect(l2).toContain('aria-valuemax="7"')
     expect(l2).toMatch(/Required<\/span><b>0\/4<\/b>/)
     expect(l2).toMatch(/Allowance<\/span><b>0\/7 kg<\/b>/)
-    expect(l2).toMatch(/Bonus<\/span><b>0\/3<\/b>/)
+    expect(l2).toMatch(/Bonus<\/span><b>0\/2<\/b>/)
   })
 
   it('tells the player the rule in plain words, with an inclusive allowance and no claim about the suitcase', () => {
@@ -72,18 +72,20 @@ describe('Level 2 markup', () => {
     expect(l2).not.toContain("doesn't weigh")
   })
 
-  it('every item shows its weight in kilograms; optional items are marked', () => {
+  it('every item shows its weight (grams below 1 kg, kilograms above); optional items are marked', () => {
     expect(l2.match(/data-weight="\d+"/g)).toHaveLength(10)
     expect(l2).toContain('Optional, 1.5 kg.')
-    expect(l2).toContain('Required, 0.4 kg.')
+    expect(l2).toContain('Optional, 400 g.')
+    expect(l2).toContain('Required, 2.25 kg.')
+    expect(l2).toContain('Required, 900 g.')
     expect(l2).toMatch(/class="wlabel wl-dark"[^>]*data-weight="1000"[^>]*>1<span class="unit"> kg<\/span>/) // toiletries, drawn art
-    expect(l2).toContain('0.85 kg')
+    expect(l2).toContain('Optional, 300 g.')
   })
 
-  it('the bonus denominator is the verified maximum (3), never the optional item count (6), with no tier claimed before solving', () => {
+  it('the bonus denominator is the verified maximum (2), never the optional item count (6), with no tier claimed before solving', () => {
     expect(l2).not.toMatch(/Bonus<\/span><b>0\/6<\/b>/)
     expect(l2).not.toContain('Perfect pack')
-    expect(l2).toContain('6 optional ★ · at most 3 fit')
+    expect(l2).toContain('6 optional ★ · at most 2 fit')
   })
 
   it('keeps the dialog closed and the controls help collapsed by default', () => {
@@ -110,6 +112,6 @@ describe('Level 3 markup', () => {
     expect(l3).toMatch(/Bonus<\/span><b>0\/5<\/b>/)
     expect(l3.match(/data-weight="/g)).toHaveLength(12)
     expect(l3).toContain('Optional, 6.5 kg.')
-    expect(l3).toContain('Optional, 0.15 kg.')
+    expect(l3).toContain('Optional, 150 g.')
   })
 })

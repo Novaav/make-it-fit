@@ -34,13 +34,13 @@ interface Chrome {
   tools: number // toolbar, help and status under the tray
 }
 
-const WIDE: Chrome = { pageX: 48, gap: 44, caseX: 76, trayX: 44, head: 72, objective: 196, caseY: 102, trayY: 76, tools: 152 }
+const WIDE: Chrome = { pageX: 48, gap: 44, caseX: 76, trayX: 44, head: 72, objective: 196, caseY: 146, trayY: 76, tools: 152 }
 /** The suitcase column is never narrower than this, so the objective tag keeps its pills on one row. */
 const MIN_CASE = 440
-const COMPACT: Chrome = { pageX: 20, gap: 0, caseX: 32, trayX: 16, head: 58, objective: 104, caseY: 44, trayY: 44, tools: 118 }
+const COMPACT: Chrome = { pageX: 20, gap: 0, caseX: 32, trayX: 16, head: 58, objective: 104, caseY: 80, trayY: 44, tools: 118 }
 
 /** Stacked layout on a tablet: wide page margins, the masthead wraps to two rows, compact tag and suitcase. */
-const TABLET_STACK: Chrome = { pageX: 48, gap: 0, caseX: 32, trayX: 16, head: 112, objective: 146, caseY: 108, trayY: 60, tools: 120 }
+const TABLET_STACK: Chrome = { pageX: 48, gap: 0, caseX: 32, trayX: 16, head: 112, objective: 146, caseY: 144, trayY: 60, tools: 120 }
 
 export const COMPACT_MAX_WIDTH = 760
 /** Landscape phones are short, so they also get the compact chrome. */
@@ -58,7 +58,7 @@ const cap = (boardCols: number) => (boardCols > 6 ? 72 : 80)
 
 /** Landscape phones: the suitcase is pinned on the left, the objective, tray and tools scroll on the right. */
 function evaluateWing(board: { width: number; height: number }, layout: TrayLayout, { w, h }: Viewport): Arrangement[] {
-  const byHeight = (h - 56 - 26 - 44 - 12) / board.height
+  const byHeight = (h - 56 - 26 - 44 - 12 - 44) / board.height
   const byWidth = (w - COMPACT.pageX - 16 - COMPACT.caseX - COMPACT.trayX - 20) / (board.width + layout.cols)
   const cell = Math.max(1, Math.floor(Math.min(MAX_STACK_CELL, cap(board.width), byHeight, byWidth)))
   return [{ layout, mode: 'wing', cell, fits: false, overflow: 0 }]

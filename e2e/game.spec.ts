@@ -144,21 +144,19 @@ test('after completion the bonus can still be improved up to the Maximum bonus (
   const objective = page.getByRole('region', { name: 'Objective' })
   const bonus = objective.locator('.pill.bonus')
   await expect(objective).toContainText('Packed!')
-  await expect(bonus).toContainText('0/3')
-  await expect(objective.locator('.pill.weight')).toContainText('3.6/7 kg')
+  await expect(bonus).toContainText('0/2')
+  await expect(objective.locator('.pill.weight')).toContainText('5.15/7 kg')
   await expect(objective).not.toContainText('Maximum bonus')
-  await packStep(page, { id: 'disco_ball', rotations: 0, col: 2, row: 2 })
-  await expect(bonus).toContainText('1/3')
-  await expect(objective.locator('.pill.weight')).toContainText('5.1/7 kg')
+  await packStep(page, { id: 'vibrator', rotations: 0, col: 1, row: 0 })
+  await expect(bonus).toContainText('1/2')
+  await expect(objective.locator('.pill.weight')).toContainText('5.55/7 kg')
   await expect(objective).toContainText('★ extras are optional.') // bonus is never presented as something missed
-  await packStep(page, { id: 'boa', rotations: 0, col: 0, row: 4 })
-  await expect(bonus).toContainText('2/3')
   await expect(bonus).not.toContainText('Maximum bonus')
-  await packStep(page, { id: 'speaker', rotations: 0, col: 4, row: 4 })
-  await expect(bonus).toContainText('3/3')
+  await packStep(page, { id: 'frame', rotations: 0, col: 4, row: 0 })
+  await expect(bonus).toContainText('2/2')
   await expect(bonus).toContainText('Maximum bonus')
   await expect(bonus).not.toContainText('Perfect pack')
-  await expect(objective.locator('.pill.weight')).toContainText('6.9/7 kg')
+  await expect(objective.locator('.pill.weight')).toContainText('6.55/7 kg')
   await expect(objective).toContainText('Maximum bonus!')
   await expect(objective).not.toContainText('Perfect pack')
   await expect(page.getByRole('dialog')).toHaveCount(0)
@@ -276,38 +274,37 @@ test('Level 2 allowance: the Maximum bonus is within 7 kg; going over blocks "Pa
   await page.getByRole('button', { name: 'L2', exact: true }).click()
   await page.getByRole('button', { name: 'Fill max bonus' }).click()
   const dialog = page.getByRole('dialog')
-  await expect(dialog).toContainText('Within the allowance 6.9/7 kg')
-  await expect(dialog).toContainText('Bonus 3/3')
+  await expect(dialog).toContainText('Within the allowance 6.55/7 kg')
+  await expect(dialog).toContainText('Bonus 2/2')
   await expect(dialog).toContainText('Maximum bonus!')
   await expect(dialog).not.toContainText('Perfect pack')
   await expect(dialog.locator('.bonus-result')).not.toContainText('/6')
   await dialog.getByRole('button', { name: 'Keep packing' }).click()
   const objective = page.getByRole('region', { name: 'Objective' })
-  await expect(objective.locator('.pill.weight')).toContainText('6.9/7 kg')
+  await expect(objective.locator('.pill.weight')).toContainText('6.55/7 kg')
 
-  // Pack a verified arrangement by hand where the fifth, sixth and seventh items bring the total to 7.4 kg.
+  // Pack a verified arrangement by hand where the massager and then the disco ball bring the total to 7.05 kg.
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
   await expect(objective.locator('.pill.weight')).toContainText('0/7 kg')
-  const steps = [
-    { id: 'heels', rotations: 0, col: 0, row: 0 },
-    { id: 'outfit', rotations: 1, col: 1, row: 1 },
-    { id: 'toiletries', rotations: 0, col: 2, row: 3 },
-    { id: 'vibrator', rotations: 1, col: 0, row: 2 },
+  const required = [
+    { id: 'handbag', rotations: 0, col: 0, row: 0 },
+    { id: 'flamingo', rotations: 0, col: 0, row: 3 },
+    { id: 'outfit', rotations: 0, col: 2, row: 0 },
+    { id: 'toiletries', rotations: 0, col: 4, row: 1 },
   ]
-  for (const step of steps) await packStep(page, step)
-  await page.getByRole('dialog').getByRole('button', { name: 'Keep packing' }).click() // required items packed: 3.6 kg
-  await packStep(page, { id: 'disco_ball', rotations: 0, col: 4, row: 3 })
-  await packStep(page, { id: 'speaker', rotations: 1, col: 3, row: 1 })
-  await expect(objective.locator('.pill.weight')).toContainText('6.6/7 kg')
+  for (const step of required) await packStep(page, step)
+  await page.getByRole('dialog').getByRole('button', { name: 'Keep packing' }).click() // required items packed: 5.15 kg
+  await packStep(page, { id: 'vibrator', rotations: 1, col: 3, row: 2 })
+  await expect(objective.locator('.pill.weight')).toContainText('5.55/7 kg')
   await expect(objective).toContainText('Packed!')
 
-  await packStep(page, { id: 'ringlight', rotations: 0, col: 3, row: 0 }) // placing is allowed; the total is now 7.4 kg
-  await expect(objective.locator('.pill.weight.over')).toContainText('7.4/7 kg')
-  await expect(objective).toContainText('Over the allowance by 0.4 kg')
+  await packStep(page, { id: 'disco_ball', rotations: 0, col: 4, row: 3 }) // placing is allowed; the total is now 7.05 kg
+  await expect(objective.locator('.pill.weight.over')).toContainText('7.05/7 kg')
+  await expect(objective).toContainText('Over the allowance by 50 g')
   await expect(objective).not.toContainText('Packed!')
 
   await page.getByRole('button', { name: 'Undo' }).click()
-  await expect(objective.locator('.pill.weight')).toContainText('6.6/7 kg')
+  await expect(objective.locator('.pill.weight')).toContainText('5.55/7 kg')
   await expect(objective).toContainText('Packed!')
 })
 
@@ -332,13 +329,15 @@ test('Level 3: a real packing that weighs exactly the 23 kg allowance succeeds',
   await expect(objective.locator('.pill.bonus')).toContainText('3/5')
 })
 
-test('item weights are shown in kilograms on every Level 2 item (printed label or chip)', async ({ page }) => {
+test('item weights are printed on every Level 2 item: grams below 1 kg, kilograms from 1 kg', async ({ page }) => {
   await page.getByRole('button', { name: 'L2', exact: true }).click()
   const weights = page.locator('.in-tray [data-weight]')
   await expect(weights).toHaveCount(10)
-  for (const text of await weights.allTextContents()) expect(text).toMatch(/^★?\d+(\.\d+)? kg$/)
+  for (const text of await weights.allTextContents()) expect(text).toMatch(/^★?\d+(\.\d+)? (g|kg)$/)
   await expect(piece(page, 'toiletries').locator('.wlabel')).toHaveText('1 kg') // printed on the drawn toiletries pouch
-  await expect(piece(page, 'speaker').locator('.wlabel')).toHaveText('★1.5 kg') // every Level 2 item prints its weight on its own label
+  await expect(piece(page, 'vibrator').locator('.wlabel')).toHaveText('★400 g') // every Level 2 item prints its weight on its own label
+  await expect(piece(page, 'handbag').locator('.wlabel')).toHaveText('2.25 kg')
+  await expect(piece(page, 'dvds').locator('.wlabel')).toHaveText('★1.5 kg')
 })
 
 for (const [n, id] of [[1, 'L1'], [2, 'L2'], [3, 'L3']] as const) {

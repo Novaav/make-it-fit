@@ -1,6 +1,7 @@
 import { lazy, Profiler, Suspense, useState } from 'react'
 import { loadLevels, type Placement } from './engine'
 import LevelPlay from './LevelPlay'
+import { loadBoards, saveBoards, type Boards, type SavedBoard } from './boards'
 import { BEST_OPTIONAL, PLAYABLE_LEVEL_IDS } from './levelMeta'
 import {
   browserStorage,
@@ -31,12 +32,27 @@ export default function App() {
   // Dev-only test session, held in memory: it never touches localStorage and vanishes on reload.
   const [testMode, setTestMode] = useState(false)
   const [testDone, setTestDone] = useState<Record<string, LevelResult>>({})
+  // The player's current arrangement in each level. Saved separately from progress; test mode keeps its own, never saved.
+  const [boards, setBoards] = useState<Boards>(() => loadBoards(browserStorage()))
+  const [testBoards, setTestBoards] = useState<Boards>({})
   const effective: Progress =
     import.meta.env.DEV && testMode ? { ...progress, completed: { ...testDone, ...progress.completed } } : progress
   const level = LEVELS.find((l) => l.id === levelId)!
   const next = IDS[IDS.indexOf(levelId) + 1]
 
+  const inTestMode = import.meta.env.DEV && testMode
+  const handleBoardChange = (id: string, board: SavedBoard) => {
+    if (inTestMode) {
+      setTestBoards((b) => ({ ...b, [id]: board }))
+      return
+    }
+    const next = { ...boards, [id]: board }
+    setBoards(next)
+    saveBoards(browserStorage(), next)
+  }
+
   const handleWin = (optionalPacked: number) => {
+    if (inTestMode) return // TEST MODE: nothing is saved
     const updated = recordCompletion(progress, levelId, optionalPacked)
     if (updated === progress) return
     setProgress(updated)
@@ -48,6 +64,9 @@ export default function App() {
       key={levelId}
       level={level}
       onWin={handleWin}
+      saved={(inTestMode ? testBoards : boards)[levelId]}
+      onBoardChange={(board) => handleBoardChange(levelId, board)}
+      onDevFillUsed={() => setDevFill(undefined)}
       isLast={!next}
       devFill={import.meta.env.DEV && devFill?.levelId === levelId ? devFill : undefined}
       onNext={next && isUnlocked(effective, IDS, next) ? () => setLevelId(next) : undefined}
@@ -85,7 +104,7 @@ export default function App() {
                 onClick={() => setLevelId(l.id)}
               >
                 Level {Number(l.id)}
-                {done && <span aria-label="completed"> ✓</span>}
+                {done && <span aria-label="completed earlier" title="Completed earlier"> ✓</span>}
                 {testOnly && <span aria-label="test completion, not saved"> ✓ test</span>}
                 {!unlocked && <span aria-label="locked"> 🔒</span>}
               </button>
@@ -123,6 +142,9 @@ export default function App() {
               setProgress(emptyProgress)
               setTestDone({})
               saveProgress(browserStorage(), emptyProgress)
+              setBoards({})
+              setTestBoards({})
+              saveBoards(browserStorage(), {})
             }}
           />
         </Suspense>

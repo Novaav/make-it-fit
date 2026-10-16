@@ -30,7 +30,8 @@ import { chooseArrangement } from './ui/fit'
 import { useViewport } from './ui/useViewport'
 import TableProps from './components/TableProps'
 import { BEST_OPTIONAL, ITEM_NAMES, LEVEL_TITLES, maxBonusLabel } from './levelMeta'
-import { formatKg, formatWeight } from './weight'
+import { formatLoad, formatWeight } from './weight'
+import { restoreGame, snapshot, type SavedBoard } from './boards'
 
 const name = (id: string) => ITEM_NAMES[id] ?? id
 const REASONS: Record<PlacementError, string> = {
@@ -70,15 +71,23 @@ interface Props {
   isLast?: boolean
   /** Development builds only: replace the board with these placements (undoable step by step). */
   devFill?: { nonce: number; placements: readonly Placement[] }
+  /** The saved arrangement for this level, if any. Only a starting point: it is replayed through the engine. */
+  saved?: SavedBoard
+  /** Called with the new arrangement after the player changes it (never for a restore). */
+  onBoardChange?: (board: SavedBoard) => void
+  /** A dev fill is applied once; this tells the app to forget it so a remount can never apply it again. */
+  onDevFillUsed?: () => void
 }
 
-export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill }: Props) {
+export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill, saved, onBoardChange, onDevFillUsed }: Props) {
   const viewport = useViewport()
   const arrangement = useMemo(() => chooseArrangement(LEVEL, TRAY_LAYOUTS[LEVEL.id], viewport), [LEVEL, viewport])
   const layout = arrangement.layout
-  const [game, setGame] = useState<GameState>(() => createGame(LEVEL))
+  const [game, setGame] = useState<GameState>(() => restoreGame(LEVEL, saved))
   const [carry, setCarryState] = useState<Carry | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
+  const [hoverId, setHoverId] = useState<string | null>(null)
+  const [focusId, setFocusId] = useState<string | null>(null)
   const [trayTurns, setTrayTurns] = useState<Record<string, Orientation>>({})
   const [message, setMessage] = useState('')
 
@@ -98,7 +107,8 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const carriedRef = useRef<HTMLDivElement | null>(null)
   const focusAfter = useRef<string | null>(null)
   const devTainted = useRef(false)
-  const celebrated = useRef(false)
+  // A level that comes back already packed (restored) is not a new achievement: no dialog, no fanfare.
+  const celebrated = useRef(isWon(game))
   const dialogOpenRef = useRef(false)
   const returnFocus = useRef<HTMLElement | null>(null)
   const primaryRef = useRef<HTMLButtonElement>(null)
@@ -422,6 +432,15 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carry])
 
+  // Report every change the player makes (not the restore itself) so the app can keep and save the arrangement.
+  const reported = useRef(game.placements)
+  useEffect(() => {
+    if (game.placements === reported.current) return
+    reported.current = game.placements
+    onBoardChange?.(snapshot(LEVEL, game.placements))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.placements])
+
   const winSignal = isWon(game) ? optionalPlacedCount(game) : -1
   useEffect(() => {
     // Dev-tool fills must never write real progress.
@@ -450,6 +469,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     setGame(next)
     setSelected(null)
     setMessage('Dev: solution loaded.')
+    onDevFillUsed?.() // consumed: returning to this level later must never re-apply it
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [devNonce])
 
@@ -519,6 +539,24 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
       ? ''
       : ` ${itemById(id).required ? 'Required' : 'Optional'}, ${formatWeight(itemById(id).weight)}.`
 
+  // What the info line shows: the item being carried, else the one under the mouse, else the focused one, else the selected one.
+  const infoId = carry?.itemId ?? hoverId ?? focusId ?? selected
+  const infoItem = infoId ? itemById(infoId) : null
+  const infoHandlers = (id: string) => ({
+    onPointerEnter: (e: ReactPointerEvent) => {
+      if (e.pointerType === 'mouse' && !carryRef.current) setHoverId(id)
+    },
+    onPointerLeave: () => setHoverId(null),
+    onFocus: () => setFocusId(id),
+    onBlur: () => setFocusId((f) => (f === id ? null : f)),
+  })
+  const missing = required.filter((i) => !placedIds.has(i.id))
+  const note = overWeight
+    ? `Over the allowance by ${formatWeight(weight - (limit ?? 0))} — take something out.`
+    : !solved && game.placements.length > 0 && missing.length > 0
+      ? `Still to pack: ${missing.map((i) => name(i.id)).join(', ')}.`
+      : ''
+
   return (
     <div
       className="level"
@@ -561,7 +599,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               {limit !== undefined && (
                 <span className={`pill weight${overWeight ? ' over' : ''}`} title={`Packing allowance: ${formatWeight(limit)}`}>
                   <span className="pill-label">Allowance</span>
-                  <b>{formatKg(weight)}/{formatWeight(limit)}</b>
+                  <b>{formatLoad(weight)}/{formatWeight(limit)}</b>
                   <span
                     className="mini-bar"
                     role="meter"
@@ -588,14 +626,14 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                 </button>
               )}
             </div>
-            <p className={`over-note${overWeight ? ' on' : ''}`} role="status">
-              {overWeight ? `Over the allowance by ${formatWeight(weight - (limit ?? 0))} — take something out.` : ''}
+            <p className={`over-note${overWeight ? ' on' : note ? ' missing' : ''}`} role="status">
+              {note}
             </p>
           </section>
           <div className="case-stick">
           <p className="case-strip" aria-hidden="true">
             <span>Packed {packedCount}/{required.length}</span>
-            {limit !== undefined && <span className={overWeight ? 'over' : ''}>{formatKg(weight)}/{formatWeight(limit)}</span>}
+            {limit !== undefined && <span className={overWeight ? 'over' : ''}>{formatLoad(weight)}/{formatWeight(limit)}</span>}
             {optionalItems.length > 0 && <span>★ {optionalCount}/{bestBonus}</span>}
           </p>
           <div className={`suitcase${overWeight ? ' strain' : ''}`}>
@@ -623,6 +661,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                     style={{ ...pieceVars(p.itemId, o), '--x': p.x, '--y': p.y } as React.CSSProperties}
                     data-item={p.itemId}
                     aria-label={`${name(p.itemId)}, packed at column ${p.x + 1}, row ${p.y + 1}.${describe(p.itemId)} Enter to move, R to rotate, Delete to take out.`}
+                    {...infoHandlers(p.itemId)}
                     onPointerDown={(e) => startPointer(e, p.itemId, 'board')}
                     onClick={(e) => e.detail === 0 && pickUpWithKeyboard(p.itemId, 'board')}
                   >
@@ -654,6 +693,17 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               </div>
             </div>
           </div>
+          <p className={`item-info${infoItem ? '' : ' idle'}`} aria-hidden="true">
+            {infoItem ? (
+              <>
+                <b>{name(infoItem.id)}</b>
+                {limit !== undefined && <span>{formatWeight(infoItem.weight)}</span>}
+                <span className={infoItem.required ? 'req' : 'opt'}>{infoItem.required ? 'Required' : 'Optional ★'}</span>
+              </>
+            ) : (
+              'Hover, tap or focus an item to see what it is.'
+            )}
+          </p>
           </div>
         </section>
 
@@ -706,8 +756,8 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                       className={`piece in-tray${selected === item.id ? ' selected' : ''}`}
                       style={pieceVars(item.id, o)}
                       data-item={item.id}
-                      title={name(item.id)}
                       aria-label={`${name(item.id)}, not packed.${describe(item.id)} Enter to pick up, R to rotate.`}
+                      {...infoHandlers(item.id)}
                       onPointerDown={(e) => startPointer(e, item.id, 'tray')}
                       onClick={(e) => e.detail === 0 && pickUpWithKeyboard(item.id, 'tray')}
                     >
@@ -763,7 +813,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               </li>
               {limit !== undefined && (
                 <li>
-                  <span className="ok">✓</span> Within the allowance <b>{formatKg(weight)}/{formatWeight(limit)}</b>
+                  <span className="ok">✓</span> Within the allowance <b>{formatLoad(weight)}/{formatWeight(limit)}</b>
                 </li>
               )}
               {optionalItems.length > 0 && (

@@ -8,11 +8,11 @@ Status: playable local build. Not deployed. Artwork is original but temporary.
 
 ## How to play
 
-- **Goal:** pack every required item. From Level 2 there is also a packing allowance (7 kg for the cabin bag, 23 kg for the checked bag): the weight of the packed items must be at most the allowance, and exactly the allowance is fine. The game weighs the illustrated items only. Weights are shown in kilograms.
+- **Goal:** pack every required item. From Level 2 there is also a packing allowance (7 kg for the cabin bag, 23 kg for the checked bag): the weight of the packed items must be at most the allowance, and exactly the allowance is fine. The game weighs the illustrated items only. Weights under 1 kg are shown in grams (900 g), the rest in kilograms (2.25 kg).
 - **Bonus:** items marked ★ are optional extras. The pill `★ Bonus n/m` compares your count with the verified best possible; reaching it is the *Maximum bonus* (called *Perfect pack* on Level 3). It is never required to complete a level.
 - **Feedback:** while placing, green means the item fits there and red means it overlaps something or sticks out. Each item shows its weight on levels with an allowance.
 - **Finish:** a success dialog shows your results. Choose **Next level** or **Keep packing** (you can keep improving the bonus after completing a level). Unlimited undo and reset.
-- **Progress:** completed levels and best bonus counts are saved in your browser's `localStorage` only. Levels unlock in order.
+- **Progress:** completed levels and best bonus counts are saved in your browser's `localStorage` only, and so is the arrangement you left in each level. A level completed earlier keeps its check mark, but the suitcase is only "Packed!" while its current arrangement is valid. Levels unlock in order.
 
 ## Controls
 

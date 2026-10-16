@@ -55,8 +55,8 @@ describe('chooseArrangement', () => {
     for (const l of levels) {
       const a = pick(l.id, 844, 390)
       expect(a.mode).toBe('wing')
-      expect(a.cell * l.height + 56 + 26 + 44).toBeLessThanOrEqual(390)
-      expect(a.cell).toBeGreaterThanOrEqual(38)
+      expect(a.cell * l.height + 56 + 26 + 44 + 44).toBeLessThanOrEqual(390)
+      expect(a.cell).toBeGreaterThanOrEqual(32)
     }
   })
 })
