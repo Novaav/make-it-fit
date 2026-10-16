@@ -1,6 +1,6 @@
 import type { Orientation } from '../engine'
 
-interface Rect {
+export interface Rect {
   readonly left: number
   readonly top: number
   readonly width: number

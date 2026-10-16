@@ -12,6 +12,8 @@
   --warn: #b3261e;
   --bonus: #5b34a8;
   --focus: #7a3fd1;
+  --ok-solid: #2a8553;
+  --bad-solid: #c93c32;
   color-scheme: light;
 }
 * { box-sizing: border-box; }
@@ -107,10 +109,17 @@ h1 { margin: 0; font-size: 1.5rem; letter-spacing: 0.05em; text-transform: upper
 .piece:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .piece.selected { outline: 3px dashed var(--focus); outline-offset: 3px; }
 .piece.on-board { position: absolute; left: calc(var(--cell) * var(--x)); top: calc(var(--cell) * var(--y)); z-index: 1; }
-.piece.lifted, .slot.lifted .piece { opacity: 0.25; }
-.piece.carrying { z-index: 2; pointer-events: none; transition: left 70ms ease-out, top 70ms ease-out; filter: drop-shadow(0 8px 8px rgba(60, 40, 20, 0.4)); }
-.piece.carrying.bad { opacity: 0.85; }
-.ghost { position: fixed; z-index: 10; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 10px 10px rgba(60, 40, 20, 0.4)); }
+/* The item being carried is hidden where it came from (tray slot or board cell): there is never a second copy. */
+.piece.lifted, .slot.lifted .piece { visibility: hidden; }
+/*
+ * The single carried element. Fixed, parked at 0,0 and moved ONLY with `transform`, so the browser translates one
+ * compositor layer. (Animating left/top on a filtered element left stale copies behind in Safari/WebKit.)
+ */
+.carried { position: fixed; left: 0; top: 0; z-index: 4; pointer-events: none; will-change: transform; filter: drop-shadow(0 10px 10px rgba(60, 40, 20, 0.4)); }
+.carried.snapped { transition: transform 70ms ease-out; filter: drop-shadow(0 6px 6px rgba(60, 40, 20, 0.35)); }
+/* Verdict on the item itself (never a tint over it): a coloured edge, plus the footprint cells under it. */
+.carried.snapped.good { filter: drop-shadow(0 0 2px var(--ok-solid)) drop-shadow(0 0 2px var(--ok-solid)) drop-shadow(0 6px 6px rgba(60, 40, 20, 0.35)); }
+.carried.snapped.bad { filter: drop-shadow(0 0 2px var(--bad-solid)) drop-shadow(0 0 2px var(--bad-solid)) drop-shadow(0 6px 6px rgba(60, 40, 20, 0.35)); }
 
 .side { width: calc(var(--cell) * var(--tcols) + 40px); max-width: 100%; }
 .tray { background: rgba(255, 250, 240, 0.55); border: 2px solid transparent; border-radius: 18px; padding: 10px 16px 12px; }
@@ -158,11 +167,12 @@ kbd { border: 1px solid rgba(0,0,0,0.25); border-bottom-width: 2px; border-radiu
   .masthead { justify-content: center; text-align: center; }
   .brand { justify-content: center; }
   .stage { flex-direction: column; align-items: center; }
-  .case-wrap { width: auto; }
+  /* Full width: with `auto` the column shrinks to its text, so a shorter hint ("Green — it fits here.") re-centred the board mid-drag. */
+  .case-wrap { width: 100%; }
   .suitcase { margin-inline: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .piece.carrying { transition: none; }
+  .carried.snapped { transition: none; }
   .backdrop, .dialog { animation: none; }
 }
 

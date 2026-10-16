@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Profiler, Suspense, useState } from 'react'
 import { loadLevels, type Placement } from './engine'
 import LevelPlay from './LevelPlay'
 import { BEST_OPTIONAL, PLAYABLE_LEVEL_IDS } from './levelMeta'
@@ -17,6 +17,11 @@ import {
 const IDS: readonly string[] = PLAYABLE_LEVEL_IDS
 // Cheats live in a lazily loaded module that only exists in development builds.
 const DevTools = import.meta.env.DEV ? lazy(() => import('./dev/DevTools')) : null
+// Development only: counts React commits so browser tests can measure re-renders during a drag.
+const countCommit = () => {
+  const w = window as unknown as { __commits?: number }
+  w.__commits = (w.__commits ?? 0) + 1
+}
 const LEVELS = loadLevels().filter((l) => IDS.includes(l.id))
 
 export default function App() {
@@ -37,6 +42,17 @@ export default function App() {
     setProgress(updated)
     saveProgress(browserStorage(), updated)
   }
+
+  const levelView = (
+    <LevelPlay
+      key={levelId}
+      level={level}
+      onWin={handleWin}
+      isLast={!next}
+      devFill={import.meta.env.DEV && devFill?.levelId === levelId ? devFill : undefined}
+      onNext={next && isUnlocked(effective, IDS, next) ? () => setLevelId(next) : undefined}
+    />
+  )
 
   return (
     <div className="app">
@@ -69,14 +85,13 @@ export default function App() {
           })}
         </nav>
       </header>
-      <LevelPlay
-        key={levelId}
-        level={level}
-        onWin={handleWin}
-        isLast={!next}
-        devFill={import.meta.env.DEV && devFill?.levelId === levelId ? devFill : undefined}
-        onNext={next && isUnlocked(effective, IDS, next) ? () => setLevelId(next) : undefined}
-      />
+      {import.meta.env.DEV ? (
+        <Profiler id="level" onRender={countCommit}>
+          {levelView}
+        </Profiler>
+      ) : (
+        levelView
+      )}
       {DevTools && (
         <Suspense fallback={null}>
           <DevTools

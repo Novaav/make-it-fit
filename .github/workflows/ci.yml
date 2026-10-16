@@ -50,8 +50,8 @@ jobs:
       - name: Production build contains no dev tools
         run: npm run check:prod-clean
 
-      - name: Install Chrome for Playwright
-        run: npx playwright install --with-deps chrome
+      - name: Install Chrome and WebKit (the Safari engine) for Playwright
+        run: npx playwright install --with-deps chrome webkit
 
       - name: Browser tests
         run: npx playwright test
