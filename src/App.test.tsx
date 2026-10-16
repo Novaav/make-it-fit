@@ -52,8 +52,10 @@ describe('level selection and Level 2 markup', () => {
   })
 
   it('marks optional items and shows every item weight', () => {
-    expect(l2.match(/class="chip-w bonus"/g)).toHaveLength(5)
-    expect(l2.match(/class="chip-w"/g)).toHaveLength(5)
+    // every item shows a weight: redrawn items print it on their label zone, the rest still use a chip
+    expect(l2.match(/data-weight="/g)).toHaveLength(10)
+    expect(l2.match(/class="chip-w bonus"/g)).toHaveLength(5) // the five optional items (not yet redrawn)
+    expect(l2.match(/class="wlabel wl-/g)).toHaveLength(3) // passport, charger, toiletries
     expect(l2).toContain('Optional, 4 kg.')
   })
 })
@@ -65,6 +67,7 @@ describe('Level 3 markup', () => {
     expect(l3).toContain('aria-valuemax="24"')
     expect(l3).toMatch(/class="pill weight"><b>0\/24 kg<\/b>/)
     expect(l3).toMatch(/Bonus<\/span><b>0\/2<\/b>/)
+    expect(l3.match(/data-weight="/g)).toHaveLength(8)
     expect(l3.match(/class="chip-w bonus"/g)).toHaveLength(3)
   })
 })
@@ -105,8 +108,10 @@ describe('objective clarity', () => {
     expect(h).toMatch(/<details class="help">/)
   })
   it('shows each item weight with its unit on limit levels only', () => {
-    expect(html('02').match(/class="chip-w[^"]*"[^>]*>\d+ kg/g)).toHaveLength(10)
+    expect(html('02').match(/data-weight="\d+"/g)).toHaveLength(10)
+    expect(html('02')).toMatch(/class="wlabel wl-dark"[^>]*data-weight="3"[^>]*>3<span class="unit"> kg<\/span>/)
     expect(html('01')).not.toContain('chip-w')
+    expect(html('01')).not.toContain('data-weight')
     // anchored on a covered cell: the hairdryer (T shape) chip sits at the end of its stem, cell (1,2) -> x=2,y=3
     expect(html('02')).toMatch(/--chip-x:2;--chip-y:3[^>]*>5 kg/)
   })

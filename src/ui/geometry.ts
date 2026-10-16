@@ -46,3 +46,12 @@ export function artTransform(w: number, h: number, orientation: Orientation) {
   const ty = -Math.min(...pts.map(([, y]) => y)) || 0
   return { tx, ty, angle: -90 * orientation || 0 }
 }
+
+/** Where a point of the base-orientation art ends up (cells) once the item is turned `orientation` times. */
+export function artPoint(x: number, y: number, w: number, h: number, orientation: Orientation) {
+  let px = x
+  let py = y
+  for (let i = 0; i < orientation; i++) [px, py] = [py, -px]
+  const { tx, ty } = artTransform(w, h, orientation)
+  return { x: px + tx, y: py + ty }
+}

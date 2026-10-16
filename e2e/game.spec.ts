@@ -243,11 +243,29 @@ test('Level 2 weight rule: over the limit blocks completion, undo restores it', 
   await expect(objective).toContainText('Level packed.')
 })
 
-test('item weights are visible on every Level 2 item', async ({ page }) => {
+test('item weights are visible on every Level 2 item (printed label or chip)', async ({ page }) => {
   await page.getByRole('button', { name: 'L2', exact: true }).click()
-  const chips = page.locator('.in-tray .chip-w')
-  await expect(chips).toHaveCount(10)
-  for (const text of await chips.allTextContents()) expect(text).toMatch(/^\d+ kg( ★)?$/)
+  const weights = page.locator('.in-tray [data-weight]')
+  await expect(weights).toHaveCount(10)
+  for (const text of await weights.allTextContents()) expect(text).toMatch(/^★?\d+ kg( ★)?$/)
+})
+
+test('a printed weight stays upright, inside its item, when the item is rotated', async ({ page }) => {
+  await page.getByRole('button', { name: 'L2', exact: true }).click()
+  const toiletries = piece(page, 'charger') // 2x1: rotating it makes the item tall and narrow
+  const label = toiletries.locator('.wlabel')
+  await expect(label).toHaveText('1 kg')
+  await toiletries.click()
+  for (let turn = 0; turn < 4; turn++) {
+    const box = (await toiletries.boundingBox())!
+    const l = (await label.boundingBox())!
+    expect(l.width, 'text runs horizontally').toBeGreaterThan(l.height)
+    expect(l.x).toBeGreaterThanOrEqual(box.x)
+    expect(l.y).toBeGreaterThanOrEqual(box.y)
+    expect(l.x + l.width).toBeLessThanOrEqual(box.x + box.width + 1)
+    expect(l.y + l.height).toBeLessThanOrEqual(box.y + box.height + 1)
+    await page.keyboard.press('r')
+  }
 })
 
 for (const [n, id] of [[1, 'L1'], [2, 'L2'], [3, 'L3']] as const) {
