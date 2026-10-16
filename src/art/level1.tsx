@@ -1,53 +1,5 @@
 import { INK, Inked, Lod1, Lod2, Stitch, line, type ItemArtDef } from './kit'
 
-/* ---------- Passport (1x1) ---------- */
-const NAVY = '#2f4b66'
-const GOLD = '#e3be5a'
-const PAGE = '#f4ebd3'
-
-const passport: ItemArtDef = {
-  zone: { x: 0.5, y: 0.79, tone: 'light' },
-  draw: () => (
-    <>
-      <Inked d="M.15 .06H.85Q.94 .06 .94 .15V.85Q.94 .94 .85 .94H.15Q.06 .94 .06 .85V.15Q.06 .06 .15 .06Z" fill={NAVY} ink="#16232f" />
-      {/* page block showing along the right and bottom edges */}
-      <path d="M.885 .13V.865Q.885 .905 .85 .905H.13V.87H.85Q.86 .87 .86 .85V.13Z" fill={PAGE} stroke="#b9a977" strokeWidth={0.012} />
-      {/* spine crease and binding stitches */}
-      <path d="M.2 .1V.9" stroke="#1c2f43" strokeWidth={0.025} {...line} />
-      <Stitch d="M.145 .13V.87" color="#8fb0cf" />
-      {/* gold-foil globe */}
-      <g stroke={GOLD} strokeWidth={0.03} {...line}>
-        <circle cx={0.54} cy={0.4} r={0.19} />
-        <ellipse cx={0.54} cy={0.4} rx={0.085} ry={0.19} strokeWidth={0.022} />
-        <path d="M.35 .4H.73M.4 .29H.68M.4 .51H.68" strokeWidth={0.02} />
-      </g>
-      <Lod1>
-        <path d="M.54 .12 .565 .17 .62 .18 .575 .21 .59 .26 .54 .23 .49 .26 .505 .21 .46 .18 .515 .17Z" fill={GOLD} />
-      </Lod1>
-      {/* quiet foil band: the weight label sits here */}
-      <path d="M.24 .685H.82" stroke={GOLD} strokeWidth={0.014} opacity={0.55} {...line} />
-      <path d="M.24 .875H.82" stroke={GOLD} strokeWidth={0.014} opacity={0.55} {...line} />
-      <Lod1>
-        {/* red ribbon bookmark and a doodled smiley on a corner of boarding pass tucked into the cover */}
-        <path d="M.66 .87V.935L.69 .91 .72 .935V.87Z" fill="#c9473b" />
-        <g transform="rotate(8 .8 .2)">
-          <rect x={0.68} y={0.1} width={0.18} height={0.14} rx={0.012} fill="#fbf6e8" stroke="#c7b98e" strokeWidth={0.01} />
-          <path d="M.7 .15H.84M.7 .18H.8" stroke="#9b8c62" strokeWidth={0.012} {...line} />
-          <circle cx={0.8} cy={0.205} r={0.022} fill="none" stroke="#6b5d3a" strokeWidth={0.01} />
-        </g>
-      </Lod1>
-      <Lod2>
-        {/* leatherette grain */}
-        <g fill="#8fb0cf" opacity={0.22}>
-          {[[0.3, 0.2], [0.42, 0.62], [0.28, 0.55], [0.7, 0.57], [0.6, 0.64], [0.33, 0.7], [0.78, 0.42], [0.25, 0.32]].map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r={0.008} />
-          ))}
-        </g>
-      </Lod2>
-    </>
-  ),
-}
-
 /* ---------- T-shirt (T tetromino: sleeves + torso) ---------- */
 const CORAL = '#e8806b'
 const CORAL_D = '#c4604c'
@@ -408,5 +360,5 @@ const shoes: ItemArtDef = {
   ),
 }
 
-export const ITEM_ART: Record<string, ItemArtDef> = { passport, shirt, jeans, charger, toiletries, shoes }
+export const ITEM_ART: Record<string, ItemArtDef> = { shirt, jeans, charger, toiletries, shoes }
 export { INK }

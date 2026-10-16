@@ -8,7 +8,7 @@ const html = (id: string, orientation: 0 | 1 | 2 | 3 = 0) => renderToStaticMarku
 
 describe('illustrated items', () => {
   it('clip to the occupied cells with shapes only (a <g> inside <clipPath> is invalid and clips everything away)', () => {
-    for (const id of ['passport', 'shirt', 'jeans', 'charger', 'toiletries', 'shoes']) {
+    for (const id of ['shirt', 'jeans', 'charger', 'toiletries', 'shoes']) {
       const markup = html(id)
       const clip = /<clipPath[^>]*>(.*?)<\/clipPath>/.exec(markup)
       expect(clip, `${id}: has a clipPath`).not.toBeNull()

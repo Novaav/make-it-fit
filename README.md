@@ -2,15 +2,15 @@
 
 **Bad decisions. Limited luggage.**
 
-A small browser puzzle game about packing an open suitcase. Drag, rotate and fit illustrated belongings into the case, stay under the weight limit, and squeeze in optional bonus items. Three hand-made levels, no timer, no sound, no account, no server.
+A small browser puzzle game about packing an open suitcase. Drag, rotate and fit illustrated belongings into the case, stay within the packing allowance, and squeeze in optional bonus items. Three hand-made levels, no timer, no sound, no account, no server.
 
 Status: playable local build. Not deployed. Artwork is original but temporary.
 
 ## How to play
 
-- **Goal:** pack every required item. From Level 2 you must also keep the total under the weight limit (kg is fictional).
-- **Bonus:** items marked ★ are optional. The score `★ Bonus n/max` compares your count with the verified maximum for that level; reach the maximum for "Max!".
-- **Feedback:** while placing, green means the item fits there and red means it overlaps something or sticks out. Each item shows its weight on levels with a limit.
+- **Goal:** pack every required item. From Level 2 there is also a packing allowance (7 kg for the cabin bag, 23 kg for the checked bag): the weight of the packed items must be at most the allowance, and exactly the allowance is fine. The game weighs the illustrated items only. Weights are shown in kilograms.
+- **Bonus:** items marked ★ are optional extras. The pill `★ Bonus n/m` compares your count with the verified best possible; reaching it is a *Perfect pack*. It is never required to complete a level.
+- **Feedback:** while placing, green means the item fits there and red means it overlaps something or sticks out. Each item shows its weight on levels with an allowance.
 - **Finish:** a success dialog shows your results. Choose **Next level** or **Keep packing** (you can keep improving the bonus after completing a level). Unlimited undo and reset.
 - **Progress:** completed levels and best bonus counts are saved in your browser's `localStorage` only. Levels unlock in order.
 

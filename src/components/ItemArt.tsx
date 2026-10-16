@@ -1,6 +1,7 @@
 import { memo, useId, type CSSProperties, type ReactNode } from 'react'
 import type { Item, Orientation, Shape } from '../engine'
 import { artTransform } from '../ui/geometry'
+import { ITEM_NAMES } from '../levelMeta'
 import { ITEM_ART } from '../art/level1'
 
 const CREAM = '#fff6e6'
@@ -34,6 +35,38 @@ function Silhouette({ cells, color, outline }: { cells: Shape; color: string; ou
 
 const line = { strokeLinecap: 'round' as const, fill: 'none' }
 
+
+/** Temporary art for items that are not illustrated yet: a clearly labelled, dashed silhouette (never mistaken for finished art). */
+const PLACEHOLDER_COLORS = ['#cfd8e3', '#e3d4cf', '#d7e3cf', '#e3dccf', '#d9cfe3', '#cfe3df']
+function Placeholder({ item }: { item: Item }) {
+  const label = (ITEM_NAMES[item.id] ?? item.id).toUpperCase()
+  const color = PLACEHOLDER_COLORS[[...item.id].reduce((n, c) => n + c.charCodeAt(0), 0) % PLACEHOLDER_COLORS.length]
+  const first = item.cells[0]
+  return (
+    <>
+      <Silhouette cells={item.cells} color={color} outline="#6b6578" />
+      <g fill="none" stroke="#6b6578" strokeWidth={0.02} strokeDasharray="0.06 0.05" opacity={0.7}>
+        <UnionDash cells={item.cells} />
+      </g>
+      <text x={first.x + 0.5} y={first.y + 0.56} fontSize={0.15} textAnchor="middle" fontWeight={700} fill="#4a4456" fontFamily="system-ui, sans-serif">
+        {label.length > 12 ? `${label.slice(0, 11)}…` : label}
+      </text>
+      <text x={first.x + 0.5} y={first.y + 0.76} fontSize={0.11} textAnchor="middle" fill="#6b6578" fontFamily="system-ui, sans-serif">
+        placeholder art
+      </text>
+    </>
+  )
+}
+function UnionDash({ cells }: { cells: Shape }) {
+  return (
+    <>
+      {cells.map((c) => (
+        <rect key={`${c.x},${c.y}`} x={c.x + 0.1} y={c.y + 0.1} width={0.8} height={0.8} rx={0.1} />
+      ))}
+    </>
+  )
+}
+
 function art(item: Item): ReactNode {
   const s = item.cells
   switch (item.id) {
@@ -46,21 +79,6 @@ function art(item: Item): ReactNode {
           <path d="M1.5 0.7l0.06 0.14 0.14 0.06-0.14 0.06-0.06 0.14-0.06-0.14-0.14-0.06 0.14-0.06Z" fill={GOLD} />
           <path d="M1.5 1.45l0.05 0.11 0.11 0.05-0.11 0.05-0.05 0.11-0.05-0.11-0.11-0.05 0.11-0.05Z" fill={GOLD} />
           <path d="M1.2 1.82H1.8" stroke="#8f3d66" strokeWidth={0.04} strokeDasharray="0.08 0.08" {...line} />
-        </>
-      )
-    case 'dvd':
-      return (
-        <>
-          <Silhouette cells={s} color="#34304a" outline="#16132a" />
-          <circle cx={0.55} cy={0.5} r={0.33} fill="#d9dde6" />
-          <circle cx={0.55} cy={0.5} r={0.08} fill="#34304a" />
-          <rect x={1.05} y={0.2} width={1.75} height={0.6} rx={0.06} fill={GOLD} />
-          <text x={1.92} y={0.47} fontSize={0.15} textAnchor="middle" fontWeight="bold" fill="#34304a" fontFamily="Georgia, serif">
-            EXTREMELY
-          </text>
-          <text x={1.92} y={0.67} fontSize={0.15} textAnchor="middle" fontWeight="bold" fill="#34304a" fontFamily="Georgia, serif">
-            EDUCATIONAL
-          </text>
         </>
       )
     case 'disco_ball':
@@ -82,34 +100,6 @@ function art(item: Item): ReactNode {
           <path d="M0.3 0.28h0.4M0.3 0.52h0.4M2.3 0.28h0.4M2.3 0.52h0.4" stroke={CREAM} strokeWidth={0.05} {...line} />
           <path d="M0.55 1.55V1.9M2.45 1.55V1.9" stroke={CREAM} strokeWidth={0.08} {...line} />
           <path d="M0.7 0.5Q1.5 1 2.3 0.5" stroke={CREAM} strokeWidth={0.05} {...line} />
-        </>
-      )
-    case 'ex_photo':
-      return (
-        <>
-          <Silhouette cells={s} color="#f1e4cc" outline="#9a8a6a" />
-          <circle cx={0.5} cy={0.55} r={0.2} fill="#e9b98f" />
-          <circle cx={1.5} cy={0.5} r={0.2} fill="#e9b98f" />
-          <path d="M1.2 1.2l0.6 0.6M1.8 1.2l-0.6 0.6" stroke="#d9534f" strokeWidth={0.07} {...line} />
-          <path d="M0.3 0.15h1.4" stroke="#9a8a6a" strokeWidth={0.03} strokeDasharray="0.06 0.06" {...line} />
-        </>
-      )
-    case 'extra_shoes':
-      return (
-        <>
-          <Silhouette cells={s} color="#59b3c4" outline="#2d7787" />
-          <path d="M0.12 0.84H1.88M2.12 0.84H3.88" stroke={CREAM} strokeWidth={0.1} {...line} />
-          <path d="M0.5 0.3v0.25M0.7 0.3v0.25M0.9 0.3v0.25M2.5 0.3v0.25M2.7 0.3v0.25M2.9 0.3v0.25" stroke={CREAM} strokeWidth={0.05} {...line} />
-          <path d="M2 0.1V0.9" stroke="#2d7787" strokeWidth={0.03} {...line} />
-        </>
-      )
-    case 'hairdryer':
-      return (
-        <>
-          <Silhouette cells={s} color="#f2a65a" outline="#a8631f" />
-          <path d="M0.3 0.3H2.7M0.3 0.5H2.7M0.3 0.7H2.7" stroke={CREAM} strokeWidth={0.04} strokeDasharray="0.12 0.08" {...line} />
-          <rect x={1.38} y={1.15} width={0.24} height={0.2} rx={0.05} fill={CREAM} />
-          <path d="M1.5 2.1Q1.2 2.4 1.5 2.6T1.5 3" stroke="#a8631f" strokeWidth={0.05} {...line} />
         </>
       )
     case 'cutout':
@@ -159,7 +149,7 @@ function art(item: Item): ReactNode {
         </>
       )
     default:
-      return <Silhouette cells={s} color="#ccc" outline="#888" />
+      return <Placeholder item={item} />
   }
 }
 
