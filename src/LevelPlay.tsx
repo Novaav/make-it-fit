@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   clampOrigin,
   commitPlacement,
@@ -48,8 +48,6 @@ interface Carry {
   /** Pointer drags only (updated when the target cell or flags change, never per pointer move). */
   snapped: boolean
   overTray: boolean
-  /** Board cell size in px, measured when the drag started (sizes the free-floating ghost). */
-  cell: number
 }
 interface Pending {
   itemId: string
@@ -86,7 +84,10 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   // scrolling, resizing or a text change that shifts the board can never leave the snap target stale.
   const pointerPos = useRef({ x: 0, y: 0 })
   const frame = useRef(0)
-  const ghostRef = useRef<HTMLDivElement | null>(null)
+  // The ONE element that shows the carried item for the whole drag (tray -> board -> drop). It is positioned only
+  // through `transform` (see placeCarried), so the browser moves a single compositor layer and never repaints a
+  // stale copy at an earlier position.
+  const carriedRef = useRef<HTMLDivElement | null>(null)
   const focusAfter = useRef<string | null>(null)
   const devTainted = useRef(false)
   const celebrated = useRef(false)
@@ -126,16 +127,33 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   })
 
   /** Recompute the snap target for a pointer position against freshly measured layout. */
-  const retarget = (c: Carry, px: number, py: number): Carry => {
-    const g = measure()
+  const retarget = (c: Carry, px: number, py: number, g: DragGeometry = measure()): Carry => {
     const b = itemBounds(LEVEL, c.itemId, c.orientation)
-    return { ...c, ...dragTarget(g, px, py, b.width, b.height, c.source === 'board'), cell: g.board.width / g.cols }
+    return { ...c, ...dragTarget(g, px, py, b.width, b.height, c.source === 'board') }
   }
 
-  /** Move the free-floating ghost straight in the DOM; no React involved. */
-  const positionGhost = () => {
-    const el = ghostRef.current
-    if (el) el.style.transform = `translate3d(${pointerPos.current.x}px, ${pointerPos.current.y}px, 0) translate(-50%, -50%)`
+  /**
+   * Put the carried item where it belongs, in viewport coordinates, straight in the DOM: snapped to its board cell
+   * (pointer over the board, or keyboard mode) or centred under the pointer. Only `transform` ever changes.
+   */
+  const placeCarried = (g: DragGeometry = measure()) => {
+    const el = carriedRef.current
+    const c = carryRef.current
+    if (!el || !c) return
+    const cell = g.board.width / g.cols
+    const snapped = c.mode === 'keyboard' || c.snapped
+    let x: number
+    let y: number
+    if (snapped) {
+      x = g.board.left + c.x * cell
+      y = g.board.top + c.y * cell
+    } else {
+      const b = itemBounds(LEVEL, c.itemId, c.orientation)
+      x = pointerPos.current.x - (b.width * cell) / 2
+      y = pointerPos.current.y - (b.height * cell) / 2
+    }
+    el.classList.toggle('snapped', snapped) // before the transform, so leaving the board never glides
+    el.style.transform = `translate3d(${x}px, ${y}px, 0)`
   }
 
   const cancelFrame = () => {
@@ -143,14 +161,17 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     frame.current = 0
   }
 
-  /** Apply the latest pointer position: always move the ghost; commit React state only if the target changed. */
+  /** Apply the latest pointer position: move the carried item in the DOM; commit React state only if the target changed. */
   const flushPointer = () => {
     frame.current = 0
     const c = carryRef.current
-    if (!c || c.mode !== 'pointer') return
-    positionGhost()
-    const next = retarget(c, pointerPos.current.x, pointerPos.current.y)
-    if (!sameTarget(c, next) || next.cell !== c.cell) setCarry(next)
+    if (!c) return
+    const g = measure()
+    if (c.mode === 'pointer') {
+      const next = retarget(c, pointerPos.current.x, pointerPos.current.y, g)
+      if (!sameTarget(c, next)) setCarry(next)
+    }
+    placeCarried(g)
   }
 
   const dropRemove = (id: string) => {
@@ -241,7 +262,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     const b = itemBounds(LEVEL, itemId, o)
     const start = p ?? { x: Math.floor((LEVEL.width - b.width) / 2), y: Math.floor((LEVEL.height - b.height) / 2) }
     setSelected(itemId)
-    setCarry({ itemId, orientation: o, x: start.x, y: start.y, source, mode: 'keyboard', snapped: true, overTray: false, cell: 0 })
+    setCarry({ itemId, orientation: o, x: start.x, y: start.y, source, mode: 'keyboard', snapped: true, overTray: false })
     setMessage(`${name(itemId)} picked up. Arrow keys move, R rotates, Enter places, Escape cancels.`)
     boardRef.current?.focus()
   }
@@ -258,7 +279,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
         setSelected(p.itemId)
         setCarry(
           retarget(
-            { itemId: p.itemId, orientation: orientationOf(p.itemId), x: 0, y: 0, source: p.source, mode: 'pointer', snapped: false, overTray: false, cell: 0 },
+            { itemId: p.itemId, orientation: orientationOf(p.itemId), x: 0, y: 0, source: p.source, mode: 'pointer', snapped: false, overTray: false },
             e.clientX,
             e.clientY,
           ),
@@ -334,9 +355,9 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
       cancelFrame()
       if (carryRef.current?.mode === 'pointer') setCarry(null)
     }
-    // Scrolling moves the board under a stationary pointer: re-target on the next frame.
+    // Scrolling/resizing moves the board under a stationary pointer or keyboard cursor: re-place on the next frame.
     const relayout = () => {
-      if (carryRef.current?.mode === 'pointer' && !frame.current) frame.current = requestAnimationFrame(flushPointer)
+      if (carryRef.current && !frame.current) frame.current = requestAnimationFrame(flushPointer)
     }
     const key = (e: KeyboardEvent) => handlers.current.key(e)
     const menu = (e: MouseEvent) => {
@@ -372,6 +393,12 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     }
   })
 
+  // Any change to the carried item (new cell, rotation, snapped flip, keyboard step) re-places it before paint.
+  useLayoutEffect(() => {
+    placeCarried()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carry])
+
   const winSignal = isWon(game) ? optionalPlacedCount(game) : -1
   useEffect(() => {
     // Dev-tool fills must never write real progress.
@@ -405,7 +432,6 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
 
   // ---- render ----
   const placedIds = new Set(game.placements.map((p) => p.itemId))
-  const cellPx = carry?.cell ?? 0
   const snapped = !!carry && (carry.mode === 'keyboard' || carry.snapped)
   const preview = carry ? previewPlacement(game, carry.itemId, carry.orientation, carry.x, carry.y) : null
   const cellState = new Map<string, 'valid' | 'invalid'>()
@@ -560,10 +586,16 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                   </button>
                 )
               })}
-              {carry && snapped && (
+              {carry && (
                 <div
-                  className={`piece on-board carrying ${preview?.error ? 'bad' : 'good'}`}
-                  style={{ ...pieceVars(carry.itemId, carry.orientation), '--x': carry.x, '--y': carry.y } as React.CSSProperties}
+                  ref={carriedRef}
+                  className={`carried${snapped ? ` snapped ${preview?.error ? 'bad' : 'good'}` : ''}`}
+                  data-carrying={carry.itemId}
+                  aria-hidden="true"
+                  style={{
+                    width: `calc(var(--cell) * ${itemBounds(LEVEL, carry.itemId, carry.orientation).width})`,
+                    height: `calc(var(--cell) * ${itemBounds(LEVEL, carry.itemId, carry.orientation).height})`,
+                  }}
                 >
                   <ItemArt item={itemById(carry.itemId)} orientation={carry.orientation} />
                 </div>
@@ -681,23 +713,6 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               <button type="button" onClick={closeDialog}>Keep packing</button>
             </div>
           </div>
-        </div>
-      )}
-
-      {carry && carry.mode === 'pointer' && (
-        <div
-          className="ghost"
-          hidden={snapped}
-          ref={(el) => {
-            ghostRef.current = el
-            if (el) positionGhost()
-          }}
-          style={{
-            width: cellPx * itemBounds(LEVEL, carry.itemId, carry.orientation).width,
-            height: cellPx * itemBounds(LEVEL, carry.itemId, carry.orientation).height,
-          }}
-        >
-          <ItemArt item={itemById(carry.itemId)} orientation={carry.orientation} />
         </div>
       )}
     </div>

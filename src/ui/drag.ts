@@ -12,7 +12,7 @@ export interface DragTarget {
   /** Board cell of the carried item's top-left corner (may be off the board). */
   x: number
   y: number
-  /** Pointer is over the board (within half a cell): show the snapped piece instead of the free ghost. */
+  /** Pointer is over the board (within half a cell): the carried item snaps to a cell instead of floating under the pointer. */
   snapped: boolean
   /** A board item is being dragged over the tray: dropping takes it out. */
   overTray: boolean

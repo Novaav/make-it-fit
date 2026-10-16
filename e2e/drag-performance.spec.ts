@@ -33,14 +33,14 @@ test.beforeEach(async ({ page }) => {
   await page.reload()
 })
 
-test('a drag across the board causes only a handful of React commits, not one per pointermove', async ({ page }, info) => {
-  const read = await cdpMetrics(page)
+test('a drag across the board causes only a handful of React commits, not one per pointermove', async ({ page, browserName }, info) => {
+  const read = browserName === 'chromium' ? await cdpMetrics(page) : null
   await page.evaluate(() => ((window as unknown as { __commits: number }).__commits = 0))
-  const before = await read()
+  const before = read ? await read() : {}
   await scriptedDrag(page, 'passport')
-  const after = await read()
+  const after = read ? await read() : {}
   const commits = await page.evaluate(() => (window as unknown as { __commits: number }).__commits)
-  const ms = (k: string) => Math.round((after[k] - before[k]) * 1000)
+  const ms = (k: string) => Math.round(((after[k] ?? 0) - (before[k] ?? 0)) * 1000)
   const report = `pointermoves≈${STEPS + 10}, React commits=${commits}, script=${ms('ScriptDuration')}ms, layout=${ms('LayoutDuration')}ms, style=${ms('RecalcStyleDuration')}ms, task=${ms('TaskDuration')}ms`
   info.annotations.push({ type: 'drag-measurement', description: report })
   console.log(`[drag-measurement] ${report}`)
@@ -49,55 +49,156 @@ test('a drag across the board causes only a handful of React commits, not one pe
   await expect(piece(page, 'passport')).toHaveAttribute('aria-label', /packed at column 3, row 4/)
 })
 
-test('the carried piece follows the pointer exactly, frame by frame, outside and inside the board', async ({ page }) => {
+// One carried object, always: a single `.carried` element shows the item for the whole drag, the original is
+// hidden (never a faded second copy), and nothing is left behind afterwards.
+const frames = (page: Page, n = 2) =>
+  page.evaluate((k) => new Promise<void>((resolve) => { let i = 0; const f = () => (++i >= k ? resolve() : requestAnimationFrame(f)); requestAnimationFrame(f) }), n)
+
+const settle = (page: Page) => page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => undefined))
+
+async function expectSingleCarried(page: Page, id: string) {
+  await expect(page.locator('.carried')).toHaveCount(1)
+  await expect(page.locator(`[data-carrying="${id}"]`)).toHaveCount(1)
+  await expect(page.locator(`[data-carrying="${id}"]`)).toBeVisible()
+  await expect(piece(page, id)).toBeHidden() // the original is hidden, not left as a faded copy
+}
+
+test('exactly one carried object follows the pointer, outside and inside the board, and nothing is left behind', async ({ page }) => {
   const { box, cell } = await boardGeometry(page)
   const p = (await piece(page, 'passport').boundingBox())!
   await page.mouse.move(p.x + p.width / 2, p.y + p.height / 2)
   await page.mouse.down()
   const path = [
     { x: p.x - 40, y: p.y + 30 },
-    { x: box.x - 20, y: box.y + 40 }, // just outside the board: free-floating ghost
-    { x: box.x + 2.3 * cell, y: box.y + 1.7 * cell }, // inside: snapped piece
-    { x: box.x + box.width + 3, y: box.y + 3 * cell }, // leaves again
+    { x: box.x - 1.2 * cell, y: box.y + 40 }, // outside the board: free-floating
+    { x: box.x + 2.3 * cell, y: box.y + 1.7 * cell }, // inside: snapped to a cell
+    { x: box.x + box.width + 1.2 * cell, y: box.y + 3 * cell }, // leaves again
+    { x: box.x + 1.4 * cell, y: box.y + 4.4 * cell }, // and back in
   ]
   for (const pt of path) {
     await page.mouse.move(pt.x, pt.y, { steps: 6 })
-    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
-    const ghost = page.locator('.ghost')
-    const carrying = page.locator('.piece.carrying')
-    const inBoard = await carrying.count()
-    if (inBoard) {
-      // snapped: the piece sits on the grid cell nearest the pointer, never further than half a cell + margin
-      const b = (await carrying.boundingBox())!
-      expect(Math.abs(b.x + b.width / 2 - pt.x)).toBeLessThanOrEqual(cell)
-      expect(Math.abs(b.y + b.height / 2 - pt.y)).toBeLessThanOrEqual(cell)
-      await expect(ghost).toBeHidden()
+    await frames(page)
+    await settle(page) // let the 70 ms snap glide (a transform transition) finish before measuring
+    await expectSingleCarried(page, 'passport')
+    const b = (await page.locator('.carried').boundingBox())!
+    const inside = pt.x > box.x - cell / 2 && pt.x < box.x + box.width + cell / 2 && pt.y > box.y - cell / 2 && pt.y < box.y + box.height + cell / 2
+    if (inside) {
+      // snapped: its corner sits exactly on a grid line of the board
+      const gx = (b.x - box.x) / cell
+      const gy = (b.y - box.y) / cell
+      expect(Math.abs(gx - Math.round(gx))).toBeLessThan(0.03)
+      expect(Math.abs(gy - Math.round(gy))).toBeLessThan(0.03)
+      await expect(page.locator('.carried')).toHaveClass(/snapped/)
     } else {
-      const g = (await ghost.boundingBox())!
-      expect(Math.abs(g.x + g.width / 2 - pt.x)).toBeLessThanOrEqual(1)
-      expect(Math.abs(g.y + g.height / 2 - pt.y)).toBeLessThanOrEqual(1)
+      // free: centred under the pointer within a pixel, no lag
+      expect(Math.abs(b.x + b.width / 2 - pt.x)).toBeLessThanOrEqual(1)
+      expect(Math.abs(b.y + b.height / 2 - pt.y)).toBeLessThanOrEqual(1)
+      await expect(page.locator('.carried')).not.toHaveClass(/snapped/)
     }
   }
+  await page.mouse.move(box.x + box.width + 1.5 * cell, box.y + box.height + 1.5 * cell, { steps: 4 })
   await page.mouse.up()
-  await expect(page.locator('.ghost')).toHaveCount(0)
+  await frames(page)
+  await expect(page.locator('.carried')).toHaveCount(0)
+  await expect(piece(page, 'passport')).toBeVisible()
   await expect(piece(page, 'passport')).toHaveAttribute('aria-label', /not packed/) // dropped outside: nothing placed
 })
 
-test('rotating mid-drag keeps following the pointer and swaps the footprint', async ({ page }) => {
+test('the carried object moves by transform only: no left/top/size animation, never a second painted copy', async ({ page }) => {
+  const { box, cell } = await boardGeometry(page)
+  const p = (await piece(page, 'shirt').boundingBox())!
+  await page.mouse.move(p.x + p.width / 2, p.y + p.height / 2)
+  await page.mouse.down()
+  const seen = new Set<string>()
+  for (let i = 0; i < 24; i++) {
+    await page.mouse.move(box.x + (i / 23) * box.width, box.y + (0.5 + (i % 5) * 0.8) * cell, { steps: 2 })
+    await frames(page, 1)
+    const info = await page.evaluate(() => {
+      const el = document.querySelector('.carried') as HTMLElement
+      const cs = getComputedStyle(el)
+      const running = document.getAnimations().map((a) => (a as CSSTransition).transitionProperty ?? a.constructor.name)
+      return { position: cs.position, left: cs.left, top: cs.top, running, copies: document.querySelectorAll('[data-carrying]').length }
+    })
+    expect(info.position).toBe('fixed')
+    expect(info.left).toBe('0px') // position is never changed through left/top
+    expect(info.top).toBe('0px')
+    expect(info.copies).toBe(1)
+    for (const prop of info.running) seen.add(prop)
+  }
+  // The only thing ever allowed to animate while carrying is the compositor-friendly transform.
+  expect([...seen].filter((prop) => prop !== 'transform')).toEqual([])
+  await page.mouse.up()
+})
+
+test('the original stays out of sight while carried, and returns on cancel, on a refused drop and across repeated drags', async ({ page }) => {
+  const { box, cell } = await boardGeometry(page)
+  const count = await page.locator('.piece').count()
+  const toolbarVisible = () => piece(page, 'charger').isVisible()
+  for (let round = 0; round < 4; round++) {
+    const p = (await piece(page, 'charger').boundingBox())!
+    await page.mouse.move(p.x + p.width / 2, p.y + p.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(box.x + 2 * cell, box.y + 2 * cell, { steps: 5 })
+    await frames(page)
+    await expectSingleCarried(page, 'charger')
+    if (round % 2 === 0) {
+      // browser takes the pointer away (pointercancel): the item goes home, nothing lingers
+      await page.evaluate(() => window.dispatchEvent(new PointerEvent('pointercancel')))
+    } else {
+      // dropped on an occupied/illegal place is covered elsewhere; here drop outside the suitcase and tray
+      await page.mouse.move(box.x + box.width + 2 * cell, box.y + box.height + 2 * cell, { steps: 3 })
+      await page.mouse.up()
+    }
+    await frames(page)
+    await expect(page.locator('.carried')).toHaveCount(0)
+    expect(await toolbarVisible()).toBe(true)
+    expect(await page.locator('.piece').count()).toBe(count) // no element was duplicated or lost
+    await page.mouse.up().catch(() => {})
+  }
+  await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /not packed/)
+})
+
+test('repeated real drags: place, pick up from the board, move it, and take it out again', async ({ page }) => {
+  const { box, cell } = await boardGeometry(page)
+  const drag = async (id: string, to: { x: number; y: number }) => {
+    const b = (await piece(page, id).boundingBox())!
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(to.x, to.y, { steps: 8 })
+    await frames(page)
+    await expectSingleCarried(page, id)
+    await page.mouse.up()
+    await frames(page)
+    await expect(page.locator('.carried')).toHaveCount(0)
+  }
+  await drag('charger', { x: box.x + 1.2 * cell, y: box.y + 0.5 * cell }) // tray -> board
+  await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /packed at column 1, row 1/)
+  await drag('charger', { x: box.x + 3.2 * cell, y: box.y + 2.5 * cell }) // board -> another cell
+  await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /packed at column 3, row 3/)
+  const tray = (await page.getByLabel('Items to pack').boundingBox())!
+  await drag('charger', { x: tray.x + tray.width / 2, y: tray.y + tray.height / 2 }) // board -> tray removes it
+  await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /not packed/)
+  await expect(piece(page, 'charger')).toBeVisible()
+})
+
+test('rotating mid-drag keeps the single carried object following the pointer and swaps its footprint', async ({ page }) => {
   const { box, cell } = await boardGeometry(page)
   const jeans = (await piece(page, 'jeans').boundingBox())!
   await page.mouse.move(jeans.x + jeans.width / 2, jeans.y + jeans.height / 2)
   await page.mouse.down()
-  const at = { x: box.x - 0.9 * cell, y: box.y + 2 * cell } // beyond the half-cell snap margin: free-floating ghost
+  const at = { x: box.x - 0.9 * cell, y: box.y + 2 * cell } // beyond the half-cell snap margin: free-floating
   await page.mouse.move(at.x, at.y, { steps: 8 })
-  const before = (await page.locator('.ghost').boundingBox())!
+  await frames(page)
+  const before = (await page.locator('.carried').boundingBox())!
   expect(before.width).toBeCloseTo(6 * cell, 0)
   await page.keyboard.press('r')
-  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
-  const after = (await page.locator('.ghost').boundingBox())!
+  await frames(page)
+  await expectSingleCarried(page, 'jeans')
+  const after = (await page.locator('.carried').boundingBox())!
   expect(after.width).toBeCloseTo(cell, 0)
   expect(after.height).toBeCloseTo(6 * cell, 0)
   expect(Math.abs(after.x + after.width / 2 - at.x)).toBeLessThanOrEqual(1)
+  expect(Math.abs(after.y + after.height / 2 - at.y)).toBeLessThanOrEqual(1)
   await page.mouse.up()
 })
 
@@ -122,7 +223,8 @@ test('scrolling during a drag does not leave the snap target stale', async ({ pa
 test.describe('touch', () => {
   test.use({ hasTouch: true, viewport: { width: 390, height: 844 } })
 
-  test('a real touch drag (pointer type "touch") places an item and does not scroll the page', async ({ page }) => {
+  test('a real touch drag (pointer type "touch") places an item and does not scroll the page', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'injects touch through the Chrome DevTools Protocol')
     await page.reload()
     const toggle = page.getByRole('button', { name: /Dev tools/ })
     if ((await toggle.getAttribute('aria-expanded')) === 'true') await toggle.click()
