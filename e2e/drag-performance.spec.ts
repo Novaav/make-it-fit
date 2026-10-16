@@ -37,7 +37,7 @@ test('a drag across the board causes only a handful of React commits, not one pe
   const read = browserName === 'chromium' ? await cdpMetrics(page) : null
   await page.evaluate(() => ((window as unknown as { __commits: number }).__commits = 0))
   const before = read ? await read() : {}
-  await scriptedDrag(page, 'passport')
+  await scriptedDrag(page, 'charger')
   const after = read ? await read() : {}
   const commits = await page.evaluate(() => (window as unknown as { __commits: number }).__commits)
   const ms = (k: string) => Math.round(((after[k] ?? 0) - (before[k] ?? 0)) * 1000)
@@ -46,7 +46,7 @@ test('a drag across the board causes only a handful of React commits, not one pe
   console.log(`[drag-measurement] ${report}`)
   // Before the refactor this was ≈ one commit per pointermove (≥ 250); now only target-cell/flag changes commit.
   expect(commits).toBeLessThanOrEqual(60)
-  await expect(piece(page, 'passport')).toHaveAttribute('aria-label', /packed at column 3, row 4/)
+  await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /packed at column 3, row 4/)
 })
 
 // One carried object, always: a single `.carried` element shows the item for the whole drag, the original is
@@ -65,7 +65,7 @@ async function expectSingleCarried(page: Page, id: string) {
 
 test('exactly one carried object follows the pointer, outside and inside the board, and nothing is left behind', async ({ page }) => {
   const { box, cell } = await boardGeometry(page)
-  const p = (await piece(page, 'passport').boundingBox())!
+  const p = (await piece(page, 'charger').boundingBox())!
   await page.mouse.move(p.x + p.width / 2, p.y + p.height / 2)
   await page.mouse.down()
   const path = [
@@ -79,7 +79,7 @@ test('exactly one carried object follows the pointer, outside and inside the boa
     await page.mouse.move(pt.x, pt.y, { steps: 6 })
     await frames(page)
     await settle(page) // let the 70 ms snap glide (a transform transition) finish before measuring
-    await expectSingleCarried(page, 'passport')
+    await expectSingleCarried(page, 'charger')
     const b = (await page.locator('.carried').boundingBox())!
     const inside = pt.x > box.x - cell / 2 && pt.x < box.x + box.width + cell / 2 && pt.y > box.y - cell / 2 && pt.y < box.y + box.height + cell / 2
     if (inside) {
@@ -100,8 +100,8 @@ test('exactly one carried object follows the pointer, outside and inside the boa
   await page.mouse.up()
   await frames(page)
   await expect(page.locator('.carried')).toHaveCount(0)
-  await expect(piece(page, 'passport')).toBeVisible()
-  await expect(piece(page, 'passport')).toHaveAttribute('aria-label', /not packed/) // dropped outside: nothing placed
+  await expect(piece(page, 'charger')).toBeVisible()
+  await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /not packed/) // dropped outside: nothing placed
 })
 
 test('the carried object moves by transform only: no left/top/size animation, never a second painted copy', async ({ page }) => {
