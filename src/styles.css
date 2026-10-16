@@ -28,8 +28,8 @@ body {
 }
 button { font: inherit; color: inherit; }
 /* One cell size per level: limited by viewport width (tray/board columns) and height (tray rows). */
-.level { --cell: max(36px, min(var(--cell-max, 64px), calc((100vw - 72px) / var(--span, 6)), calc((100dvh - 250px) / var(--trows, 7)))); }
-.app { max-width: 1200px; margin: 0 auto; padding: 10px 16px 16px; user-select: none; -webkit-user-select: none; }
+.level { --cell: max(36px, min(var(--cell-max, 64px), calc((100vw - 72px) / var(--span, 6)), calc((100dvh - 272px) / var(--trows, 7)))); }
+.app { max-width: 1280px; margin: 0 auto; padding: 10px 16px 16px; user-select: none; -webkit-user-select: none; }
 
 .masthead { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; padding: 4px 0 12px; }
 .brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
@@ -46,6 +46,7 @@ h1 { margin: 0; font-size: 1.5rem; letter-spacing: 0.05em; text-transform: upper
 .suitcase { width: fit-content; margin-inline: auto; }
 
 .objective { margin: 0 0 14px; }
+.level-title { margin: 0 0 2px; color: var(--muted); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.3; }
 .goal-line { margin: 0 0 8px; min-height: 2.7em; font-size: 0.95rem; line-height: 1.35; }
 .objective.solved .goal-line b { color: var(--ok); }
 .pills { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 42px; }

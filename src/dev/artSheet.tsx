@@ -10,7 +10,7 @@ import '../styles.css'
  * Not part of the production build: it is reached only through art-sheet.html, which Vite does not bundle.
  */
 const level = loadLevels().find((l) => l.id === '01')!
-const IDS = ['passport', 'shirt', 'jeans', 'charger', 'toiletries', 'shoes']
+const IDS = ['shirt', 'jeans', 'charger', 'toiletries', 'shoes']
 const items = IDS.map((id) => level.items.find((i) => i.id === id)!)
 const LININGS = [
   { name: 'Tide lining', bg: '#f3e3c3', line: '#c9ae78' },
@@ -30,7 +30,7 @@ interface PieceProps {
   orientation?: Orientation
   cell: number
   lining?: (typeof LININGS)[number]
-  weight?: { kg: number; bonus?: boolean }
+  weight?: { grams: number; bonus?: boolean }
   style?: CSSProperties
   carried?: 'plain' | 'good' | 'bad'
   silhouette?: boolean
@@ -66,7 +66,7 @@ function Piece({ item, orientation = 0, cell, lining = LININGS[0], weight, style
     >
       <div style={{ position: 'absolute', left: cell / 2, top: cell / 2, width: b.w * cell, height: b.h * cell, filter }}>
         <ItemArt item={item} orientation={orientation} />
-        {weight && <WeightLabel item={item} orientation={orientation} kg={weight.kg} bonus={!!weight.bonus} />}
+        {weight && <WeightLabel item={item} orientation={orientation} grams={weight.grams} bonus={!!weight.bonus} />}
       </div>
     </div>
   )
@@ -85,7 +85,7 @@ function Labelled({ name, children }: { name: string; children: React.ReactNode 
   )
 }
 
-const WEIGHTS: Record<string, number> = { passport: 1, shirt: 2, jeans: 3, charger: 1, toiletries: 3, shoes: 4 }
+const WEIGHTS: Record<string, number> = { shirt: 250, jeans: 700, charger: 400, toiletries: 1000, shoes: 1200 }
 
 const sections: Record<string, () => React.ReactNode> = {
   desktop: () => (
@@ -136,8 +136,8 @@ const sections: Record<string, () => React.ReactNode> = {
       {[64, 48].map((px) => (
         <div key={px} style={{ ...row, marginBottom: 10 }}>
           {items.map((i) => (
-            <Labelled key={i.id} name={`${i.id} · ${WEIGHTS[i.id]} kg`}>
-              <Piece item={i} cell={px} weight={{ kg: WEIGHTS[i.id] }} />
+            <Labelled key={i.id} name={`${i.id} · ${WEIGHTS[i.id]} g`}>
+              <Piece item={i} cell={px} weight={{ grams: WEIGHTS[i.id] }} />
             </Labelled>
           ))}
         </div>
@@ -145,7 +145,7 @@ const sections: Record<string, () => React.ReactNode> = {
       <div style={row}>
         {[0, 1, 2, 3].map((o) => (
           <Labelled key={o} name={`shirt, bonus ★, ${o * 90}° turn: the number stays upright`}>
-            <Piece item={items[1]} orientation={o as Orientation} cell={56} weight={{ kg: 2, bonus: true }} />
+            <Piece item={items[0]} orientation={o as Orientation} cell={56} weight={{ grams: 250, bonus: true }} />
           </Labelled>
         ))}
       </div>
@@ -183,12 +183,12 @@ const sections: Record<string, () => React.ReactNode> = {
       <div style={{ ...row, alignItems: 'flex-end' }}>
         {[72, 56, 48, 40].map((px) => (
           <Labelled key={px} name={`jeans · ${px}px`}>
-            <Piece item={items[2]} cell={px} weight={{ kg: 3 }} />
+            <Piece item={items[1]} cell={px} weight={{ grams: 700 }} />
           </Labelled>
         ))}
         {[1].map((o) => (
           <Labelled key={o} name="jeans · 90° turn · 56px">
-            <Piece item={items[2]} orientation={o as Orientation} cell={56} weight={{ kg: 3 }} />
+            <Piece item={items[1]} orientation={o as Orientation} cell={56} weight={{ grams: 700 }} />
           </Labelled>
         ))}
       </div>

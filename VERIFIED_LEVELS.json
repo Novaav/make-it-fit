@@ -7,17 +7,6 @@
     ],
     "items": [
       {
-        "id": "passport",
-        "cells": [
-          [
-            0,
-            0
-          ]
-        ],
-        "weight": 1,
-        "required": true
-      },
-      {
         "id": "shirt",
         "cells": [
           [
@@ -37,7 +26,7 @@
             0
           ]
         ],
-        "weight": 2,
+        "weight": 250,
         "required": true
       },
       {
@@ -68,45 +57,7 @@
             0
           ]
         ],
-        "weight": 3,
-        "required": true
-      },
-      {
-        "id": "charger",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            1,
-            0
-          ]
-        ],
-        "weight": 1,
-        "required": true
-      },
-      {
-        "id": "toiletries",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            0,
-            1
-          ],
-          [
-            1,
-            0
-          ],
-          [
-            1,
-            1
-          ]
-        ],
-        "weight": 3,
+        "weight": 700,
         "required": true
       },
       {
@@ -133,43 +84,7 @@
             1
           ]
         ],
-        "weight": 4,
-        "required": true
-      }
-    ]
-  },
-  {
-    "id": "02",
-    "board": [
-      6,
-      5
-    ],
-    "weight_limit": 15,
-    "items": [
-      {
-        "id": "passport",
-        "cells": [
-          [
-            0,
-            0
-          ]
-        ],
-        "weight": 1,
-        "required": true
-      },
-      {
-        "id": "charger",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            1,
-            0
-          ]
-        ],
-        "weight": 1,
+        "weight": 1200,
         "required": true
       },
       {
@@ -192,9 +107,34 @@
             1
           ]
         ],
-        "weight": 3,
+        "weight": 1000,
         "required": true
       },
+      {
+        "id": "charger",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "weight": 400,
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "02",
+    "board": [
+      6,
+      5
+    ],
+    "weight_limit": 7000,
+    "items": [
       {
         "id": "outfit",
         "cells": [
@@ -215,30 +155,11 @@
             0
           ]
         ],
-        "weight": 4,
+        "weight": 900,
         "required": true
       },
       {
-        "id": "dvd",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            1,
-            0
-          ],
-          [
-            2,
-            0
-          ]
-        ],
-        "weight": 1,
-        "required": true
-      },
-      {
-        "id": "disco_ball",
+        "id": "toiletries",
         "cells": [
           [
             0,
@@ -257,8 +178,8 @@
             1
           ]
         ],
-        "weight": 4,
-        "required": false
+        "weight": 1000,
+        "required": true
       },
       {
         "id": "heels",
@@ -284,11 +205,11 @@
             1
           ]
         ],
-        "weight": 4,
-        "required": false
+        "weight": 1300,
+        "required": true
       },
       {
-        "id": "ex_photo",
+        "id": "vibrator",
         "cells": [
           [
             0,
@@ -299,15 +220,115 @@
             0
           ],
           [
+            2,
+            0
+          ]
+        ],
+        "weight": 400,
+        "required": true
+      },
+      {
+        "id": "speaker",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "weight": 1500,
+        "required": false
+      },
+      {
+        "id": "disco_ball",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
             1,
             1
           ]
         ],
-        "weight": 2,
+        "weight": 1500,
         "required": false
       },
       {
-        "id": "extra_shoes",
+        "id": "frame",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "weight": 1200,
+        "required": false
+      },
+      {
+        "id": "flamingo",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "weight": 850,
+        "required": false
+      },
+      {
+        "id": "boa",
         "cells": [
           [
             0,
@@ -326,11 +347,11 @@
             0
           ]
         ],
-        "weight": 3,
+        "weight": 300,
         "required": false
       },
       {
-        "id": "hairdryer",
+        "id": "ringlight",
         "cells": [
           [
             0,
@@ -353,7 +374,7 @@
             0
           ]
         ],
-        "weight": 5,
+        "weight": 800,
         "required": false
       }
     ]
@@ -361,10 +382,10 @@
   {
     "id": "03",
     "board": [
-      6,
-      5
+      8,
+      6
     ],
-    "weight_limit": 24,
+    "weight_limit": 23000,
     "items": [
       {
         "id": "cutout",
@@ -410,18 +431,38 @@
             0
           ]
         ],
-        "weight": 7,
+        "weight": 4000,
         "required": true
       },
       {
-        "id": "passport",
+        "id": "laundry",
         "cells": [
           [
             0,
             0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
           ]
         ],
-        "weight": 1,
+        "weight": 5000,
         "required": true
       },
       {
@@ -444,26 +485,11 @@
             0
           ]
         ],
-        "weight": 3,
+        "weight": 900,
         "required": true
       },
       {
-        "id": "charger",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            1,
-            0
-          ]
-        ],
-        "weight": 1,
-        "required": true
-      },
-      {
-        "id": "toiletries",
+        "id": "hangover",
         "cells": [
           [
             0,
@@ -482,7 +508,34 @@
             1
           ]
         ],
-        "weight": 3,
+        "weight": 800,
+        "required": true
+      },
+      {
+        "id": "heels",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "weight": 1300,
         "required": true
       },
       {
@@ -505,22 +558,7 @@
             2
           ]
         ],
-        "weight": 4,
-        "required": false
-      },
-      {
-        "id": "emergency_socks",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            1,
-            0
-          ]
-        ],
-        "weight": 1,
+        "weight": 3600,
         "required": false
       },
       {
@@ -547,7 +585,122 @@
             1
           ]
         ],
-        "weight": 4,
+        "weight": 3200,
+        "required": false
+      },
+      {
+        "id": "gnome",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "weight": 6500,
+        "required": false
+      },
+      {
+        "id": "cheese",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "weight": 2800,
+        "required": false
+      },
+      {
+        "id": "liquor",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "weight": 1500,
+        "required": false
+      },
+      {
+        "id": "robe",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "weight": 1300,
+        "required": false
+      },
+      {
+        "id": "emergency_socks",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "weight": 150,
         "required": false
       }
     ]

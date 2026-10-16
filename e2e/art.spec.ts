@@ -6,15 +6,15 @@ import { expect, test } from '@playwright/test'
 interface Cell { x: number; y: number; occupied: boolean; painted: number }
 interface Report { id: string; orientation: number; cells: Cell[] }
 
-const REDRAWN = ['passport', 'shirt', 'jeans', 'charger', 'toiletries', 'shoes']
+const REDRAWN = ['shirt', 'jeans', 'charger', 'toiletries', 'shoes']
 
 test('illustrated items paint only their occupied cells, and every occupied cell holds art', async ({ page }) => {
   await page.goto('/art-sheet.html?section=rotations')
   await page.waitForSelector('#sheet svg')
   const reports: Report[] = await page.evaluate(() => (window as unknown as { __artCheck: () => Promise<Report[]> }).__artCheck())
 
-  // 1 passport + 4 shirt + 2 jeans + 2 charger + 1 toiletries + 4 shoes unique rotations
-  expect(reports).toHaveLength(14)
+  // 4 shirt + 2 jeans + 2 charger + 1 toiletries + 4 shoes unique rotations
+  expect(reports).toHaveLength(13)
   expect(new Set(reports.map((r) => r.id))).toEqual(new Set(REDRAWN))
 
   for (const r of reports) {

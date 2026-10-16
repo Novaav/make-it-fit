@@ -1,4 +1,5 @@
-import { ITEM_NAMES, WEIGHT_UNIT } from '../levelMeta'
+import { BEST_OPTIONAL, ITEM_NAMES, LEVEL_TITLES, maxBonusLabel } from '../levelMeta'
+import { formatWeight } from '../weight'
 import { createGame, isWon, loadLevels, optionalPlacedCount, place, placementCells, totalWeight } from '../engine'
 import { referenceSolution } from './solutions'
 
@@ -22,7 +23,7 @@ export function renderSolutionsDoc(): string {
     '',
     '- Run `npm run dev`. A **Dev tools** panel appears at the bottom-left of the page (development server only):',
     '  - **Jump L1 / L2 / L3** opens any level regardless of progress.',
-    '  - **Fill required only** / **Fill max bonus** load the verified layouts below (each item is a separate Undo step), so you can check the completion card, weight meter and progress saving immediately.',
+    '  - **Fill required only** / **Fill max bonus** load the verified layouts below (each item is a separate Undo step), so you can check the completion card, allowance meter and progress saving immediately.',
     '  - Jump and Fill never save progress or unlock levels; **Clear saved progress** resets real unlocks, ✓ marks and best bonus counts.',
     '  - Browser tests (`npm run test:e2e`) play Level 1 by dragging with exactly these coordinates.',
     '- The panel and the solution data are not part of the production build (`npm run check:prod-clean` builds and verifies this).',
@@ -45,27 +46,27 @@ export function renderSolutionsDoc(): string {
     const grid: string[][] = Array.from({ length: level.height }, () => Array<string>(level.width).fill('.'))
     for (const p of placements) for (const c of placementCells(level, p)) grid[c.y][c.x] = symbol.get(p.itemId)!
 
-    out.push(`## Level ${Number(level.id)}`, '')
+    out.push(`## Level ${Number(level.id)} — ${LEVEL_TITLES[level.id]}`, '')
     out.push(
       `- Board: ${level.width} columns × ${level.height} rows. ` +
-        (level.weightLimit !== undefined ? `Weight limit: ${level.weightLimit} ${WEIGHT_UNIT}.` : 'No weight limit.'),
+        (level.weightLimit !== undefined ? `Packing allowance: ${formatWeight(level.weightLimit)} (a total equal to the allowance succeeds).` : 'No weight allowance (this level teaches fitting and rotation only).'),
       `- Required items (${required.length}): ${required.map((i) => ITEM_NAMES[i.id]).join(', ')}.`,
       optional.length
         ? `- Optional items (${optional.length}): ${optional.map((i) => ITEM_NAMES[i.id]).join(', ')}.`
         : '- Optional items: none.',
-      `- **Required-only solution**: pack the ${requiredOnly.length} required items from the table (weight ${requiredWeight} ${WEIGHT_UNIT}).`,
+      `- **Required-only solution**: pack the ${requiredOnly.length} required items from the table (weight ${formatWeight(requiredWeight)}).`,
     )
     if (optional.length) {
       const bonus = placements.filter((p) => !level.items.find((i) => i.id === p.itemId)!.required)
       out.push(
-        `- **Maximum bonus solution**: all required items plus ${bonus.map((p) => ITEM_NAMES[p.itemId]).join(' and ')} (${optionalPlacedCount(state)} of ${optional.length} optional; total weight ${totalWeight(state)} ${WEIGHT_UNIT}). This is the verified maximum for the level.`,
+        `- **Maximum bonus solution**: all required items plus ${bonus.map((p) => ITEM_NAMES[p.itemId]).join(' and ')} (bonus ${optionalPlacedCount(state)} of ${BEST_OPTIONAL[level.id]}, the "${maxBonusLabel(level.id)}" tier; total weight ${formatWeight(totalWeight(state))}). This is the verified maximum for the level; other sets can reach it too.`,
       )
     }
     out.push('', '| Item | Required | Weight | Rotation (presses) | Position (column,row) | Letter |', '|---|---|---|---|---|---|')
     for (const p of placements) {
       const item = level.items.find((i) => i.id === p.itemId)!
       out.push(
-        `| ${ITEM_NAMES[p.itemId]} | ${item.required ? 'yes' : '**optional**'} | ${item.weight} | ${p.orientation} | (${p.x},${p.y}) | ${symbol.get(p.itemId)} |`,
+        `| ${ITEM_NAMES[p.itemId]} | ${item.required ? 'yes' : '**optional**'} | ${formatWeight(item.weight)} | ${p.orientation} | (${p.x},${p.y}) | ${symbol.get(p.itemId)} |`,
       )
     }
     out.push('', '```', '       ' + Array.from({ length: level.width }, (_, i) => i).join(' '))

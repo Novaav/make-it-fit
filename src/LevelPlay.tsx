@@ -26,7 +26,8 @@ import { ItemArt } from './components/ItemArt'
 import { WeightLabel, hasLabelZone } from './art/WeightLabel'
 import { dragTarget, sameTarget, type DragGeometry } from './ui/drag'
 import { TRAY_LAYOUTS } from './ui/trayLayout'
-import { BEST_OPTIONAL, ITEM_NAMES, WEIGHT_UNIT } from './levelMeta'
+import { BEST_OPTIONAL, ITEM_NAMES, LEVEL_TITLES, maxBonusLabel } from './levelMeta'
+import { formatKg, formatWeight } from './weight'
 
 const name = (id: string) => ITEM_NAMES[id] ?? id
 const REASONS: Record<PlacementError, string> = {
@@ -468,12 +469,12 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const requiredDone = packedCount === required.length
   const bestBonus = BEST_OPTIONAL[LEVEL.id] ?? 0
   const solved = showWin
-  // "Max!" only for a valid solution: the denominator is the verified maximum, not the optional item count.
+  // "Perfect pack" only for a valid solution: the denominator is the verified maximum, not the optional item count.
   const bonusMaxed = solved && optionalItems.length > 0 && optionalCount >= bestBonus
   const goalText =
     limit === undefined
       ? `Fit all ${required.length} items into the suitcase. Green = fits, red = doesn't.`
-      : `Pack all required items under ${limit} ${WEIGHT_UNIT}. ★ items are optional.`
+      : `Pack your items within the allowance. ★ items are optional extras.`
   const liveHint =
     carry && snapped && preview
       ? preview.error
@@ -493,7 +494,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const chips = (id: string, o: Orientation) => {
     if (limit === undefined) return null
     // Redrawn items print the weight on a label zone built into the illustration; others still use a chip.
-    if (hasLabelZone(id)) return <WeightLabel item={itemById(id)} orientation={o} kg={itemById(id).weight} bonus={!itemById(id).required} />
+    if (hasLabelZone(id)) return <WeightLabel item={itemById(id)} orientation={o} grams={itemById(id).weight} bonus={!itemById(id).required} />
     const cells = rotate(itemById(id).cells, o)
     const anchor = cells.reduce((a, c) => (c.y > a.y || (c.y === a.y && c.x > a.x) ? c : a))
     return (
@@ -503,7 +504,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
         style={{ '--chip-x': anchor.x + 1, '--chip-y': anchor.y + 1 } as React.CSSProperties}
         aria-hidden="true"
       >
-        {itemById(id).weight} {WEIGHT_UNIT}
+        {formatWeight(itemById(id).weight)}
         {itemById(id).required ? '' : ' ★'}
       </span>
     )
@@ -511,7 +512,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const describe = (id: string) =>
     limit === undefined
       ? ''
-      : ` ${itemById(id).required ? 'Required' : 'Optional'}, ${itemById(id).weight} ${WEIGHT_UNIT}.`
+      : ` ${itemById(id).required ? 'Required' : 'Optional'}, ${formatWeight(itemById(id).weight)}.`
 
   return (
     <div
@@ -531,11 +532,14 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
       <main className="stage">
         <section className="case-wrap" aria-label={`Level ${Number(LEVEL.id)} suitcase`}>
           <section className={`objective${solved ? ' solved' : ''}`} aria-label="Objective">
+            <p className="level-title">
+              Level {Number(LEVEL.id)} · {LEVEL_TITLES[LEVEL.id]}
+            </p>
             <p className="goal-line" aria-live="off">
               {solved ? (
                 <>
-                  <b>✓ Level packed.</b>{' '}
-                  {optionalItems.length > 0 && !bonusMaxed ? 'Add more ★ items for a better bonus.' : 'Bonus maxed.'}
+                  <b>✓ Packed!</b>{' '}
+                  {optionalItems.length > 0 ? (bonusMaxed ? `${maxBonusLabel(LEVEL.id)}!` : '★ extras are optional.') : ''}
                 </>
               ) : (
                 liveHint ?? goalText
@@ -548,16 +552,17 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                 {requiredDone && <span aria-hidden="true">✓</span>}
               </span>
               {limit !== undefined && (
-                <span className={`pill weight${overWeight ? ' over' : ''}`}>
-                  <b>{weight}/{limit} {WEIGHT_UNIT}</b>
+                <span className={`pill weight${overWeight ? ' over' : ''}`} title={`Packing allowance: ${formatWeight(limit)}`}>
+                  <span className="pill-label">Allowance</span>
+                  <b>{formatKg(weight)}/{formatWeight(limit)}</b>
                   <span
                     className="mini-bar"
                     role="meter"
-                    aria-label="Suitcase weight"
+                    aria-label={`Packing allowance: ${formatWeight(limit)}`}
                     aria-valuemin={0}
-                    aria-valuemax={limit}
-                    aria-valuenow={weight}
-                    aria-valuetext={`${weight} of ${limit} ${WEIGHT_UNIT}`}
+                    aria-valuemax={limit / 1000}
+                    aria-valuenow={weight / 1000}
+                    aria-valuetext={`${formatWeight(weight)} packed of ${formatWeight(limit)}`}
                   >
                     <span style={{ width: `${Math.min(100, (weight / limit) * 100)}%` }} />
                   </span>
@@ -567,7 +572,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                 <span className={`pill bonus${bonusMaxed ? ' max' : ''}`}>
                   <span className="pill-label">★ Bonus</span>
                   <b>{optionalCount}/{bestBonus}</b>
-                  {bonusMaxed && <span className="max-tag">Max!</span>}
+                  {bonusMaxed && <span className="max-tag">{maxBonusLabel(LEVEL.id)}</span>}
                 </span>
               )}
               {solved && (
@@ -577,7 +582,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               )}
             </div>
             <p className={`over-note${overWeight ? ' on' : ''}`} role="status">
-              {overWeight ? `Over by ${weight - (limit ?? 0)} ${WEIGHT_UNIT} — take something out.` : ''}
+              {overWeight ? `Over the allowance by ${formatWeight(weight - (limit ?? 0))} — take something out.` : ''}
             </p>
           </section>
           <div className="suitcase">
@@ -707,7 +712,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
             onClick={(e) => e.stopPropagation()}
             onKeyDown={dialogKeys}
           >
-            <p className="dialog-kicker">Level {Number(LEVEL.id)}</p>
+            <p className="dialog-kicker">Level {Number(LEVEL.id)} · {LEVEL_TITLES[LEVEL.id]}</p>
             {import.meta.env.DEV && devTainted.current && <p className="test-tag">TEST RUN — not saved</p>}
             <h2 id="done-title">Packed!</h2>
             <ul className="results">
@@ -716,13 +721,13 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               </li>
               {limit !== undefined && (
                 <li>
-                  <span className="ok">✓</span> Weight <b>{weight}/{limit} {WEIGHT_UNIT}</b>
+                  <span className="ok">✓</span> Within the allowance <b>{formatKg(weight)}/{formatWeight(limit)}</b>
                 </li>
               )}
               {optionalItems.length > 0 && (
                 <li className={`bonus-result${bonusMaxed ? ' max' : ''}`}>
                   <span className="ok" aria-hidden="true">★</span> Bonus <b>{optionalCount}/{bestBonus}</b>
-                  {bonusMaxed ? <span className="max-tag">Max!</span> : <span className="sub"> — max is {bestBonus}</span>}
+                  {bonusMaxed ? <span className="max-tag">{maxBonusLabel(LEVEL.id)}!</span> : <span className="sub"> (optional extras)</span>}
                 </li>
               )}
             </ul>

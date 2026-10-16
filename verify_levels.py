@@ -12,14 +12,14 @@ def rotations(cells):
   cur=norm([(y,-x) for x,y in cur])
  return r
 
-def solve(level, exclude=(), no_rotate=False, timeout=8):
+def solve(level, exclude=(), no_rotate=False, timeout=120):
  W,H=level['board']; allitems=[i for i in level['items'] if i['id'] not in exclude]
  required=[i for i in allitems if i['required']]; optional=[i for i in allitems if not i['required']]
  start=time.monotonic(); nodes=0
  for k in range(len(optional),-1,-1):
   for subset in combinations(optional,k):
    items=sorted(required+list(subset),key=lambda i:-len(i['cells']))
-   if sum(i['weight'] for i in items)>level.get('weight_limit',999) or sum(len(i['cells']) for i in items)>W*H:continue
+   if sum(i['weight'] for i in items)>level.get('weight_limit',10**9) or sum(len(i['cells']) for i in items)>W*H:continue
    placements=[]
    for it in items:
     opts=[]
@@ -47,21 +47,31 @@ def solve(level, exclude=(), no_rotate=False, timeout=8):
  return {'solvable':False,'nodes':nodes,'seconds':round(time.monotonic()-start,3)}
 
 def I(id,shape,w,req=True):return {'id':id,'cells':norm(shape),'weight':w,'required':req}
+# Shapes (cells are x,y; one grid cell is roughly 9 cm of suitcase).
+def rect(w,h):return [(x,y) for x in range(w) for y in range(h)]
+def line(n):return [(i,0) for i in range(n)]
+T4=[(0,0),(1,0),(2,0),(1,1)]            # t-shirt, party outfit
+T5=[(0,0),(1,0),(2,0),(1,1),(1,2)]      # ring light on its tripod
+L4=[(0,0),(1,0),(1,1),(1,2)]            # hotel lamp
+U5=[(0,0),(0,1),(1,0),(2,0),(2,1)]      # sneakers, heels, ceramic foot (arch is the empty cell)
+P5=[(0,0),(1,0),(0,1),(1,1),(0,2)]      # folded bathrobe
+CUTOUT=[(0,0),(1,0),(2,0),(3,0),(4,0),(2,1),(2,2),(1,3),(2,3),(3,3)]
+# Weights are integer GRAMS. Allowances are game limits on the weight of the items (the game does not model the suitcase itself).
 levels=[
  {'id':'01','board':(5,6),'items':[
- I('passport',[(0,0)],1),I('shirt',[(0,0),(1,0),(2,0),(1,1)],2),I('jeans',[(0,0),(1,0),(2,0),(3,0),(4,0),(5,0)],3),I('charger',[(0,0),(1,0)],1),I('toiletries',[(0,0),(1,0),(0,1),(1,1)],3),I('shoes',[(0,0),(1,0),(2,0),(0,1),(2,1)],4)]},
- {'id':'02','board':(6,5),'weight_limit':15,'items':[
- I('passport',[(0,0)],1),I('charger',[(0,0),(1,0)],1),I('toiletries',[(0,0),(1,0),(0,1),(1,1)],3),I('outfit',[(0,0),(1,0),(2,0),(1,1)],4),I('dvd',[(0,0),(1,0),(2,0)],1),
- I('disco_ball',[(0,0),(1,0),(0,1),(1,1)],4,False),I('heels',[(0,0),(1,0),(2,0),(0,1),(2,1)],4,False),I('ex_photo',[(0,0),(1,0),(1,1)],2,False),I('extra_shoes',[(0,0),(1,0),(2,0),(3,0)],3,False),I('hairdryer',[(0,0),(1,0),(2,0),(1,1),(1,2)],5,False)]},
- {'id':'03','board':(6,5),'weight_limit':24,'items':[
- I('cutout',[(0,0),(1,0),(2,0),(3,0),(4,0),(2,1),(2,2),(1,3),(2,3),(3,3)],7),I('passport',[(0,0)],1),I('outfit',[(0,0),(1,0),(2,0),(1,1)],3),I('charger',[(0,0),(1,0)],1),I('toiletries',[(0,0),(1,0),(0,1),(1,1)],3),
- I('hotel_lamp',[(0,0),(1,0),(1,1),(1,2)],4,False),I('emergency_socks',[(0,0),(1,0)],1,False),I('ceramic_foot',[(0,0),(1,0),(2,0),(0,1),(2,1)],4,False)]}
+  I('shirt',T4,250),I('jeans',line(6),700),I('shoes',U5,1200),I('toiletries',rect(2,2),1000),I('charger',line(2),400)]},
+ {'id':'02','board':(6,5),'weight_limit':7000,'items':[
+  I('outfit',T4,900),I('toiletries',rect(2,2),1000),I('heels',U5,1300),I('vibrator',line(3),400),
+  I('speaker',line(2),1500,False),I('disco_ball',rect(2,2),1500,False),I('frame',rect(2,3),1200,False),
+  I('flamingo',rect(3,2),850,False),I('boa',line(4),300,False),I('ringlight',T5,800,False)]},
+ {'id':'03','board':(8,6),'weight_limit':23000,'items':[
+  I('cutout',CUTOUT,4000),I('laundry',rect(3,2),5000),I('outfit',T4,900),I('hangover',rect(2,2),800),I('heels',U5,1300),
+  I('hotel_lamp',L4,3600,False),I('ceramic_foot',U5,3200,False),I('gnome',rect(2,3),6500,False),I('cheese',rect(2,2),2800,False),
+  I('liquor',line(3),1500,False),I('robe',P5,1300,False),I('emergency_socks',line(2),150,False)]}
 ]
 if __name__=='__main__':
  for l in levels:
-  print('\nLEVEL',l['id']);
-  for opts in [(),('cutout',)]:
-   if opts and l['id']!='03':continue
-   print('excluded',opts,solve(l,opts))
+  print('\nLEVEL',l['id'])
+  print('solve',solve(l))
   if l['id']=='01':print('NO ROTATE',solve(l,no_rotate=True))
  with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'VERIFIED_LEVELS.json'),'w') as f:json.dump(levels,f,indent=2)

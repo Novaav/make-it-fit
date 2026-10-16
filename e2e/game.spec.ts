@@ -13,11 +13,11 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('dragging snaps an item onto the grid and Undo puts it back', async ({ page }) => {
-  await dragItem(page, 'passport', 4, 0)
-  await expect(piece(page, 'passport')).toHaveAttribute('aria-label', /packed at column 5, row 1/)
-  await expect(page.getByRole('region', { name: 'Objective' }).locator('.pill').first()).toContainText('1/6')
+  await dragItem(page, 'charger', 3, 0)
+  await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /packed at column 4, row 1/)
+  await expect(page.getByRole('region', { name: 'Objective' }).locator('.pill').first()).toContainText('1/5')
   await page.getByRole('button', { name: 'Undo' }).click()
-  await expect(piece(page, 'passport')).toHaveAttribute('aria-label', /not packed/)
+  await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /not packed/)
 })
 
 test('an invalid drop is refused and explained', async ({ page }) => {
@@ -48,23 +48,23 @@ test('rotating keeps one scale and never moves the tray, board or page', async (
 })
 
 test('keyboard: pick up, move, place, and Delete removes', async ({ page }) => {
-  const passport = piece(page, 'passport')
-  await passport.focus()
-  await passport.press('Enter')
+  const charger = piece(page, 'charger')
+  await charger.focus()
+  await charger.press('Enter')
   await page.keyboard.press('ArrowRight')
   await page.keyboard.press('Enter')
-  await expect(passport).toHaveAttribute('aria-label', /packed at column 4, row 3/)
-  await expect(passport).toBeFocused()
+  await expect(charger).toHaveAttribute('aria-label', /packed at column 3, row 3/)
+  await expect(charger).toBeFocused()
   await page.keyboard.press('Delete')
-  await expect(passport).toHaveAttribute('aria-label', /not packed/)
+  await expect(charger).toHaveAttribute('aria-label', /not packed/)
 })
 
 test('objective area is concise and gives live green/red feedback while dragging', async ({ page }) => {
   const objective = page.getByRole('region', { name: 'Objective' })
-  await expect(objective).toContainText('Fit all 6 items into the suitcase')
+  await expect(objective).toContainText('Fit all 5 items into the suitcase')
   await expect(objective).toContainText('Required')
   const { box, cell } = await boardGeometry(page)
-  const p = (await piece(page, 'passport').boundingBox())!
+  const p = (await piece(page, 'charger').boundingBox())!
   await page.mouse.move(p.x + p.width / 2, p.y + p.height / 2)
   await page.mouse.down()
   await page.mouse.move(box.x + 2.5 * cell, box.y + 2.5 * cell, { steps: 8 })
@@ -72,7 +72,7 @@ test('objective area is concise and gives live green/red feedback while dragging
   await page.mouse.move(box.x + box.width + cell * 0.4, box.y + 2.5 * cell, { steps: 4 }) // half off the edge
   await expect(objective).toContainText('Red — it sticks out of the suitcase.')
   await page.mouse.up()
-  await expect(piece(page, 'passport')).toHaveAttribute('aria-label', /not packed/)
+  await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /not packed/)
 })
 
 test('Level 1: solving it shows the success dialog, Next level moves on, progress persists, Clear resets', async ({ page }) => {
@@ -86,7 +86,10 @@ test('Level 1: solving it shows the success dialog, Next level moves on, progres
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('heading', { name: 'Packed!' })).toBeVisible()
-  await expect(dialog).toContainText('Required items 6/6')
+  await expect(dialog).toContainText('Required items 5/5')
+  await expect(dialog).not.toContainText('Bonus') // Level 1 has no bonus
+  await expect(dialog).not.toContainText('Perfect pack')
+  await expect(dialog).not.toContainText('Maximum bonus')
   await expect(dialog.getByRole('button', { name: 'Next level' })).toBeFocused()
   expect(await board(page).boundingBox()).toEqual(boardBefore) // success state never shifts the layout
   await expect(tab(page, 2)).toBeEnabled()
@@ -95,7 +98,7 @@ test('Level 1: solving it shows the success dialog, Next level moves on, progres
   await dialog.getByRole('button', { name: 'Next level' }).click()
   await expect(dialog).toHaveCount(0)
   await expect(tab(page, 2)).toHaveAttribute('aria-current', 'page')
-  await expect(page.getByRole('region', { name: 'Objective' })).toContainText('Pack all required items under 15 kg')
+  await expect(page.getByRole('region', { name: 'Objective' })).toContainText('Pack your items within the allowance')
   await expect(tab(page, 1)).toContainText('✓')
 
   await page.reload()
@@ -124,33 +127,40 @@ test('success dialog: focus is managed, Escape keeps packing, and it does not re
   await expect(dialog).toHaveCount(0)
   await expect(page.locator(':focus')).toBeVisible() // focus returned somewhere real
   const objective = page.getByRole('region', { name: 'Objective' })
-  await expect(objective).toContainText('Level packed.')
+  await expect(objective).toContainText('Packed!')
   await expect(objective.getByRole('button', { name: 'Next level →' })).toBeVisible()
   // undo + redo the last item: still solved again, but the dialog is not shown a second time
   await page.getByRole('button', { name: 'Undo' }).click()
-  await expect(objective).not.toContainText('Level packed.')
+  await expect(objective).not.toContainText('Packed!')
   await page.getByRole('button', { name: 'Undo' }).click()
   await page.keyboard.press('Control+z') // no-op past history start must not throw
   await expect(dialog).toHaveCount(0)
 })
 
-test('after completion the bonus can still be improved (Level 2)', async ({ page }) => {
+test('after completion the bonus can still be improved up to the Maximum bonus (Level 2)', async ({ page }) => {
   await page.getByRole('button', { name: 'L2', exact: true }).click()
   await page.getByRole('button', { name: 'Fill required only' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Keep packing' }).click()
   const objective = page.getByRole('region', { name: 'Objective' })
-  await expect(objective).toContainText('Level packed.')
-  await expect(objective.locator('.pill.bonus')).toContainText('0/2')
-  await expect(objective.locator('.pill.bonus')).not.toContainText('Max!')
-  await dragItem(page, 'ex_photo', 4, 1)
-  await expect(objective.locator('.pill.bonus')).toContainText('1/2')
-  await expect(objective.locator('.pill.bonus')).not.toContainText('Max!')
-  await expect(objective).toContainText('Add more ★ items')
-  await dragItem(page, 'extra_shoes', 0, 2)
-  await expect(objective.locator('.pill.bonus')).toContainText('2/2')
-  await expect(objective.locator('.pill.bonus')).toContainText('Max!')
-  await expect(objective.locator('.pill.weight')).toContainText('15/15 kg')
-  await expect(objective).toContainText('Bonus maxed.')
+  const bonus = objective.locator('.pill.bonus')
+  await expect(objective).toContainText('Packed!')
+  await expect(bonus).toContainText('0/3')
+  await expect(objective.locator('.pill.weight')).toContainText('3.6/7 kg')
+  await expect(objective).not.toContainText('Maximum bonus')
+  await packStep(page, { id: 'disco_ball', rotations: 0, col: 2, row: 2 })
+  await expect(bonus).toContainText('1/3')
+  await expect(objective.locator('.pill.weight')).toContainText('5.1/7 kg')
+  await expect(objective).toContainText('★ extras are optional.') // bonus is never presented as something missed
+  await packStep(page, { id: 'boa', rotations: 0, col: 0, row: 4 })
+  await expect(bonus).toContainText('2/3')
+  await expect(bonus).not.toContainText('Maximum bonus')
+  await packStep(page, { id: 'speaker', rotations: 0, col: 4, row: 4 })
+  await expect(bonus).toContainText('3/3')
+  await expect(bonus).toContainText('Maximum bonus')
+  await expect(bonus).not.toContainText('Perfect pack')
+  await expect(objective.locator('.pill.weight')).toContainText('6.9/7 kg')
+  await expect(objective).toContainText('Maximum bonus!')
+  await expect(objective).not.toContainText('Perfect pack')
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
@@ -213,59 +223,73 @@ test('dev tools never record progress or unlock levels', async ({ page }) => {
   await expect(tab(page, 1)).toHaveAttribute('aria-current', 'page')
 })
 
-test('Level 2 weight rule: over the limit blocks completion, undo restores it', async ({ page }) => {
+test('Level 2 allowance: the Maximum bonus is within 7 kg; going over blocks "Packed!" and Undo restores it', async ({ page }) => {
   await page.getByRole('button', { name: 'L2', exact: true }).click()
   await page.getByRole('button', { name: 'Fill max bonus' }).click()
   const dialog = page.getByRole('dialog')
-  await expect(dialog).toContainText('Weight 15/15 kg')
-  await expect(dialog).toContainText('Bonus 2/2')
-  await expect(dialog).toContainText('Max!')
-  await expect(dialog.locator('.bonus-result')).not.toContainText('/5')
+  await expect(dialog).toContainText('Within the allowance 6.9/7 kg')
+  await expect(dialog).toContainText('Bonus 3/3')
+  await expect(dialog).toContainText('Maximum bonus!')
+  await expect(dialog).not.toContainText('Perfect pack')
+  await expect(dialog.locator('.bonus-result')).not.toContainText('/6')
   await dialog.getByRole('button', { name: 'Keep packing' }).click()
   const objective = page.getByRole('region', { name: 'Objective' })
-  await expect(objective.locator('.pill.weight')).toContainText('15/15 kg')
+  await expect(objective.locator('.pill.weight')).toContainText('6.9/7 kg')
 
-  await page.getByRole('button', { name: 'Fill required only' }).click()
-  await expect(objective.locator('.pill.weight')).toContainText('10/15 kg')
-  await dragItem(page, 'disco_ball', 4, 1) // +4 kg, still within the limit
-  await expect(piece(page, 'disco_ball')).toHaveAttribute('aria-label', /packed at column 5, row 2/)
-  await expect(objective.locator('.pill.weight')).toContainText('14/15 kg')
-  await expect(objective).toContainText('Level packed.')
+  // Pack a verified arrangement by hand where the fifth, sixth and seventh items bring the total to 7.4 kg.
+  await page.getByRole('button', { name: 'Reset', exact: true }).click()
+  await expect(objective.locator('.pill.weight')).toContainText('0/7 kg')
+  const steps = [
+    { id: 'heels', rotations: 0, col: 0, row: 0 },
+    { id: 'outfit', rotations: 1, col: 1, row: 1 },
+    { id: 'toiletries', rotations: 0, col: 2, row: 3 },
+    { id: 'vibrator', rotations: 1, col: 0, row: 2 },
+  ]
+  for (const step of steps) await packStep(page, step)
+  await page.getByRole('dialog').getByRole('button', { name: 'Keep packing' }).click() // required items packed: 3.6 kg
+  await packStep(page, { id: 'disco_ball', rotations: 0, col: 4, row: 3 })
+  await packStep(page, { id: 'speaker', rotations: 1, col: 3, row: 1 })
+  await expect(objective.locator('.pill.weight')).toContainText('6.6/7 kg')
+  await expect(objective).toContainText('Packed!')
 
-  await dragItem(page, 'extra_shoes', 0, 2) // +3 kg: allowed, but over the limit
-  await expect(piece(page, 'extra_shoes')).toHaveAttribute('aria-label', /packed at column 1, row 3/)
-  await expect(objective.locator('.pill.weight.over')).toContainText('17/15 kg')
-  await expect(objective).toContainText('Over by 2 kg')
-  await expect(objective).not.toContainText('Level packed.')
+  await packStep(page, { id: 'ringlight', rotations: 0, col: 3, row: 0 }) // placing is allowed; the total is now 7.4 kg
+  await expect(objective.locator('.pill.weight.over')).toContainText('7.4/7 kg')
+  await expect(objective).toContainText('Over the allowance by 0.4 kg')
+  await expect(objective).not.toContainText('Packed!')
 
   await page.getByRole('button', { name: 'Undo' }).click()
-  await expect(objective.locator('.pill.weight')).toContainText('14/15 kg')
-  await expect(objective).toContainText('Level packed.')
+  await expect(objective.locator('.pill.weight')).toContainText('6.6/7 kg')
+  await expect(objective).toContainText('Packed!')
 })
 
-test('item weights are visible on every Level 2 item (printed label or chip)', async ({ page }) => {
+test('Level 3: a real packing that weighs exactly the 23 kg allowance succeeds', async ({ page }) => {
+  await page.getByRole('button', { name: 'L3', exact: true }).click()
+  const objective = page.getByRole('region', { name: 'Objective' })
+  const steps = [
+    { id: 'cutout', rotations: 0, col: 0, row: 0 },
+    { id: 'laundry', rotations: 0, col: 5, row: 0 },
+    { id: 'heels', rotations: 0, col: 0, row: 4 },
+    { id: 'robe', rotations: 0, col: 0, row: 1 },
+    { id: 'outfit', rotations: 3, col: 3, row: 1 },
+    { id: 'hangover', rotations: 0, col: 6, row: 4 },
+  ]
+  for (const step of steps) await packStep(page, step) // required items: 12 kg
+  await page.getByRole('dialog').getByRole('button', { name: 'Keep packing' }).click()
+  await packStep(page, { id: 'ceramic_foot', rotations: 0, col: 3, row: 4 })
+  await packStep(page, { id: 'gnome', rotations: 1, col: 5, row: 2 })
+  await expect(objective.locator('.pill.weight')).toContainText('23/23 kg')
+  await expect(objective.locator('.pill.weight')).not.toHaveClass(/over/)
+  await expect(objective).toContainText('Packed!')
+  await expect(objective.locator('.pill.bonus')).toContainText('3/5')
+})
+
+test('item weights are shown in kilograms on every Level 2 item (printed label or chip)', async ({ page }) => {
   await page.getByRole('button', { name: 'L2', exact: true }).click()
   const weights = page.locator('.in-tray [data-weight]')
   await expect(weights).toHaveCount(10)
-  for (const text of await weights.allTextContents()) expect(text).toMatch(/^★?\d+ kg( ★)?$/)
-})
-
-test('a printed weight stays upright, inside its item, when the item is rotated', async ({ page }) => {
-  await page.getByRole('button', { name: 'L2', exact: true }).click()
-  const toiletries = piece(page, 'charger') // 2x1: rotating it makes the item tall and narrow
-  const label = toiletries.locator('.wlabel')
-  await expect(label).toHaveText('1 kg')
-  await toiletries.click()
-  for (let turn = 0; turn < 4; turn++) {
-    const box = (await toiletries.boundingBox())!
-    const l = (await label.boundingBox())!
-    expect(l.width, 'text runs horizontally').toBeGreaterThan(l.height)
-    expect(l.x).toBeGreaterThanOrEqual(box.x)
-    expect(l.y).toBeGreaterThanOrEqual(box.y)
-    expect(l.x + l.width).toBeLessThanOrEqual(box.x + box.width + 1)
-    expect(l.y + l.height).toBeLessThanOrEqual(box.y + box.height + 1)
-    await page.keyboard.press('r')
-  }
+  for (const text of await weights.allTextContents()) expect(text).toMatch(/^★?\d+(\.\d+)? kg( ★)?$/)
+  await expect(piece(page, 'toiletries').locator('.wlabel')).toHaveText('1 kg') // printed on the drawn toiletries pouch
+  await expect(piece(page, 'speaker').locator('.chip-w')).toHaveText('1.5 kg ★')
 })
 
 for (const [n, id] of [[1, 'L1'], [2, 'L2'], [3, 'L3']] as const) {
@@ -292,7 +316,7 @@ test('desktop: Level 3 tray stays put while every item is rotated', async ({ pag
   const tray = page.getByLabel('Items to pack')
   const before = await tray.boundingBox()
   const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight)
-  for (const id of ['cutout', 'outfit', 'hotel_lamp', 'ceramic_foot', 'toiletries', 'charger', 'emergency_socks']) {
+  for (const id of ['cutout', 'laundry', 'outfit', 'hangover', 'heels', 'hotel_lamp', 'ceramic_foot', 'gnome', 'cheese', 'liquor', 'robe', 'emergency_socks']) {
     await piece(page, id).click()
     await page.keyboard.press('r')
     expect(await tray.boundingBox()).toEqual(before)
@@ -320,7 +344,9 @@ test.describe('dev workflow: Test win & continue', () => {
 
     await testWin(page)
     const last = page.getByRole('dialog')
-    await expect(last).toContainText('Bonus 2/2')
+    await expect(last).toContainText('Bonus 5/5')
+    await expect(last).toContainText('Perfect pack!')
+    await expect(last).not.toContainText('Maximum bonus')
     await expect(last.getByRole('button', { name: 'Play again' })).toBeVisible() // last level: no next
     expect(await stored(page)).toBeNull()
 
