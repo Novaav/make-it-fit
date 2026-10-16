@@ -35,6 +35,31 @@ function packs(level: Level, items: readonly Item[], allowRotation = true): bool
   return go(0, 0n)
 }
 
+/** Number of distinct ways to place every item (all rotations) on the board. */
+function countPackings(level: Level, items: readonly Item[]): number {
+  const W = level.width
+  const H = level.height
+  const options = [...items]
+    .sort((a, b) => b.cells.length - a.cells.length)
+    .map((item) => {
+      const masks: bigint[] = []
+      for (const { shape } of uniqueRotations(item.cells)) {
+        const w = Math.max(...shape.map((c) => c.x)) + 1
+        const h = Math.max(...shape.map((c) => c.y)) + 1
+        for (let oy = 0; oy + h <= H; oy++)
+          for (let ox = 0; ox + w <= W; ox++) masks.push(shape.reduce((m, c) => m | (1n << BigInt((oy + c.y) * W + ox + c.x)), 0n))
+      }
+      return masks
+    })
+  const go = (k: number, occ: bigint): number => {
+    if (k === options.length) return 1
+    let n = 0
+    for (const m of options[k]) if ((occ & m) === 0n) n += go(k + 1, occ | m)
+    return n
+  }
+  return go(0, 0n)
+}
+
 function* subsets<T>(items: readonly T[]): Generator<T[]> {
   for (let mask = 0; mask < 1 << items.length; mask++) yield items.filter((_, i) => mask & (1 << i))
 }
@@ -70,21 +95,23 @@ describe('independent enumeration of the three levels', () => {
     expect(BEST_OPTIONAL['01']).toBe(0)
   })
 
-  it('level 2: maximum bonus 3 with eight legal sets; both the allowance and the board genuinely constrain', () => {
+  it('level 2: maximum bonus 2 with six legal sets; both the allowance and the board genuinely constrain', () => {
     const a = analyse(lv('02'))
-    expect(a.best).toBe(3)
+    expect(a.best).toBe(2)
     expect(BEST_OPTIONAL['02']).toBe(a.best)
     expect(a.maxSets).toEqual(
-      [
-        'boa+disco_ball+speaker', 'boa+frame+speaker', 'boa+flamingo+speaker', 'flamingo+ringlight+speaker', 'boa+ringlight+speaker',
-        'boa+disco_ball+frame', 'boa+disco_ball+flamingo', 'boa+disco_ball+ringlight',
-      ].map((s) => s.split('+').sort().join('+')).sort(),
+      ['vibrator+frame', 'vibrator+boa', 'vibrator+ringlight', 'disco_ball+boa', 'boa+ringlight', 'boa+dvds'].map((s) => s.split('+').sort().join('+')).sort(),
     )
-    expect(a.legalBySize(2)).toBe(15) // every pair fits and is light enough
-    expect(a.legalBySize(3)).toBe(8) // of 20 triples
-    expect(a.legalBySize(4)).toBe(0)
-    expect(a.weightTraps).toBe(5) // fit on the board but over 7 kg
-    expect(a.spaceTraps).toBe(6) // within 7 kg but cannot be packed
+    expect(a.legalBySize(1)).toBe(6)
+    expect(a.legalBySize(2)).toBe(6) // of 15 pairs
+    expect(a.legalBySize(3)).toBe(0) // no triple can be packed within 7 kg
+    expect(a.weightTraps).toBe(3) // fit on the board but over 7 kg
+    expect(a.spaceTraps).toBe(4) // within 7 kg but cannot be packed
+  })
+
+  it('level 2: the required items alone have exactly 7,328 packings on the 6x5 board (it was 108,156)', () => {
+    const l = lv('02')
+    expect(countPackings(l, l.items.filter((i) => i.required))).toBe(7328)
   })
 
   it('level 3: maximum bonus 5 with exactly three legal "perfect pack" sets; weight and space both bind', () => {

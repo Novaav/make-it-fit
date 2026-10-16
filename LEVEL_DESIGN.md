@@ -18,22 +18,22 @@ Board 5×6 (30 cells), no allowance, 5 required items (21 cells, 3.55 kg), no op
 Proven: solvable; **rotation is mandatory** (the 6-long jeans only fit standing up on a 5-wide board; the no-rotation variant is unsatisfiable); 45,408 distinct packings of the required items.
 
 ## Level 2 — Carry-On, Questionable Decisions
-Board 6×5 (30 cells), allowance **7 kg**, 4 required items (16 cells, 3.60 kg), 6 optional.
+Board 6×5 (30 cells), allowance **7 kg**, 4 required items (21 cells, 5.15 kg), 6 optional.
 
 | Item | Role | Cells | Weight |
 |---|---|---|---|
+| Louis Regretton handbag (`handbag`) | required | 7 (3×2 body, handle above) | 2.25 kg |
 | Party outfit (`outfit`) | required | 4 (T) | 900 g |
-| Toiletries (`toiletries`) | required | 4 (2×2) | 1.0 kg |
-| Red-soled heels (`heels`) | required | 5 (U) | 1.3 kg |
-| Pocket massager (`vibrator`) | required | 3 (line) | 400 g |
-| Party speaker (`speaker`) | optional | 2 (line) | 1.5 kg |
-| Disco ball (`disco_ball`) | optional | 4 (2×2) | 1.5 kg |
-| Framed photo of the ex (`frame`) | optional | 6 (2×3) | 1.2 kg |
-| Inflatable flamingo (`flamingo`) | optional | 6 (3×2) | 850 g |
+| Toiletries (`toiletries`) | required | 4 (2×2) | 1 kg |
+| Inflatable flamingo (`flamingo`) | required | 6 (3×2) | 1 kg |
+| Pocket massager (`vibrator`) | optional | 3 (line) | 400 g |
+| Framed photo of the ex (`frame`) | optional | 6 (2×3) | 1 kg |
 | Feather boa (`boa`) | optional | 4 (line) | 300 g |
 | Ring light and tripod (`ringlight`) | optional | 5 (T) | 800 g |
+| Disco ball (`disco_ball`) | optional | 4 (2×2) | 1.5 kg |
+| Mom's Porn Collection (`dvds`) | optional | 5 (2×3 minus a corner) | 1.5 kg |
 
-Proven: maximum bonus **3**; exactly **8** legal three-item sets (speaker+disco ball+boa, speaker+frame+boa, speaker+flamingo+boa, speaker+flamingo+ring light, speaker+boa+ring light, disco ball+frame+boa, disco ball+flamingo+boa, disco ball+boa+ring light); all 15 pairs are legal; 8 of 20 triples are legal; no four-item set is legal. Both constraints bind: 5 optional sets fit on the board but are over 7 kg, and 6 are light enough but cannot be packed. Required items alone: 108,156 packings.
+Proven (own enumeration in `src/engine/enumerate.test.ts` and `verify_levels.py` agree): maximum bonus **2**; exactly **6** legal two-item sets (massager+photo, massager+boa, massager+ring light, disco ball+boa, boa+ring light, boa+DVDs); 6 of 15 pairs are legal; no triple can be packed. Both constraints bind: 3 optional sets fit on the board but are over 7 kg (weight traps) and 4 are light enough but cannot be packed (space traps). Required items alone: **7,328** packings (was 108,156 before the redesign) and a random placement succeeds about 58% of the time (was about 99%). Rotation is not needed for the required items alone; five of the six best sets need it. The photo+massager set fills all 30 cells (8 layouts) and boa+ring light does too (16 layouts). These are proxies for difficulty, not proof that it is fun; it needs playtesting.
 
 ## Level 3 — Excess Baggage
 Board 8×6 (48 cells), allowance **23 kg**, 5 required items (29 cells, 12.00 kg), 7 optional.
@@ -59,4 +59,5 @@ Proven: maximum bonus **5** (the "Perfect pack", optional; Level 2's top tier is
 L1 teaches fitting and rotation with no weights; L2 adds a visible ceiling and a bonus with many routes; L3 makes weight and space interlock on a 0-5 bonus ladder. Completing a level needs only the required items within the allowance.
 
 ## History
+- Level 2 was redesigned again: the red-soled heels became the Louis Regretton handbag, the speaker was replaced by Mom's Porn Collection, the flamingo became required, the massager optional, and the maximum bonus fell from 3 to 2 so that the required items themselves take thought.
 - Level 2 was previously 6×5 at 15 units and Level 3 6×5 at 24 units with the passport, DVD, phone charger and other items (kept in Git history); replaced by this redesign after the gameplay audit.

@@ -136,6 +136,41 @@
     "weight_limit": 7000,
     "items": [
       {
+        "id": "handbag",
+        "cells": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "weight": 2250,
+        "required": true
+      },
+      {
         "id": "outfit",
         "cells": [
           [
@@ -182,7 +217,7 @@
         "required": true
       },
       {
-        "id": "heels",
+        "id": "flamingo",
         "cells": [
           [
             0,
@@ -197,6 +232,10 @@
             0
           ],
           [
+            1,
+            1
+          ],
+          [
             2,
             0
           ],
@@ -205,7 +244,7 @@
             1
           ]
         ],
-        "weight": 1300,
+        "weight": 1000,
         "required": true
       },
       {
@@ -225,44 +264,6 @@
           ]
         ],
         "weight": 400,
-        "required": true
-      },
-      {
-        "id": "speaker",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            1,
-            0
-          ]
-        ],
-        "weight": 1500,
-        "required": false
-      },
-      {
-        "id": "disco_ball",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            0,
-            1
-          ],
-          [
-            1,
-            0
-          ],
-          [
-            1,
-            1
-          ]
-        ],
-        "weight": 1500,
         "required": false
       },
       {
@@ -293,38 +294,7 @@
             2
           ]
         ],
-        "weight": 1200,
-        "required": false
-      },
-      {
-        "id": "flamingo",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            0,
-            1
-          ],
-          [
-            1,
-            0
-          ],
-          [
-            1,
-            1
-          ],
-          [
-            2,
-            0
-          ],
-          [
-            2,
-            1
-          ]
-        ],
-        "weight": 850,
+        "weight": 1000,
         "required": false
       },
       {
@@ -375,6 +345,56 @@
           ]
         ],
         "weight": 800,
+        "required": false
+      },
+      {
+        "id": "disco_ball",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "weight": 1500,
+        "required": false
+      },
+      {
+        "id": "dvds",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "weight": 1500,
         "required": false
       }
     ]

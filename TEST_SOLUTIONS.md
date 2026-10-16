@@ -27,11 +27,11 @@ _Generated from `VERIFIED_LEVELS.json` and `src/engine/solutions.fixture.json`; 
 
 | Item | Required | Weight | Rotation (presses) | Position (column,row) | Letter |
 |---|---|---|---|---|---|
-| Jeans | yes | 0.7 kg | 1 | (0,0) | B |
+| Jeans | yes | 700 g | 1 | (0,0) | B |
 | Sneakers | yes | 1.2 kg | 0 | (1,0) | C |
-| T-shirt | yes | 0.25 kg | 0 | (1,2) | A |
+| T-shirt | yes | 250 g | 0 | (1,2) | A |
 | Toiletries | yes | 1 kg | 0 | (3,3) | D |
-| Laptop charger | yes | 0.4 kg | 0 | (1,4) | E |
+| Laptop charger | yes | 400 g | 0 | (1,4) | E |
 
 ```
        0 1 2 3 4
@@ -46,28 +46,27 @@ row 5  B . . . .
 ## Level 2 — Carry-On, Questionable Decisions
 
 - Board: 6 columns × 5 rows. Packing allowance: 7 kg (a total equal to the allowance succeeds).
-- Required items (4): Party outfit, Toiletries, Red-soled heels, Pocket massager.
-- Optional items (6): Party speaker, Disco ball, Framed photo of the ex, Inflatable flamingo, Feather boa, Ring light and tripod.
-- **Required-only solution**: pack the 4 required items from the table (weight 3.6 kg).
-- **Maximum bonus solution**: all required items plus Disco ball and Feather boa and Party speaker (bonus 3 of 3, the "Maximum bonus" tier; total weight 6.9 kg). This is the verified maximum for the level; other sets can reach it too.
+- Required items (4): Louis Regretton handbag, Party outfit, Toiletries, Inflatable flamingo.
+- Optional items (6): Pocket massager, Framed photo of the ex, Feather boa, Ring light and tripod, Disco ball, Mom's Porn Collection.
+- **Required-only solution**: pack the 4 required items from the table (weight 5.15 kg).
+- **Maximum bonus solution**: all required items plus Framed photo of the ex and Pocket massager (bonus 2 of 2, the "Maximum bonus" tier; total weight 6.55 kg). This is the verified maximum for the level; other sets can reach it too.
 
 | Item | Required | Weight | Rotation (presses) | Position (column,row) | Letter |
 |---|---|---|---|---|---|
-| Red-soled heels | yes | 1.3 kg | 0 | (0,0) | C |
-| Party outfit | yes | 0.9 kg | 0 | (3,0) | A |
-| Toiletries | yes | 1 kg | 0 | (0,2) | B |
-| Disco ball | **optional** | 1.5 kg | 0 | (2,2) | F |
-| Feather boa | **optional** | 0.3 kg | 0 | (0,4) | I |
-| Pocket massager | yes | 0.4 kg | 1 | (5,1) | D |
-| Party speaker | **optional** | 1.5 kg | 0 | (4,4) | E |
+| Louis Regretton handbag | yes | 2.25 kg | 0 | (0,2) | A |
+| Inflatable flamingo | yes | 1 kg | 0 | (3,3) | D |
+| Framed photo of the ex | **optional** | 1 kg | 0 | (4,0) | F |
+| Party outfit | yes | 900 g | 1 | (0,0) | B |
+| Toiletries | yes | 1 kg | 0 | (2,1) | C |
+| Pocket massager | **optional** | 400 g | 0 | (1,0) | E |
 
 ```
        0 1 2 3 4 5
-row 0  C C C A A A
-row 1  C . C . A D
-row 2  B B F F . D
-row 3  B B F F . D
-row 4  I I I I E E
+row 0  B E E E F F
+row 1  B B C C F F
+row 2  B A C C F F
+row 3  A A A D D D
+row 4  A A A D D D
 ```
 
 ## Level 3 — Excess Baggage
@@ -85,11 +84,11 @@ row 4  I I I I E E
 | Red-soled heels | yes | 1.3 kg | 0 | (5,2) | E |
 | Ceramic foot | **optional** | 3.2 kg | 1 | (0,2) | G |
 | Hotel bathrobe | **optional** | 1.3 kg | 2 | (3,3) | K |
-| Party outfit | yes | 0.9 kg | 2 | (5,3) | C |
-| Hangover kit | yes | 0.8 kg | 0 | (3,1) | D |
+| Party outfit | yes | 900 g | 2 | (5,3) | C |
+| Hangover kit | yes | 800 g | 0 | (3,1) | D |
 | Hotel lamp | **optional** | 3.6 kg | 3 | (0,4) | F |
 | Bottle of local spirit | **optional** | 1.5 kg | 0 | (5,5) | J |
-| Emergency socks | **optional** | 0.15 kg | 0 | (0,1) | L |
+| Emergency socks | **optional** | 150 g | 0 | (0,1) | L |
 
 ```
        0 1 2 3 4 5 6 7

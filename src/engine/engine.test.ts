@@ -183,8 +183,8 @@ describe('win predicate', () => {
     expect(place(createGame(l), { itemId: 'jeans', orientation: 0, x: 0, y: 0 })).toMatchObject({ ok: false })
   })
 
-  it('optional maxima from the reference verifier: L2 = 3, L3 = 5', () => {
-    expect(optionalPlacedCount(solved(level('02')))).toBe(3)
+  it('optional maxima from the reference verifier: L2 = 2, L3 = 5', () => {
+    expect(optionalPlacedCount(solved(level('02')))).toBe(2)
     expect(optionalPlacedCount(solved(level('03')))).toBe(5)
   })
 
@@ -195,16 +195,16 @@ describe('win predicate', () => {
   })
 
   it('is not won when over the allowance, even with all required items placed', () => {
-    const l = level('02') // 6x5 board, allowance 7000 g; required items weigh 3600 g
+    const l = level('02') // 6x5 board, allowance 7000 g; required items weigh 5150 g
     expect(isWon(solved(l, false))).toBe(true)
-    // A verified packing of the required items + speaker + disco ball + ring light: it fits the board but weighs 7400 g.
+    // A verified packing of the required items + massager + disco ball: it fits the board but weighs 7050 g.
     const OVER: [string, number, number, number][] = [
-      ['heels', 0, 0, 0], ['ringlight', 0, 3, 0], ['outfit', 1, 1, 1], ['toiletries', 0, 2, 3],
-      ['disco_ball', 0, 4, 3], ['vibrator', 1, 0, 2], ['speaker', 1, 3, 1],
+      ['handbag', 0, 0, 0], ['flamingo', 0, 0, 3], ['outfit', 0, 2, 0], ['toiletries', 0, 4, 1],
+      ['disco_ball', 0, 4, 3], ['vibrator', 1, 3, 2],
     ]
     let g = createGame(l)
     for (const [id, rot, x, y] of OVER) g = must(place(g, { itemId: id, orientation: uniqueRotations(item(l, id).cells)[rot].orientation, x, y }))
-    expect(totalWeight(g)).toBe(7400)
+    expect(totalWeight(g)).toBe(7050)
     expect(isOverWeight(g)).toBe(true)
     expect(isWon(g)).toBe(false)
   })
