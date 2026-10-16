@@ -13,9 +13,9 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: { headless: true, viewport: { width: 1280, height: 900 }, trace: 'off' },
   projects: [
-    { name: 'dev', testMatch: /(game|drag-performance)\.spec\.ts/, use: { channel: 'chrome', baseURL: DEV } },
+    { name: 'dev', testMatch: /(game|drag-performance|art)\.spec\.ts/, use: { channel: 'chrome', baseURL: DEV } },
     // Safari/WebKit: drag rendering bugs have been Safari-specific, so the drag spec also runs on the WebKit engine.
-    { name: 'webkit', testMatch: /drag-performance\.spec\.ts/, use: { browserName: 'webkit', baseURL: DEV } },
+    { name: 'webkit', testMatch: /(drag-performance|art)\.spec\.ts/, use: { browserName: 'webkit', baseURL: DEV } },
     { name: 'prod', testMatch: /prod\.spec\.ts/, use: { channel: 'chrome', baseURL: PROD } },
   ],
   webServer: [

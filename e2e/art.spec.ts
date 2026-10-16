@@ -1,0 +1,31 @@
+import { expect, test } from '@playwright/test'
+
+// Cell-fidelity law for the illustrated items: the artwork is gameplay information, so it may paint ONLY the
+// cells the item occupies, and every occupied cell must visibly contain art. The sheet page rasterises each item at
+// each unique rotation and reports the painted fraction of every cell (see src/dev/artSheet.tsx).
+interface Cell { x: number; y: number; occupied: boolean; painted: number }
+interface Report { id: string; orientation: number; cells: Cell[] }
+
+const REDRAWN = ['passport', 'shirt', 'jeans', 'charger', 'toiletries', 'shoes']
+
+test('illustrated items paint only their occupied cells, and every occupied cell holds art', async ({ page }) => {
+  await page.goto('/art-sheet.html?section=rotations')
+  await page.waitForSelector('#sheet svg')
+  const reports: Report[] = await page.evaluate(() => (window as unknown as { __artCheck: () => Promise<Report[]> }).__artCheck())
+
+  // 1 passport + 4 shirt + 2 jeans + 2 charger + 1 toiletries + 4 shoes unique rotations
+  expect(reports).toHaveLength(14)
+  expect(new Set(reports.map((r) => r.id))).toEqual(new Set(REDRAWN))
+
+  for (const r of reports) {
+    const label = `${r.id} @ ${r.orientation * 90}°`
+    const occupied = r.cells.filter((c) => c.occupied)
+    const empty = r.cells.filter((c) => !c.occupied)
+    // Nothing may be painted in cells the item does not occupy (arch/gap cells of U and T shapes).
+    for (const c of empty) expect(c.painted, `${label}: painted outside its cells at (${c.x},${c.y})`).toBeLessThanOrEqual(0.002)
+    // No occupied cell may look empty, and the item as a whole must fill most of its footprint.
+    for (const c of occupied) expect(c.painted, `${label}: occupied cell (${c.x},${c.y}) looks empty`).toBeGreaterThanOrEqual(0.25)
+    const average = occupied.reduce((sum, c) => sum + c.painted, 0) / occupied.length
+    expect(average, `${label}: average cell coverage`).toBeGreaterThanOrEqual(0.5)
+  }
+})

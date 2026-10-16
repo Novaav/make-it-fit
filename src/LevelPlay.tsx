@@ -23,6 +23,7 @@ import {
   place,
 } from './engine'
 import { ItemArt } from './components/ItemArt'
+import { WeightLabel, hasLabelZone } from './art/WeightLabel'
 import { dragTarget, sameTarget, type DragGeometry } from './ui/drag'
 import { TRAY_LAYOUTS } from './ui/trayLayout'
 import { BEST_OPTIONAL, ITEM_NAMES, WEIGHT_UNIT } from './levelMeta'
@@ -76,6 +77,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const [message, setMessage] = useState('')
 
   const boardRef = useRef<HTMLDivElement>(null)
+  const levelRef = useRef<HTMLDivElement>(null)
   const trayRef = useRef<HTMLDivElement>(null)
   const pending = useRef<Pending | null>(null)
   // Pointer drag pipeline: the latest pointer position and the single scheduled frame live in refs, so pointer
@@ -393,6 +395,21 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     }
   })
 
+  // Tell the stylesheet how big the cells are so small screens drop microdetail (lod2 < 56 px, lod1 < 40 px).
+  useEffect(() => {
+    const board = boardRef.current
+    const root = levelRef.current
+    if (!board || !root) return
+    const apply = () => {
+      const cell = board.getBoundingClientRect().width / LEVEL.width
+      root.dataset.cell = cell < 40 ? 'xs' : cell < 56 ? 'sm' : 'lg'
+    }
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(board)
+    return () => ro.disconnect()
+  }, [LEVEL.width])
+
   // Any change to the carried item (new cell, rotation, snapped flip, keyboard step) re-places it before paint.
   useLayoutEffect(() => {
     placeCarried()
@@ -475,11 +492,14 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   // not on the bounding-box corner, which is empty for T/U/L shapes.
   const chips = (id: string, o: Orientation) => {
     if (limit === undefined) return null
+    // Redrawn items print the weight on a label zone built into the illustration; others still use a chip.
+    if (hasLabelZone(id)) return <WeightLabel item={itemById(id)} orientation={o} kg={itemById(id).weight} bonus={!itemById(id).required} />
     const cells = rotate(itemById(id).cells, o)
     const anchor = cells.reduce((a, c) => (c.y > a.y || (c.y === a.y && c.x > a.x) ? c : a))
     return (
       <span
         className={`chip-w${itemById(id).required ? '' : ' bonus'}`}
+        data-weight={itemById(id).weight}
         style={{ '--chip-x': anchor.x + 1, '--chip-y': anchor.y + 1 } as React.CSSProperties}
         aria-hidden="true"
       >
@@ -496,6 +516,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   return (
     <div
       className="level"
+      ref={levelRef}
       style={
         {
           '--cols': LEVEL.width,

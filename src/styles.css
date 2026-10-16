@@ -176,3 +176,10 @@ kbd { border: 1px solid rgba(0,0,0,0.25); border-bottom-width: 2px; border-radiu
   .backdrop, .dialog { animation: none; }
 }
 
+
+/* Illustrated items: detail tiers by cell size (set on .level as data-cell), and the printed weight label. */
+.level[data-cell='xs'] .lod1, .level[data-cell='xs'] .lod2, .level[data-cell='sm'] .lod2 { display: none; }
+.wlabel { position: absolute; left: calc(var(--cell) * var(--zx)); top: calc(var(--cell) * var(--zy)); transform: translate(-50%, -50%); z-index: 1; pointer-events: none; white-space: nowrap; font: 800 max(11px, calc(var(--cell) * 0.2)) / 1 system-ui, sans-serif; letter-spacing: 0.01em; }
+.wl-dark { color: #2b2433; }
+.wl-light { color: #fff6e6; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); }
+.level[data-cell='xs'] .wlabel .unit, .level[data-cell='sm'] .wlabel .unit { display: none; }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { artTransform, pointInRect, pointerToOrigin } from './geometry'
+import { artPoint, artTransform, pointInRect, pointerToOrigin } from './geometry'
 
 const rect = { left: 100, top: 50, width: 250, height: 300 } // 5x6 board, 50px cells
 
@@ -31,5 +31,18 @@ describe('artTransform', () => {
     expect(artTransform(2, 1, 1)).toEqual({ tx: 0, ty: 2, angle: -90 })
     expect(artTransform(2, 1, 2)).toEqual({ tx: 2, ty: 1, angle: -180 })
     expect(artTransform(2, 1, 3)).toEqual({ tx: 1, ty: 0, angle: -270 })
+  })
+})
+
+describe('artPoint', () => {
+  it('follows the same turn as the engine: a point on a 2x1 strip moves with it when rotated', () => {
+    // left end of a 2x1 strip, centre line
+    expect(artPoint(0.5, 0.5, 2, 1, 0)).toEqual({ x: 0.5, y: 0.5 })
+    // one turn counter-clockwise: the strip stands up and its left end is now at the bottom
+    expect(artPoint(0.5, 0.5, 2, 1, 1)).toEqual({ x: 0.5, y: 1.5 })
+    // two turns: the left end is now on the right
+    expect(artPoint(0.5, 0.5, 2, 1, 2)).toEqual({ x: 1.5, y: 0.5 })
+    // three turns: the left end is at the top
+    expect(artPoint(0.5, 0.5, 2, 1, 3)).toEqual({ x: 0.5, y: 0.5 })
   })
 })
