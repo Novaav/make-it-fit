@@ -91,13 +91,16 @@ describe('Level 2 markup', () => {
     expect(l2).toMatch(/<details class="help">/)
   })
 
-  it('unfinished artwork is clearly labelled as a placeholder', () => {
-    expect(l2).toContain('placeholder art')
+  it('every Level 2 item is illustrated: no placeholder remains', () => {
+    expect(l2).not.toContain('placeholder art')
   })
 })
 
 describe('Level 3 markup', () => {
   const l3 = play('03')
+  it('unfinished Level 3 artwork is still clearly labelled as a placeholder', () => {
+    expect(l3).toContain('placeholder art')
+  })
   it('shows all twelve items in fixed slots, a 23 kg allowance and a 0-5 bonus', () => {
     expect(l3.match(/grid-column:\d+ \/ span \d+;grid-row:\d+ \/ span \d+/g)).toHaveLength(12)
     expect(l3).toContain('Level 3 · Excess Baggage')

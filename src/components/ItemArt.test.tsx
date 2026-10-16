@@ -37,3 +37,18 @@ describe('illustrated items', () => {
     expect(markup).toContain('mask="url(#')
   })
 })
+
+describe('Level 2 artwork', () => {
+  const level2 = loadLevels().find((l) => l.id === '02')!
+  it('every Level 2 item is illustrated (no placeholder) and clips to its cells at every rotation', () => {
+    for (const item of level2.items) {
+      for (const o of [0, 1, 2, 3] as const) {
+        const markup = renderToStaticMarkup(<ItemArt item={item} orientation={o} />)
+        expect(markup, `${item.id} @ ${o}`).not.toContain('placeholder art')
+        expect(markup, `${item.id} @ ${o}`).toContain('clip-path="url(#')
+        const clip = /<clipPath[^>]*>(.*?)<\/clipPath>/.exec(markup)
+        expect(clip![1]).not.toContain('<g')
+      }
+    }
+  })
+})

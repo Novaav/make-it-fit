@@ -336,9 +336,9 @@ test('item weights are shown in kilograms on every Level 2 item (printed label o
   await page.getByRole('button', { name: 'L2', exact: true }).click()
   const weights = page.locator('.in-tray [data-weight]')
   await expect(weights).toHaveCount(10)
-  for (const text of await weights.allTextContents()) expect(text).toMatch(/^★?\d+(\.\d+)? kg( ★)?$/)
+  for (const text of await weights.allTextContents()) expect(text).toMatch(/^★?\d+(\.\d+)? kg$/)
   await expect(piece(page, 'toiletries').locator('.wlabel')).toHaveText('1 kg') // printed on the drawn toiletries pouch
-  await expect(piece(page, 'speaker').locator('.chip-w')).toHaveText('1.5 kg ★')
+  await expect(piece(page, 'speaker').locator('.wlabel')).toHaveText('★1.5 kg') // every Level 2 item prints its weight on its own label
 })
 
 for (const [n, id] of [[1, 'L1'], [2, 'L2'], [3, 'L3']] as const) {
