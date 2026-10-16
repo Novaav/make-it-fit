@@ -9,7 +9,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check:prod-clean": "vite build && ! grep -rqE \"dev-tools|Fill max bonus|Clear saved progress|Test win|TEST MODE|TEST RUN|test-done|__commits\" dist && echo prod build has no dev tools"
+    "art:sheet": "node scripts/art-sheet.mjs",
+    "check:prod-clean": "vite build && ! grep -rqE \"dev-tools|Fill max bonus|Clear saved progress|Test win|TEST MODE|TEST RUN|test-done|__commits|__artCheck|Art review sheet\" dist && echo prod build has no dev tools"
   },
   "dependencies": {
     "react": "^19.3.1",
