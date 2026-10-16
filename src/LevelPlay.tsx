@@ -749,6 +749,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
             onClick={(e) => e.stopPropagation()}
             onKeyDown={dialogKeys}
           >
+            <div className="dialog-scroll">
             <div className="dialog-band" aria-hidden="true">
               <span>Boarding pass</span>
               <span>Gate {Number(LEVEL.id)}</span>
@@ -779,6 +780,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                 {onNext ? 'Next level' : 'Play again'}
               </button>
               <button type="button" onClick={closeDialog}>Keep packing</button>
+            </div>
             </div>
           </div>
         </div>
