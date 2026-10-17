@@ -54,6 +54,9 @@ const shirt: ItemArtDef = {
       <path d="M1.14 .11C.9 .16 .7 .22 .45 .3M1.86 .11C2.1 .16 2.3 .22 2.55 .3" stroke={CORAL_D} strokeWidth={0.018} {...line} />
       <path d="M1.1 .93C.95 .78 .8 .72 .62 .68M1.1 .98C.9 .9 .75 .86 .58 .85M1.9 .93C2.05 .78 2.2 .72 2.38 .68M1.9 .98C2.1 .9 2.25 .86 2.42 .85" stroke={CORAL_D} strokeWidth={0.016} opacity={0.8} {...line} />
       <path d="M1.1 1.26Q1.5 1.33 1.9 1.24" stroke="#fff" strokeWidth={0.02} opacity={0.22} {...line} />
+      {/* a little screen-printed chaos swirl on the chest (cream ink, slightly cracked) */}
+      <path d="M1.5 1.2C1.38 1.2 1.36 1.08 1.46 1.06C1.62 1.04 1.66 1.24 1.5 1.3C1.3 1.36 1.26 1.08 1.44 .98C1.66 .9 1.8 1.1 1.72 1.26" stroke="#fff3e2" strokeWidth={0.04} opacity={0.85} {...line} />
+      <path d="M1.28 1.34L1.36 1.28M1.62 .96L1.68 .92" stroke="#fff3e2" strokeWidth={0.02} opacity={0.7} {...line} />
       {/* hem with a stitched turn-up */}
       <Stitch d="M1.1 1.82Q1.5 1.89 1.9 1.82" color="#fbd2c6" />
       {/* printed care label inside the hem: the weight sits here */}
@@ -133,6 +136,9 @@ const jeans: ItemArtDef = {
       <Lod1>
         <path d="M2.7 .22L3.1 .27M2.8 .31L3.2 .34" stroke={DENIM_L} strokeWidth={0.018} opacity={0.65} {...line} />
       </Lod1>
+      {/* an iron-on star patch with a stitched border over the knee */}
+      <rect x={4.06} y={0.22} width={0.3} height={0.3} rx={0.04} fill="#e3b04f" stroke="#a67c22" strokeWidth={0.02} transform="rotate(-6 4.2 .37)" />
+      <path d="M4.21 .28L4.25 .35L4.33 .36L4.27 .41L4.29 .49L4.21 .45L4.14 .49L4.16 .41L4.1 .36L4.17 .35Z" fill="#fff3c0" stroke="#a67c22" strokeWidth={0.012} strokeLinejoin="round" />
       {/* hem of the front leg: turned-up cuff showing the lighter inside */}
       <path d="M5.2 .15L5.68 .16Q5.77 .17 5.77 .25V.55Q5.77 .63 5.68 .64L5.2 .65Z" fill={DENIM_L} opacity={0.9} />
       <path d="M5.2 .15V.65" stroke={DENIM_INK} strokeWidth={0.03} opacity={0.6} {...line} />
