@@ -25,7 +25,7 @@ Status: feature-complete and release-prepared; not deployed yet (see [DEPLOYMENT
 | Take an item out | Drag it back to the tray, or `Remove` | `Delete` / `Backspace` |
 | Undo | `Undo` button | `Ctrl`/`⌘` + `Z` |
 
-A new player's first load of a browsing session opens with a short (about 2.4 s) branded intro: the wordmark sits large on the empty table with its tagline and a Play button, then travels into the masthead as the packing table fades up. A tap, key press or Play skips it; returning players, reduced motion and browser automation skip it, and `?intro` on the address replays it for review. Rotation and the layout of the "To pack" tray are designed so that rotating an item never changes the size of the panel. Reduced-motion preferences are respected.
+A new player's first visit of a browsing session opens with a branded start: the wordmark sits large on the empty table with its tagline and a Play button, and it waits, with no timer, until Play is pressed (no other tap or key starts the game); Play moves the wordmark into the masthead as the packing table fades up (about 0.85 s), and the how-to-play note follows once that has settled. Returning players, browser automation and a visit already started in the same session go straight in, reduced motion shows the start without movement, and `?intro` on the address replays it for review. Rotation and the layout of the "To pack" tray are designed so that rotating an item never changes the size of the panel. Reduced-motion preferences are respected.
 
 ## Run it
 

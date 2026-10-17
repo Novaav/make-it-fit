@@ -26,14 +26,21 @@ const countCommit = () => {
 }
 const LEVELS = loadLevels().filter((l) => IDS.includes(l.id))
 
-// The branded opening plays once per browsing session, for a player with nothing saved yet (a returning player goes
-// straight in), never with reduced motion or under browser automation. `?intro` forces it, to review it.
+// The branded opening is shown to a player with nothing saved yet, once per browsing session. It waits, as long as it
+// takes, until Play is pressed (nothing else starts the game). A returning player, and browser automation, go straight in;
+// `?intro` forces it, to review it. Reduced motion shows it without movement.
 const OPENING_KEY = 'make-it-fit:opening:v1'
-const OPENING_MS = 2480
+const LEAVE_MS = 880
+const reducedMotion = () => {
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  } catch {
+    return false
+  }
+}
 function shouldPlayOpening(returning: boolean): boolean {
   if (typeof window === 'undefined') return false
   try {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
     if (new URLSearchParams(window.location.search).has('intro')) return true
     if (navigator.webdriver || returning) return false
     return window.sessionStorage.getItem(OPENING_KEY) === null
@@ -58,20 +65,48 @@ export default function App() {
   const [opening, setOpening] = useState(() =>
     shouldPlayOpening(Object.keys(progress.completed).length + Object.keys(boards).length + Object.keys(introSeen).length > 0),
   )
-  // `go` starts the sequence once the fonts are in and the wordmark's start position is measured (the table stays empty until then)
+  // `go` shows the composition once the fonts are in and the wordmark's position is measured (until then the table is empty);
+  // `leaving` is the move into the masthead after Play, which ends the opening when it has settled.
   const [go, setGo] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+  const [measureKey, setMeasureKey] = useState(0)
   const appRef = useRef<HTMLDivElement>(null)
   const lockupRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (!opening) return
-    let alive = true
-    const stop = () => setOpening(false)
+  const playRef = useRef<HTMLButtonElement>(null)
+  const play = () => {
+    if (leaving) return
     try {
       window.sessionStorage.setItem(OPENING_KEY, '1')
     } catch {
-      // private mode: it simply plays again next time
+      // private mode: it simply shows again next time
     }
-    let timer = 0
+    if (reducedMotion()) setOpening(false)
+    else setLeaving(true)
+  }
+  useEffect(() => {
+    if (!leaving) return
+    const t = window.setTimeout(() => {
+      setOpening(false)
+      setLeaving(false)
+    }, LEAVE_MS)
+    return () => window.clearTimeout(t)
+  }, [leaving])
+  // the game underneath cannot be reached (by keyboard, touch or a screen reader) while the opening is up
+  useEffect(() => {
+    if (!opening) return
+    const under = Array.from(appRef.current?.querySelectorAll<HTMLElement>(':scope > :not(.masthead):not(.opening-layer), .levels') ?? [])
+    under.forEach((e) => e.setAttribute('inert', ''))
+    return () => {
+      under.forEach((e) => e.removeAttribute('inert'))
+      // keyboard focus returns to the game (a first-visit note, if it opens, takes focus itself)
+      requestAnimationFrame(() => {
+        if (document.activeElement === document.body) document.querySelector<HTMLElement>('.level-tab.current')?.focus({ preventScroll: true })
+      })
+    }
+  }, [opening])
+  useEffect(() => {
+    if (!opening) return
+    let alive = true
     const fonts = document.fonts?.ready ?? Promise.resolve()
     void Promise.race([fonts, new Promise((r) => window.setTimeout(r, 400))]).then(() => {
       const app = appRef.current
@@ -96,16 +131,30 @@ export default function App() {
       app.style.setProperty('--oy', `${Math.round(top) - r.top}px`)
       app.style.setProperty('--tag-top', `${top + h + 18}px`)
       setGo(true)
-      timer = window.setTimeout(stop, OPENING_MS)
+      requestAnimationFrame(() => playRef.current?.focus({ preventScroll: true }))
     })
-    // the first touch, click or key press ends it at once, so the game is never made to wait
-    window.addEventListener('pointerdown', stop, { capture: true, once: true })
-    window.addEventListener('keydown', stop, { capture: true, once: true })
     return () => {
       alive = false
+    }
+  }, [opening, measureKey])
+  // it waits indefinitely, so a rotated phone or resized window must re-centre it (not the browser bar sliding on a phone)
+  useEffect(() => {
+    if (!opening) return
+    let size = [window.innerWidth, window.innerHeight]
+    let timer = 0
+    const onResize = () => {
       window.clearTimeout(timer)
-      window.removeEventListener('pointerdown', stop, { capture: true })
-      window.removeEventListener('keydown', stop, { capture: true })
+      timer = window.setTimeout(() => {
+        if (window.innerWidth === size[0] && Math.abs(window.innerHeight - size[1]) < 100) return
+        size = [window.innerWidth, window.innerHeight]
+        setGo(false)
+        setMeasureKey((k) => k + 1)
+      }, 150)
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('resize', onResize)
     }
   }, [opening])
   // Why a locked level is locked, shown briefly when its tab is pressed (a disabled button would stay silent, especially on touch).
@@ -170,7 +219,7 @@ export default function App() {
   )
 
   return (
-    <div className={`app${opening ? ` opening${go ? ' go' : ''}` : ''}`} ref={appRef}>
+    <div className={`app${opening ? ` opening${go ? ' go' : ''}${leaving ? ' leaving' : ''}` : ''}`} ref={appRef}>
       <header className="masthead">
         <div className="brand">
           <div className="brand-slot">
@@ -232,7 +281,7 @@ export default function App() {
         <div className="opening-layer">
           <div className="opening-stack">
             <p className="opening-tag" aria-hidden="true">Bad decisions. Limited luggage.</p>
-            <button type="button" className="opening-play" onClick={() => setOpening(false)} aria-label="Play (skip the introduction)">
+            <button type="button" className="opening-play" ref={playRef} onClick={play}>
               Play
             </button>
           </div>

@@ -533,11 +533,11 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 @container (max-width: 400px) { .pill.weight .mini-bar { display: none; } }
 
 /*
- * The opening (see App.tsx): a branded first impression, one continuous sequence of about 2.5 s. The real wordmark sits
- * large at the centre of the empty table (the "It" tile stamps on), a luggage tag carries the tagline and a Play button,
- * then the wordmark travels to its place in the masthead while the packing table fades up and the case lid lifts.
- * Transform and opacity only. --ox/--oy/--os (where the wordmark starts) are measured in App.tsx. Plays once per
- * browsing session for a new player; a tap or key press removes .opening and leaves the finished layout.
+ * The opening (see App.tsx): a branded first impression. The real wordmark sits large at the centre of the empty table
+ * (the "It" tile stamps on), a luggage tag carries the tagline and a Play button, and the composition holds, still,
+ * until Play is pressed (no timer, and no other tap or key starts the game). Play moves the wordmark into the masthead
+ * while the packing table fades up, about 0.85 s. Transform and opacity only. --ox/--oy/--os (where the wordmark
+ * starts) are measured in App.tsx. Shown once per browsing session to a new player; reduced motion shows it still.
  */
 .opening-layer { display: none; }
 .app.opening .opening-layer { display: flex; }
@@ -558,22 +558,30 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .opening-play:hover { background: var(--paper); color: var(--ink); }
 .brand-lockup { display: flex; align-items: center; gap: 12px; transform-origin: 0 0; }
 /* waiting for the fonts and the measurements: the table is empty, nothing flashes */
-.app.opening:not(.go) > :not(.masthead):not(.opening-layer), .app.opening:not(.go) .levels, .app.opening:not(.go) .tagline, .app.opening:not(.go) .brand-lockup, .app.opening:not(.go) .opening-stack { opacity: 0; }
+.app.opening:not(.go) .brand-lockup, .app.opening:not(.go) .opening-stack { opacity: 0; }
+/* the composition holds, still, until Play: the table stays hidden beneath it */
+.app.opening > :not(.masthead):not(.opening-layer), .app.opening .levels, .app.opening .tagline { opacity: 0; }
 /* the slot holds the wordmark's place in the masthead; the wordmark inside is drawn large and shrinks into it */
 .app.opening.go .brand-slot { position: relative; width: var(--lw); height: var(--lh); }
-.app.opening.go .brand-lockup { position: absolute; width: max-content; white-space: nowrap; left: 0; top: 0; zoom: var(--os); animation: op-in 500ms ease-out both, op-travel 900ms cubic-bezier(0.45, 0, 0.25, 1) 1450ms both; }
+.app.opening.go .brand-lockup {
+  position: absolute; left: 0; top: 0; width: max-content; white-space: nowrap; zoom: var(--os); transform-origin: 0 0;
+  transform: translate(calc(var(--ox, 0px) / var(--os, 1)), calc(var(--oy, 0px) / var(--os, 1)));
+  animation: op-in 500ms ease-out both;
+}
 .app.opening.go .wm-it { animation: op-stamp 460ms cubic-bezier(0.3, 1.5, 0.45, 1) 450ms both; }
-.app.opening.go .opening-tag { animation: op-up 420ms ease-out 900ms both, op-out 260ms ease-in 1400ms forwards; }
-.app.opening.go .opening-play { animation: op-up 380ms ease-out 1100ms both, op-out 260ms ease-in 1400ms forwards; }
-/* the table fades up as the wordmark settles into the masthead, one gentle reveal, no per-piece effects */
-.app.opening.go > :not(.masthead):not(.opening-layer), .app.opening.go .levels, .app.opening.go .tagline { animation: op-reveal 540ms ease-out 1900ms both; }
+.app.opening.go .opening-tag { animation: op-up 420ms ease-out 900ms both; }
+.app.opening.go .opening-play { animation: op-up 380ms ease-out 1100ms both; }
+/* Play: the tag and button leave, the wordmark travels home, the table fades up as it settles (about 0.85 s) */
+.app.opening.leaving .brand-lockup { animation: op-in 500ms ease-out both, op-travel 800ms cubic-bezier(0.45, 0, 0.25, 1) both; }
+.app.opening.leaving .opening-tag, .app.opening.leaving .opening-play { animation: op-out 200ms ease-in forwards; pointer-events: none; }
+.app.opening.leaving > :not(.masthead):not(.opening-layer), .app.opening.leaving .levels, .app.opening.leaving .tagline { animation: op-reveal 420ms ease-out 430ms both; }
 @keyframes op-in { from { opacity: 0; } }
 @keyframes op-travel { from { transform: translate(calc(var(--ox, 0px) / var(--os, 1)), calc(var(--oy, 0px) / var(--os, 1))) scale(1); } to { transform: translate(0, 0) scale(var(--is, 1)); } }
 @keyframes op-stamp { from { opacity: 0; transform: rotate(-3deg) translateY(-0.45em) scale(1.45); } to { opacity: 1; transform: rotate(-3deg); } }
 @keyframes op-up { from { opacity: 0; transform: translateY(10px); } }
 @keyframes op-out { to { opacity: 0; } }
-@keyframes op-reveal { from { opacity: 0; transform: translateY(10px); } }
+@keyframes op-reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .opening-play:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
-  .app.opening .opening-layer { display: none; }
+  .app.opening *, .app.opening *::after { animation: none !important; }
 }
