@@ -85,16 +85,6 @@ const painting: ItemArtDef = {
       <rect x={2.2} y={2.54} width={0.62} height={0.34} rx={0.025} fill="#fffaf0" stroke="#c4b48a" strokeWidth={0.015} />
       <rect x={2.2} y={2.54} width={0.62} height={0.08} rx={0.02} fill="#e8602c" />
       <path d="M2.26 2.68V2.84M2.3 2.68V2.84M2.36 2.68V2.84M2.4 2.68V2.84M2.46 2.68V2.84M2.5 2.68V2.84M2.58 2.68V2.84M2.62 2.68V2.84M2.68 2.68V2.84M2.74 2.68V2.84M2.78 2.68V2.84" stroke="#2b2433" strokeWidth={0.016} />
-      {/* a paper room tag tied to the frame */}
-      <path d="M2.9 .62Q2.98 1.0 2.82 1.1" stroke="#7a6a48" strokeWidth={0.025} {...line} />
-      <g transform="rotate(9 2.7 1.4)">
-        <rect x={2.5} y={1.08} width={0.42} height={0.6} rx={0.04} fill="#fbf1de" stroke="#b6a77f" strokeWidth={0.02} />
-        <rect x={2.5} y={1.08} width={0.42} height={0.13} rx={0.03} fill="#c8323a" />
-        <circle cx={2.71} cy={1.145} r={0.03} fill="#fbf1de" />
-        <text x={2.71} y={1.5} textAnchor="middle" fontSize={0.21} fontWeight={800} fill="#3a2a1a" style={{ fontFamily: 'var(--ui)' }}>
-          214
-        </text>
-      </g>
     </>
   ),
 }
@@ -498,40 +488,45 @@ const cheese: ItemArtDef = {
   ),
 }
 
-/* ---------- Badcardi Rum (3x1): amber glass, a black-and-gold label, wax and cork, a duty-free sticker ---------- */
-const BOTTLE = 'M.2 .14H1.8Q2.05 .14 2.15 .3Q2.3 .44 2.6 .44Q2.7 .44 2.7 .5Q2.7 .56 2.6 .56Q2.3 .56 2.15 .7Q2.05 .86 1.8 .86H.2Q.1 .86 .1 .76V.24Q.1 .14 .2 .14Z'
+/* ---------- Badcardi Rum (3x1): an amber añejo in a shouldered bottle, black screw cap, cream label, red foil ---------- */
+const BOTTLE = 'M.22 .12H1.68Q1.98 .12 2.1 .26Q2.24 .42 2.46 .42H2.6V.58H2.46Q2.24 .58 2.1 .74Q1.98 .88 1.68 .88H.22Q.1 .88 .1 .76V.24Q.1 .12 .22 .12Z'
 
 const liquor: ItemArtDef = {
-  zone: { x: 1.15, y: 0.69, tone: 'light' },
+  zone: { x: 1.1, y: 0.69, tone: 'dark' },
   draw: (uid) => (
     <>
       <defs>
         <linearGradient id={`${uid}-glass`} x1={0} y1={0} x2={0} y2={1}>
-          <stop offset="0" stopColor="#e9a64c" />
-          <stop offset="0.45" stopColor="#b8651d" />
-          <stop offset="1" stopColor="#6e330c" />
+          <stop offset="0" stopColor="#f0b255" />
+          <stop offset="0.4" stopColor="#c0701f" />
+          <stop offset="1" stopColor="#64300b" />
         </linearGradient>
       </defs>
       <Contact d={BOTTLE} />
       <Inked d={BOTTLE} fill={`url(#${uid}-glass)`} ink="#3a1a06" w={0.04} />
-      {/* the label: black with a gold border, a gull on the wing, the name in cream capitals */}
-      <rect x={0.52} y={0.17} width={1.26} height={0.66} rx={0.04} fill="#1c1514" stroke="#d9aa4a" strokeWidth={0.03} />
-      <rect x={0.58} y={0.23} width={1.14} height={0.54} rx={0.025} fill="none" stroke="#d9aa4a" strokeWidth={0.012} />
-      <path d="M1.0 .33Q1.07 .24 1.15 .32Q1.23 .24 1.3 .33" stroke="#d9aa4a" strokeWidth={0.03} {...line} />
-      <text x={1.15} y={0.5} textAnchor="middle" textLength={0.98} lengthAdjust="spacingAndGlyphs" fontSize={0.17} fontWeight={800} fill="#fbf1de" style={{ fontFamily: 'var(--ui)' }}>
+      {/* embossed glass: a shoulder ring, a base ring, a lit edge */}
+      <path d="M1.92 .2Q2.02 .5 1.92 .8M.2 .8H.5M.2 .2H.5" stroke="#6a3410" strokeWidth={0.03} opacity={0.6} {...line} />
+      <path d="M.28 .17H1.6" stroke="#fff" strokeWidth={0.04} opacity={0.55} {...line} />
+      <path d="M.3 .83H1.6" stroke="#ffd38a" strokeWidth={0.02} opacity={0.5} {...line} />
+      {/* a cream label with a red border: BADCARDI, RUM, an aged-rum star line, a gold seal; the weight sits at the bottom */}
+      <rect x={0.5} y={0.16} width={1.3} height={0.68} rx={0.035} fill="#f6ead0" stroke="#7a2a22" strokeWidth={0.03} />
+      <rect x={0.56} y={0.22} width={1.18} height={0.56} rx={0.02} fill="none" stroke="#c8453b" strokeWidth={0.015} />
+      <text x={1.15} y={0.43} textAnchor="middle" textLength={1.0} lengthAdjust="spacingAndGlyphs" fontSize={0.19} fontWeight={800} fill="#1c1514" style={{ fontFamily: 'var(--ui)' }}>
         BADCARDI
       </text>
-      <path d="M.7 .56H1.6" stroke="#d9aa4a" strokeWidth={0.012} />
-      {/* a duty-free sticker on the shoulder, gold foil on the neck, wax and cork */}
-      <circle cx={1.94} cy={0.62} r={0.1} fill="#2f6fc4" stroke="#fff" strokeWidth={0.02} />
-      <path d="M1.94 .55l.02.05h.05l-.04.03.02.05l-.05-.03l-.05.03l.02-.05l-.04-.03h.05z" fill="#ffd23a" />
-      <path d="M2.18 .36Q2.25 .5 2.18 .64" stroke="#d9aa4a" strokeWidth={0.06} {...line} />
-      <path d="M2.55 .38H2.74Q2.8 .38 2.8 .44V.56Q2.8 .62 2.74 .62H2.55Q2.5 .54 2.52 .5Q2.5 .44 2.55 .38Z" fill="#c7362c" stroke="#6a0f0a" strokeWidth={0.025} strokeLinejoin="round" />
-      <path d="M2.68 .62Q2.7 .74 2.64 .8" stroke="#c7362c" strokeWidth={0.05} {...line} />
-      <rect x={2.74} y={0.4} width={0.2} height={0.2} rx={0.04} fill="#d6a86a" stroke="#6a4520" strokeWidth={0.025} />
-      {/* highlight streaks on the glass */}
-      <path d="M.3 .2H.5M1.8 .2H1.9" stroke="#fff" strokeWidth={0.035} opacity={0.65} {...line} />
-      <path d="M.3 .8H.5" stroke="#ffd38a" strokeWidth={0.02} opacity={0.5} {...line} />
+      <path d="M.7 .5H.9M1.4 .5H1.6" stroke="#c8453b" strokeWidth={0.02} {...line} />
+      <text x={1.15} y={0.545} textAnchor="middle" fontSize={0.1} fontWeight={800} letterSpacing={0.05} fill="#7a2a22" style={{ fontFamily: 'var(--ui)' }}>
+        ★ RUM ★
+      </text>
+      <circle cx={0.7} cy={0.67} r={0.055} fill="#d9aa4a" stroke="#7a5a12" strokeWidth={0.012} />
+      {/* shoulder sticker, red foil on the neck, a black screw cap with ridges and a gold ring */}
+      <circle cx={1.94} cy={0.64} r={0.09} fill="#2f6fc4" stroke="#fff" strokeWidth={0.02} />
+      <path d="M1.94 .57l.02.05h.05l-.04.03.02.05l-.05-.03l-.05.03l.02-.05l-.04-.03h.05z" fill="#ffd23a" />
+      <path d="M2.32 .4Q2.38 .5 2.32 .6" stroke="#c8323a" strokeWidth={0.1} {...line} />
+      <rect x={2.58} y={0.4} width={0.36} height={0.2} rx={0.03} fill="#1c1514" stroke="#0a0706" strokeWidth={0.02} />
+      <rect x={2.56} y={0.4} width={0.05} height={0.2} rx={0.015} fill="#d9aa4a" stroke="#7a5a12" strokeWidth={0.012} />
+      <path d="M2.68 .42V.58M2.74 .42V.58M2.8 .42V.58M2.86 .42V.58" stroke="#3a3432" strokeWidth={0.02} {...line} />
+      <path d="M2.62 .43H2.9" stroke="#fff" strokeWidth={0.015} opacity={0.5} {...line} />
     </>
   ),
 }
