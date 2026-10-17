@@ -162,7 +162,7 @@ test('keyboard: Tab reaches Skip and Next, Enter advances, and focus returns to 
   await expect(page.getByRole('button', { name: /How to play/ })).toBeFocused()
 })
 
-for (const [w, h] of [[1440, 900], [1280, 800], [390, 844], [360, 740]] as const)
+for (const [w, h] of [[1440, 900], [1280, 800], [768, 1024], [390, 844], [360, 740]] as const)
   for (const n of [1, 2, 3])
     test(`the note never covers the suitcase or the tool buttons, or overflows: Level ${n} at ${w}x${h}`, async ({ page }) => {
       await page.setViewportSize({ width: w, height: h })
@@ -187,3 +187,74 @@ for (const [w, h] of [[1440, 900], [1280, 800], [390, 844], [360, 740]] as const
         expect(hit(t), `covers ${name}`).toBe(false)
       }
     })
+
+test.describe('the note stays where it is', () => {
+  const pos = async (page: Page) => {
+    const n = (await note(page).boundingBox())!
+    const o = (await page.getByRole('region', { name: 'Objective' }).boundingBox())!
+    return { dx: Math.round(n.x - o.x), dy: Math.round(n.y - o.y), x: Math.round(n.x), y: Math.round(n.y) }
+  }
+  const near = (a: number, b: number, tol = 3) => expect(Math.abs(a - b)).toBeLessThanOrEqual(tol)
+
+  for (const [w, h] of [[1280, 800], [390, 844], [768, 1024]] as const)
+    test(`does not jump when it opens, changes page, is replayed, the level is won or the window is resized (${w}x${h})`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: h })
+      await page.evaluate(([i]) => localStorage.setItem(i, JSON.stringify({ version: 1, seen: {} })), [INTRO])
+      await page.reload()
+      const tools = page.getByRole('button', { name: /Dev tools/ })
+      if (w < 500 && (await tools.getAttribute('aria-expanded')) === 'true') await tools.click()
+      await expect(note(page)).toBeVisible()
+      await page.waitForTimeout(500)
+      const first = await pos(page)
+      expect(first.dx, 'pinned on the objective card').toBeLessThanOrEqual(12)
+      expect(first.dy).toBeLessThanOrEqual(12)
+
+      await note(page).getByRole('button', { name: 'Next' }).click() // a longer second page
+      await page.waitForTimeout(450)
+      const second = await pos(page)
+      near(second.dx, first.dx)
+      near(second.dy, first.dy)
+
+      await note(page).getByRole('button', { name: 'Back' }).click()
+      await page.waitForTimeout(450)
+      near((await pos(page)).dy, first.dy)
+
+      await note(page).getByRole('button', { name: 'Skip' }).click()
+      await page.getByRole('button', { name: /How to play/ }).click() // replay
+      await page.waitForTimeout(500)
+      const replay = await pos(page)
+      near(replay.dx, first.dx)
+      near(replay.dy, first.dy)
+
+      // the objective card changes shape (the level is won) while the replayed note is open
+      if (w >= 500) await page.getByRole('button', { name: 'Fill normal win' }).click()
+      else {
+        await tools.click()
+        await page.getByRole('button', { name: 'Fill normal win' }).click()
+      }
+      await page.waitForTimeout(900)
+      {
+        const afterWin = await pos(page)
+        near(afterWin.dx, first.dx)
+        near(afterWin.dy, first.dy)
+      }
+
+      const keep = page.getByRole('dialog').getByRole('button', { name: 'Keep packing' })
+      if (await keep.count()) await keep.click()
+      if (!(await note(page).count())) await page.getByRole('button', { name: /How to play/ }).click()
+      {
+        await page.setViewportSize({ width: w, height: h - 80 })
+        await page.waitForTimeout(500)
+        const resized = await pos(page)
+        near(resized.dx, first.dx)
+        near(resized.dy, first.dy)
+      }
+    })
+})
+
+test('Escape closes the note even when nothing inside it has focus, and focus goes back to How to play', async ({ page }) => {
+  await expect(note(page)).toBeVisible()
+  await page.locator('body').click({ position: { x: 5, y: 5 } }) // focus leaves the note
+  await page.keyboard.press('Escape')
+  await expect(note(page)).toHaveCount(0)
+})

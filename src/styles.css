@@ -470,40 +470,31 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 
 /* the how-to-play note: a handwritten page pinned to the table, never a full-screen interruption */
 .intro-note {
-  position: fixed; z-index: 25; bottom: 16px; right: max(16px, calc((100vw - 1560px) / 2 + 24px)); width: min(330px, calc(100vw - 24px)); padding: 22px 20px 12px 38px;
+  /* Pinned to the objective card (a layout anchor, not a measured position), so it never moves on its own */
+  position: absolute; z-index: 25; top: 6px; left: 6px; width: min(330px, calc(100% - 12px)); max-height: min(70vh, 300px); overflow: auto; padding: 18px 16px 10px 36px;
   background: linear-gradient(90deg, transparent 31px, rgba(201, 60, 50, 0.45) 31px 33px, transparent 33px), repeating-linear-gradient(180deg, transparent 0 29px, rgba(66, 110, 180, 0.28) 29px 30px), #fffdf5;
-  border: 2px solid rgba(43, 36, 51, 0.35); border-radius: 4px 10px 10px 4px; box-shadow: 4px 8px 0 rgba(43, 36, 51, 0.2), 0 22px 40px -12px rgba(43, 36, 51, 0.5);
+  border: 1px solid rgba(43, 36, 51, 0.4); box-shadow: 3px 6px 0 rgba(43, 36, 51, 0.2), 0 18px 30px -10px rgba(30, 20, 10, 0.5);
   color: #2b2433; font-family: var(--hand); transform: rotate(-1.2deg); animation: note-in 320ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 .note-tape { position: absolute; top: -12px; width: 64px; height: 22px; background: rgba(238, 220, 150, 0.8); border: 1px dashed rgba(120, 100, 40, 0.4); }
 .note-tape.left { left: 18px; transform: rotate(-6deg); }
 .note-tape.right { right: 18px; transform: rotate(5deg); }
-.note-kicker { margin: 0 0 4px; color: #6b5f7a; font: 700 0.72rem var(--ui); letter-spacing: 0.12em; text-transform: uppercase; }
-.note-page { min-height: 96px; position: relative; animation: page-in 260ms ease-out both; }
-.note-page h2 { margin: 0 0 4px; font-family: var(--hand); font-size: 1.8rem; font-weight: 600; line-height: 1; color: #3a2a6a; text-decoration: underline wavy rgba(106, 42, 168, 0.5) 2px; text-underline-offset: 6px; }
-.note-page ul { margin: 8px 0 0; padding: 0; list-style: none; font-size: 1.3rem; line-height: 28px; }
+.note-kicker { display: none; margin: 0 0 2px; color: #6b5f7a; font: 700 0.72rem var(--ui); letter-spacing: 0.12em; text-transform: uppercase; }
+.note-page { min-height: 70px; position: relative; animation: page-in 260ms ease-out both; }
+.note-page h2 { margin: 0 0 2px; font-family: var(--hand); font-size: 1.55rem; font-weight: 600; line-height: 1; color: #3a2a6a; text-decoration: underline wavy rgba(106, 42, 168, 0.5) 2px; text-underline-offset: 6px; }
+.note-page ul { margin: 4px 0 0; padding: 0; list-style: none; font-size: 1.1rem; line-height: 24px; }
 .note-page li::before { content: '– '; color: var(--chaos); }
-.note-doodle { position: absolute; right: -4px; bottom: -6px; color: rgba(106, 42, 168, 0.75); transform: rotate(6deg); }
-.note-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-family: var(--ui); }
+.note-foot { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-family: var(--ui); }
 .note-dots { display: flex; gap: 5px; margin-right: auto; }
 .note-dots i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid rgba(43, 36, 51, 0.5); }
 .note-dots i.on { background: var(--chaos); border-color: var(--chaos); }
 .note-foot .note-next { margin-left: auto; }
-.note-foot button { min-height: 40px; padding: 0 14px; border: 2px solid var(--ink); border-radius: 8px; background: #fffdf5; font: 700 0.9rem var(--ui); cursor: pointer; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.25); }
+.note-foot button { min-height: 38px; padding: 0 14px; border: 2px solid var(--ink); border-radius: 8px; background: #fffdf5; font: 700 0.9rem var(--ui); cursor: pointer; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.25); }
 .note-foot .note-skip { border-color: transparent; background: transparent; box-shadow: none; color: var(--muted); text-decoration: underline; }
 .note-foot .note-next { background: var(--ink); color: var(--paper); }
 .note-foot button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 @keyframes note-in { from { transform: translateY(18px) rotate(3deg); opacity: 0; } }
 @keyframes page-in { from { transform: translateX(14px) rotate(-1.5deg); opacity: 0; } }
-@media (max-width: 760px) {
-  .intro-note { top: auto; bottom: 66px; right: 8px; left: 8px; width: auto; padding: 20px 16px 10px 36px; max-height: 46vh; overflow: auto; }
-  .note-page { min-height: 70px; }
-  .note-page ul { margin-top: 4px; font-size: 1.1rem; line-height: 24px; }
-  .note-doodle, .note-kicker { display: none; }
-  .note-page h2 { font-size: 1.55rem; }
-  .note-foot { margin-top: 4px; }
-  .note-foot button { min-height: 38px; }
-}
 @media (prefers-reduced-motion: reduce) {
   .intro-note, .note-page { animation: none; }
   .chaos-bar .fill { transition: none; }

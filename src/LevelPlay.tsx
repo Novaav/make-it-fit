@@ -640,18 +640,18 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
       data-arrange={arrangement.mode}
     >
       <TableProps />
-      {intro?.open && (
-        <IntroNote
-          level={LEVEL}
-          onClose={() => {
-            intro.onClose()
-            requestAnimationFrame(() => replayRef.current?.focus())
-          }}
-        />
-      )}
       <main className="stage">
         <section className="case-wrap" aria-label={`Level ${Number(LEVEL.id)} suitcase`}>
           <section className={`objective${solved ? ' solved' : ''}`} aria-label="Objective">
+          {intro?.open && (
+            <IntroNote
+              level={LEVEL}
+              onClose={() => {
+                intro.onClose()
+                requestAnimationFrame(() => replayRef.current?.focus())
+              }}
+            />
+          )}
             <p className="level-title">
               Level {Number(LEVEL.id)} · {LEVEL_TITLES[LEVEL.id]}
               {intro && (
