@@ -28,7 +28,7 @@
         ],
         "weight": 250,
         "required": true,
-        "chaos": 0
+        "chaos": 2
       },
       {
         "id": "jeans",
@@ -60,7 +60,7 @@
         ],
         "weight": 700,
         "required": true,
-        "chaos": 0
+        "chaos": 2
       },
       {
         "id": "shoes",
@@ -88,7 +88,7 @@
         ],
         "weight": 1200,
         "required": true,
-        "chaos": 0
+        "chaos": 3
       },
       {
         "id": "toiletries",
@@ -112,7 +112,7 @@
         ],
         "weight": 1000,
         "required": true,
-        "chaos": 0
+        "chaos": 1
       },
       {
         "id": "charger",
@@ -128,7 +128,7 @@
         ],
         "weight": 400,
         "required": true,
-        "chaos": 0
+        "chaos": 1
       }
     ]
   },

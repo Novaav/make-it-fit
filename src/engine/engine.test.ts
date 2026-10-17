@@ -245,6 +245,35 @@ describe('win predicate', () => {
   })
 })
 
+describe('Level 1 Chaos is display-only', () => {
+  const l1 = level('01')
+  const all = solutions['01'].perfect as [string, number, number, number][]
+
+  it('gives every item a Chaos value, total 9, and no target or perfect score', () => {
+    expect(Object.fromEntries(l1.items.map((i) => [i.id, i.chaos]))).toEqual({ shirt: 2, jeans: 2, shoes: 3, toiletries: 1, charger: 1 })
+    expect(l1.target).toBeUndefined()
+    expect(l1.perfect).toBeUndefined()
+  })
+
+  it('is won exactly when all five are packed, whatever the Chaos total says, and is never perfect', () => {
+    let s = createGame(l1)
+    const totals: number[] = []
+    for (const [id, rotIndex, x, y] of all) {
+      expect(isWon(s)).toBe(false)
+      s = must(place(s, { itemId: id, orientation: uniqueRotations(item(l1, id).cells)[rotIndex].orientation, x, y }))
+      totals.push(totalChaos(s))
+    }
+    expect(isWon(s)).toBe(true)
+    expect(isPerfect(s)).toBe(false)
+    expect(totals[totals.length - 1]).toBe(9)
+    expect([...totals].sort((a, b) => a - b)).toEqual(totals) // the total only ever climbs while packing
+  })
+
+  it('shares Chaos values with later levels (toiletries is worth 1 everywhere)', () => {
+    expect(item(level('01'), 'toiletries').chaos).toBe(item(level('02'), 'toiletries').chaos)
+  })
+})
+
 describe('interaction helpers', () => {
   const l = level('01')
   const start = createGame(l)

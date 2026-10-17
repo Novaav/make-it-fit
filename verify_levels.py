@@ -81,9 +81,10 @@ P5=[(0,0),(1,0),(0,1),(1,1),(0,2)]      # folded bathrobe, Mom's DVD collection 
 TOTE=[(1,0),(0,1),(1,1),(2,1),(0,2),(1,2),(2,2)]  # oversized handbag: a 3x2 body with its handles above (3x3 minus both top corners)
 CUTOUT=[(0,0),(1,0),(2,0),(3,0),(4,0),(2,1),(2,2),(1,3),(2,3),(3,3)]
 # Weights are integer GRAMS. Allowances are game limits on the weight of the items (the game does not model the suitcase itself).
+# Level 1 keeps its pack-all-five rule; its Chaos values are display-only (no target, no allowance).
 levels=[
  {'id':'01','board':(5,6),'items':[
-  I('shirt',T4,250),I('jeans',line(6),700),I('shoes',U5,1200),I('toiletries',rect(2,2),1000),I('charger',line(2),400)]},
+  I('shirt',T4,250,True,2),I('jeans',line(6),700,True,2),I('shoes',U5,1200,True,3),I('toiletries',rect(2,2),1000,True,1),I('charger',line(2),400,True,1)]},
  # Levels 2 and 3 are Chaos levels: every item has a Chaos value; reach `target` Chaos within the allowance (perfect = the maximum).
  {'id':'02','board':(6,5),'weight_limit':6500,'target':20,'perfect':25,'items':[
   I('handbag',TOTE,2250,False,6),I('outfit',T4,900,False,2),I('toiletries',rect(2,2),1000,False,1),I('flamingo',rect(3,2),1000,False,5),
