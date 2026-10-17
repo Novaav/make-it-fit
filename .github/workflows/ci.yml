@@ -45,7 +45,7 @@ jobs:
       - name: Puzzle verification (solver must reproduce the committed puzzle data)
         run: |
           python3 verify_levels.py
-          git diff --exit-code -- VERIFIED_LEVELS.json
+          git diff --exit-code -- VERIFIED_LEVELS.json src/engine/solutions.fixture.json src/dev/explorer.fixture.json
 
       - name: Production build contains no dev tools
         run: npm run check:prod-clean

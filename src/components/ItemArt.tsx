@@ -4,8 +4,6 @@ import { artTransform } from '../ui/geometry'
 import { ITEM_NAMES } from '../levelMeta'
 import { ITEM_ART } from '../art/items'
 
-const CREAM = '#fff6e6'
-
 /** Rounded union of the shape's cells: dark outline pass, then colour pass. */
 function Silhouette({ cells, color, outline }: { cells: Shape; color: string; outline: string }) {
   const seams = cells.flatMap((c) => [
@@ -31,9 +29,6 @@ function Silhouette({ cells, color, outline }: { cells: Shape; color: string; ou
     </>
   )
 }
-
-const line = { strokeLinecap: 'round' as const, fill: 'none' }
-
 
 /** Temporary art for items that are not illustrated yet: a clearly labelled, dashed silhouette (never mistaken for finished art). */
 const PLACEHOLDER_COLORS = ['#cfd8e3', '#e3d4cf', '#d7e3cf', '#e3dccf', '#d9cfe3', '#cfe3df']
@@ -66,45 +61,9 @@ function UnionDash({ cells }: { cells: Shape }) {
   )
 }
 
+/** Every item in the game has final artwork; this only exists so an item added without art still shows up, clearly labelled. */
 function art(item: Item): ReactNode {
-  const s = item.cells
-  switch (item.id) {
-    case 'hotel_lamp':
-      return (
-        <>
-          <Silhouette cells={s} color="#f0d36b" outline="#a1862a" />
-          <path d="M0.12 0.9L0.3 0.12H1.7L1.88 0.9Z" fill={CREAM} stroke="#a1862a" strokeWidth={0.04} />
-          <path d="M1.5 1.1V2.6" stroke="#a1862a" strokeWidth={0.1} {...line} />
-          <ellipse cx={1.5} cy={2.8} rx={0.38} ry={0.12} fill="#a1862a" />
-          <path d="M1.5 0.9V1.1" stroke="#a1862a" strokeWidth={0.05} {...line} />
-        </>
-      )
-    case 'emergency_socks':
-      return (
-        <>
-          <Silhouette cells={s} color="#e68aa6" outline="#a24a68" />
-          <path d="M0.15 0.3H0.85M1.15 0.3H1.85M0.15 0.5H0.85M1.15 0.5H1.85" stroke={CREAM} strokeWidth={0.07} {...line} />
-          <path d="M0.2 0.8H0.8M1.2 0.8H1.8" stroke="#a24a68" strokeWidth={0.06} {...line} />
-        </>
-      )
-    case 'ceramic_foot':
-      return (
-        <>
-          <Silhouette cells={s} color="#eef2f8" outline="#5f7aa0" />
-          <g fill="#6d9bd1">
-            <circle cx={0.5} cy={0.5} r={0.1} />
-            <circle cx={1.5} cy={0.5} r={0.1} />
-            <circle cx={2.5} cy={0.5} r={0.1} />
-            <circle cx={0.5} cy={1.5} r={0.1} />
-            <circle cx={2.5} cy={1.5} r={0.1} />
-          </g>
-          <path d="M0.2 0.8Q1.5 1.3 2.8 0.8" stroke="#6d9bd1" strokeWidth={0.05} {...line} />
-          <path d="M0.2 1.88H0.8M2.2 1.88H2.8" stroke="#5f7aa0" strokeWidth={0.06} {...line} />
-        </>
-      )
-    default:
-      return <Placeholder item={item} />
-  }
+  return <Placeholder item={item} />
 }
 
 interface Props {
@@ -114,7 +73,6 @@ interface Props {
   style?: CSSProperties
 }
 
-/** Temporary vector art. Sized by its parent; keeps the cell aspect ratio. */
 /** Rounded union of the occupied cells, inset a little: the only region the redrawn items may paint. */
 function UnionShapes({ cells, inset }: { cells: Shape; inset: number }) {
   const has = (x: number, y: number) => cells.some((c) => c.x === x && c.y === y)
@@ -136,7 +94,7 @@ function UnionShapes({ cells, inset }: { cells: Shape; inset: number }) {
   )
 }
 
-/** Temporary vector art for items not yet redrawn. Sized by its parent; keeps the cell aspect ratio. */
+/** The illustrated item (or the labelled placeholder). Sized by its parent; keeps the cell aspect ratio. */
 export const ItemArt = memo(function ItemArt({ item, orientation, className, style }: Props) {
   const uid = useId().replace(/:/g, '')
   const w = Math.max(...item.cells.map((c) => c.x)) + 1

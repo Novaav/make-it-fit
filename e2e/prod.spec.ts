@@ -37,3 +37,25 @@ test('production: Level 1 can be won by hand, unlocking and persisting Level 2',
   await expect(page.getByRole('button', { name: /^Level 2/ })).toBeEnabled()
   await expect(page.getByRole('button', { name: /^Level 1/ })).toContainText('✓')
 })
+
+test('production page has its metadata, a favicon, no console errors and no failed requests', async ({ page }) => {
+  const problems: string[] = []
+  page.on('pageerror', (e) => problems.push(e.message))
+  page.on('console', (m) => m.type() === 'error' && problems.push(m.text()))
+  page.on('response', (r) => r.status() >= 400 && problems.push(`HTTP ${r.status()} ${r.url()}`))
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: /Make\s*It\s*Fit/ })).toBeVisible()
+  await expect(page).toHaveTitle('Make It Fit')
+  expect(await page.locator('meta[name="description"]').getAttribute('content')).toContain('packing puzzle')
+  expect(await page.locator('meta[name="theme-color"]').getAttribute('content')).toBeTruthy()
+  expect(await page.locator('link[rel="icon"]').getAttribute('href')).toContain('data:image/svg+xml')
+  expect(await page.locator('html').getAttribute('lang')).toBe('en')
+  await page.waitForTimeout(500)
+  expect(problems).toEqual([])
+})
+
+test('production assets load with relative paths, so the build works from a sub-folder', async ({ page }) => {
+  await page.goto('/')
+  const html = await page.content()
+  expect(html).not.toMatch(/(?:src|href)="\/assets\//)
+})
