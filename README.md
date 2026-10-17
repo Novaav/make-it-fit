@@ -25,7 +25,7 @@ Status: feature-complete and release-prepared; not deployed yet (see [DEPLOYMENT
 | Take an item out | Drag it back to the tray, or `Remove` | `Delete` / `Backspace` |
 | Undo | `Undo` button | `Ctrl`/`⌘` + `Z` |
 
-The first load of a browsing session opens with a short (about 1.3 s) entrance in which the table comes to life; any touch or key skips it, and it is not played with reduced motion. Rotation and the layout of the "To pack" tray are designed so that rotating an item never changes the size of the panel. Reduced-motion preferences are respected.
+A new player's first load of a browsing session opens with a short (about 1.9 s) branded intro: the wordmark sits large on the empty table with its tagline and a Play button, then travels into the masthead as the packing table fades up and the case lid lifts. A tap, key press or Play skips it; returning players, reduced motion and browser automation skip it, and `?intro` on the address replays it for review. Rotation and the layout of the "To pack" tray are designed so that rotating an item never changes the size of the panel. Reduced-motion preferences are respected.
 
 ## Run it
 

@@ -858,7 +858,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
                   Everything is in the suitcase.
                 </p>
               )}
-              {LEVEL.items.map((item, index) => {
+              {LEVEL.items.map((item) => {
                 if (placedIds.has(item.id)) return null
                 const o = trayTurns[item.id] ?? 0
                 const slot = layout.slots[item.id]
@@ -872,7 +872,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
                     <button
                       type="button"
                       className={`piece in-tray${selected === item.id ? ' selected' : ''}`}
-                      style={{ ...pieceVars(item.id, o), '--i': index } as React.CSSProperties}
+                      style={pieceVars(item.id, o)}
                       data-item={item.id}
                       aria-label={`${name(item.id)}, not packed.${describe(item.id)} Enter to pick up, R to rotate.`}
                       {...infoHandlers(item.id)}

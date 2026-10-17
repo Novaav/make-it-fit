@@ -1,4 +1,4 @@
-import { lazy, Profiler, Suspense, useEffect, useState } from 'react'
+import { lazy, Profiler, Suspense, useEffect, useRef, useState } from 'react'
 import { loadLevels, type Placement } from './engine'
 import LevelPlay from './LevelPlay'
 import { loadBoards, saveBoards, type Boards, type SavedBoard } from './boards'
@@ -26,14 +26,17 @@ const countCommit = () => {
 }
 const LEVELS = loadLevels().filter((l) => IDS.includes(l.id))
 
-// The table comes to life once per browsing session (not on reload, level switch or return), never with reduced motion.
-const ENTRANCE_KEY = 'make-it-fit:entrance:v1'
-const ENTRANCE_MS = 1350
-function shouldPlayEntrance(): boolean {
+// The branded opening plays once per browsing session, for a player with nothing saved yet (a returning player goes
+// straight in), never with reduced motion or under browser automation. `?intro` forces it, to review it.
+const OPENING_KEY = 'make-it-fit:opening:v1'
+const OPENING_MS = 1900
+function shouldPlayOpening(returning: boolean): boolean {
   if (typeof window === 'undefined') return false
   try {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
-    return window.sessionStorage.getItem(ENTRANCE_KEY) === null
+    if (new URLSearchParams(window.location.search).has('intro')) return true
+    if (navigator.webdriver || returning) return false
+    return window.sessionStorage.getItem(OPENING_KEY) === null
   } catch {
     return false
   }
@@ -52,25 +55,53 @@ export default function App() {
   // Which how-to-play notes were seen (kept apart from progress), and a level whose note is being replayed on request.
   const [introSeen, setIntroSeen] = useState<IntroSeen>(() => loadIntroSeen(browserStorage()))
   const [replayIntro, setReplayIntro] = useState<string | null>(null)
-  const [entrance, setEntrance] = useState(shouldPlayEntrance)
+  const [opening, setOpening] = useState(() =>
+    shouldPlayOpening(Object.keys(progress.completed).length + Object.keys(boards).length + Object.keys(introSeen).length > 0),
+  )
+  // `go` starts the sequence once the fonts are in and the wordmark's start position is measured (the table stays empty until then)
+  const [go, setGo] = useState(false)
+  const appRef = useRef<HTMLDivElement>(null)
+  const lockupRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (!entrance) return
+    if (!opening) return
+    let alive = true
+    const stop = () => setOpening(false)
     try {
-      window.sessionStorage.setItem(ENTRANCE_KEY, '1')
+      window.sessionStorage.setItem(OPENING_KEY, '1')
     } catch {
       // private mode: it simply plays again next time
     }
-    const stop = () => setEntrance(false)
-    const timer = window.setTimeout(stop, ENTRANCE_MS)
+    let timer = 0
+    const fonts = document.fonts?.ready ?? Promise.resolve()
+    void Promise.race([fonts, new Promise((r) => window.setTimeout(r, 400))]).then(() => {
+      const app = appRef.current
+      const lockup = lockupRef.current
+      if (!alive || !app || !lockup) return
+      // read the wordmark's final place, then centre it, enlarged, on the table with the tag and button beneath it
+      const r = lockup.getBoundingClientRect()
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const scale = Math.max(1, Math.min(3.8, (vw * 0.84) / r.width, (vh * 0.3) / r.height))
+      const w = r.width * scale
+      const h = r.height * scale
+      const top = Math.max(8, (vh - (h + 112)) / 2 - vh * 0.03)
+      app.style.setProperty('--os', String(scale))
+      app.style.setProperty('--ox', `${(vw - w) / 2 - r.left}px`)
+      app.style.setProperty('--oy', `${top - r.top}px`)
+      app.style.setProperty('--tag-top', `${top + h + 18}px`)
+      setGo(true)
+      timer = window.setTimeout(stop, OPENING_MS)
+    })
     // the first touch, click or key press ends it at once, so the game is never made to wait
     window.addEventListener('pointerdown', stop, { capture: true, once: true })
     window.addEventListener('keydown', stop, { capture: true, once: true })
     return () => {
+      alive = false
       window.clearTimeout(timer)
       window.removeEventListener('pointerdown', stop, { capture: true })
       window.removeEventListener('keydown', stop, { capture: true })
     }
-  }, [entrance])
+  }, [opening])
   // Why a locked level is locked, shown briefly when its tab is pressed (a disabled button would stay silent, especially on touch).
   const [lockNote, setLockNote] = useState<string | null>(null)
   useEffect(() => {
@@ -113,8 +144,8 @@ export default function App() {
       onDevFillUsed={() => setDevFill(undefined)}
       intro={{
         // a first visit shows the note; TEST MODE never does (and never saves that it was seen)
-        // a first-visit note waits for the entrance to finish (or be skipped), so the two never compete
-        open: replayIntro === levelId || (!inTestMode && !introSeen[levelId] && !entrance),
+        // a first-visit note waits for the opening to finish (or be skipped), so the two never compete
+        open: replayIntro === levelId || (!inTestMode && !introSeen[levelId] && !opening),
         replay: replayIntro === levelId,
         pending: !inTestMode && !introSeen[levelId],
         onOpen: () => setReplayIntro(levelId),
@@ -133,9 +164,10 @@ export default function App() {
   )
 
   return (
-    <div className={`app${entrance ? ' entrance' : ''}`}>
+    <div className={`app${opening ? ` opening${go ? ' go' : ''}` : ''}`} ref={appRef}>
       <header className="masthead">
         <div className="brand">
+          <div className="brand-lockup" ref={lockupRef}>
           <svg className="brand-mark" viewBox="0 0 44 40" width="44" height="40" aria-hidden="true">
             <path d="M15 9V6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3" fill="none" stroke="#2b2433" strokeWidth="2.6" strokeLinecap="round" />
             <rect x="2" y="9" width="40" height="28" rx="6" fill="#2a7480" stroke="#2b2433" strokeWidth="2.6" />
@@ -145,6 +177,7 @@ export default function App() {
             <path d="M28 26h8v6h-8z" fill="none" stroke="#fff8e9" strokeWidth="1.6" strokeDasharray="3 2" />
           </svg>
           <h1>Make <span className="wm-it">It</span> Fit</h1>
+          </div>
           <p className="tagline">Bad decisions. Limited luggage.</p>
         </div>
         <nav className="levels" aria-label="Levels">
@@ -187,6 +220,16 @@ export default function App() {
           </p>
         )}
       </header>
+      {opening && (
+        <div className="opening-layer">
+          <div className="opening-stack">
+            <p className="opening-tag" aria-hidden="true">Bad decisions. Limited luggage.</p>
+            <button type="button" className="opening-play" onClick={() => setOpening(false)} aria-label="Play (skip the introduction)">
+              Play
+            </button>
+          </div>
+        </div>
+      )}
       {import.meta.env.DEV ? (
         <Profiler id="level" onRender={countCommit}>
           {levelView}
