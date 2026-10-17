@@ -132,3 +132,32 @@ test.describe('perfect pack celebration', () => {
     expect(JSON.parse((await page.evaluate((k) => localStorage.getItem(k), PROGRESS))!).completed['02']).toBeUndefined()
   })
 })
+
+test.describe('Level 3 items', () => {
+  const NAMES: Record<string, string> = {
+    cutout: 'Cardboard cutout', laundry: 'Laundry bag', outfit: 'Party outfit', hangover: 'Hangover kit', heels: 'Red-soled heels', hotel_lamp: 'Hotel lamp',
+    ceramic_foot: 'Ceramic foot', gnome: 'Concrete garden gnome', cheese: 'Wheel of cheese', liquor: 'Bottle of local spirit', robe: 'Hotel bathrobe', emergency_socks: 'Emergency socks',
+  }
+  test('are all illustrated, named for assistive tech with their Chaos or MUST, and stamped identically in the tray and the suitcase', async ({ page }) => {
+    await page.goto('/')
+    await page.evaluate(([p]) => {
+      localStorage.clear()
+      localStorage.setItem('make-it-fit:intro:v1', JSON.stringify({ version: 1, seen: { '01': true, '02': true, '03': true } }))
+      localStorage.setItem(p, JSON.stringify({ version: 2, completed: { '01': {}, '02': {} } }))
+    }, [PROGRESS])
+    await page.reload()
+    await tab(page, 3).click()
+    expect(await page.locator('.piece svg text', { hasText: 'placeholder art' }).count()).toBe(0)
+    for (const [id, name] of Object.entries(NAMES)) {
+      const label = await piece(page, id).getAttribute('aria-label')
+      expect(label, id).toContain(name)
+      expect(label, id).toMatch(id === 'cutout' || id === 'laundry' ? /Mandatory/ : /Chaos \d/)
+      const box = (await piece(page, id).boundingBox())!
+      expect(Math.min(box.width, box.height), `${id} hit target`).toBeGreaterThanOrEqual(30)
+    }
+    const trayStamp = await piece(page, 'ceramic_foot').locator('.chaos-badge').evaluate((e) => e.outerHTML)
+    await piece(page, 'ceramic_foot').focus()
+    await expect(piece(page, 'ceramic_foot').locator('.chaos-badge')).toHaveText('6')
+    expect(trayStamp).toContain('data-chaos="6"')
+  })
+})

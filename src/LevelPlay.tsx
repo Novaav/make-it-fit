@@ -483,7 +483,15 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     if (perfectNow) celebratedPerfect.current = true
     returnFocus.current = document.activeElement as HTMLElement | null
     setDialogKind(kind)
-    setDialogOpen(true)
+    // A perfect pack lets the gold meter and the stitched flourish play on the open table first (about a second),
+    // then the boarding pass is stamped. With reduced motion there is no wait.
+    const wait = perfectNow && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1100 : 0
+    if (!wait) {
+      setDialogOpen(true)
+      return
+    }
+    const t = window.setTimeout(() => setDialogOpen(true), wait)
+    return () => window.clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [won, chaos, perfectNow])
 

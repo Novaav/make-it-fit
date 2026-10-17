@@ -87,7 +87,7 @@ describe('Level 2 markup', () => {
   it('every item shows its Chaos in a badge and its weight on its label, without hover', () => {
     expect(l2.match(/class="chaos-badge"/g)).toHaveLength(10)
     expect(l2.match(/data-chaos="\d"/g)).toHaveLength(10)
-    expect(l2).toMatch(/data-chaos="6"[^>]*>6<\/span>/) // the DVDs and the handbag
+    expect(l2).toMatch(/data-chaos="6"[^>]*>.*?<text[^>]*>6<\/text>/) // the DVDs and the handbag
     expect(l2.match(/data-weight="\d+"/g)).toHaveLength(10)
     expect(l2).toContain('Chaos 6, 2.25 kg.')
     expect(l2).toContain('Chaos 2, 900 g.')

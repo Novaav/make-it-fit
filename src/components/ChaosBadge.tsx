@@ -2,6 +2,16 @@ import type { CSSProperties } from 'react'
 import type { Item, Orientation } from '../engine'
 import { artPoint } from '../ui/geometry'
 
+/** A hand-cut paper dot: a circle whose radius wobbles slightly, the same wobble for the same value every time. */
+function paperDot(seed: number): string {
+  const pts = Array.from({ length: 20 }, (_, i) => {
+    const a = (Math.PI * 2 * i) / 20
+    const r = 20 + Math.sin(i * 2.3 + seed * 1.7) * 0.55 + Math.cos(i * 1.1 + seed) * 0.35
+    return `${(22 + r * Math.cos(a)).toFixed(2)},${(22 + r * Math.sin(a)).toFixed(2)}`
+  })
+  return `M${pts.join('L')}Z`
+}
+
 /**
  * The Chaos number (or "MUST" for a mandatory item with no Chaos) inked as a small round stamp on an item's first occupied cell, so every item shows what
  * it is worth without hover or tap. It turns with the item's position but its text stays upright.
@@ -21,7 +31,19 @@ export function ChaosBadge({ item, orientation }: { item: Item; orientation: Ori
       style={{ '--bx': p.x, '--by': p.y, '--tilt': `${must ? -3 : tilt}deg` } as CSSProperties}
       aria-hidden="true"
     >
-      {must ? 'MUST' : item.chaos}
+      {must ? (
+        'MUST'
+      ) : (
+        <svg viewBox="0 0 44 44" focusable="false">
+          {/* a paper dot stuck on the item, a worn rubber-stamp ring (gaps where the ink did not take) and the number, slightly bled */}
+          <path d={paperDot(item.chaos)} className="dot-paper" />
+          <circle cx={22} cy={22} r={16.2} className="dot-ring" strokeDasharray="38 3 22 3 30 3 4 2" />
+          <circle cx={22} cy={22} r={13.4} className="dot-ring thin" />
+          <text x={22} y={29.4} textAnchor="middle" className="dot-num">
+            {item.chaos}
+          </text>
+        </svg>
+      )}
     </span>
   )
 }

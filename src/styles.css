@@ -435,6 +435,12 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   box-shadow: 0 0 0 1.5px var(--chaos-ink), inset 0 0 0 2px #fff4d6, inset 0 0 0 3px var(--chaos), 0 1px 3px rgba(43, 36, 51, 0.5);
   font: 700 max(12px, calc(var(--cell) * 0.27)) / 1 var(--display); pointer-events: none;
 }
+.chaos-badge:not(.must) { background: none; box-shadow: none; filter: drop-shadow(0 1px 1.5px rgba(43, 36, 51, 0.55)); }
+.chaos-badge svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.dot-paper { fill: #fff4d6; stroke: #d9c79a; stroke-width: 0.8; }
+.dot-ring { fill: none; stroke: var(--chaos-ink); stroke-width: 1.8; stroke-linecap: round; opacity: 0.92; mix-blend-mode: multiply; }
+.dot-ring.thin { stroke-width: 0.9; opacity: 0.7; stroke-dasharray: 2.2 1.4; }
+.dot-num { fill: var(--chaos-ink); stroke: var(--chaos-ink); stroke-width: 0.9; stroke-opacity: 0.45; paint-order: stroke; font: 700 21px var(--display); }
 .chaos-badge.must { width: auto; height: max(17px, calc(var(--cell) * 0.3)); padding: 0 6px; border-radius: 3px; color: var(--ink); font: 800 max(9px, calc(var(--cell) * 0.19)) / 1 var(--ui); letter-spacing: 0.1em; box-shadow: 0 0 0 1.5px var(--ink), inset 0 0 0 1.5px #fff4d6, inset 0 0 0 2.5px var(--ink), 0 1px 3px rgba(43, 36, 51, 0.5); }
 .pill .of { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
 .pill.chaos { flex: 1 1 100%; flex-wrap: wrap; align-items: center; row-gap: 2px; border-color: var(--chaos); }
@@ -489,6 +495,7 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   .intro-note { top: auto; bottom: 10px; right: 8px; left: 8px; width: auto; padding: 22px 18px 12px 38px; max-height: 58vh; overflow: auto; }
   .note-page { min-height: 120px; }
   .note-page ul { font-size: 1.3rem; }
+  .note-doodle { position: static; display: block; margin: 2px 4px 0 auto; width: 64px; height: 40px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .intro-note, .note-page { animation: none; }
