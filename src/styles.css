@@ -549,7 +549,6 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .opening-tag {
   position: relative; margin: 0; padding: 7px 18px 8px 34px; max-width: calc(100vw - 32px); border: 2px solid var(--ink); border-radius: 6px 16px 16px 6px;
   background: var(--paper); color: var(--ink); font: italic 600 1.1rem / 1.25 var(--display); text-align: center; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.28);
-  transform: rotate(-1.2deg);
 }
 .opening-tag::before { content: ''; position: absolute; left: 11px; top: 50%; width: 11px; height: 11px; margin-top: -5.5px; border-radius: 50%; background: var(--table); border: 2px solid var(--ink); box-shadow: inset 1px 1px 0 rgba(43, 36, 51, 0.35); }
 .opening-play {
@@ -560,28 +559,20 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .brand-lockup { display: flex; align-items: center; gap: 12px; transform-origin: 0 0; }
 /* waiting for the fonts and the measurements: the table is empty, nothing flashes */
 .app.opening:not(.go) > :not(.masthead):not(.opening-layer), .app.opening:not(.go) .levels, .app.opening:not(.go) .tagline, .app.opening:not(.go) .brand-lockup, .app.opening:not(.go) .opening-stack { opacity: 0; }
-.app.opening.go .brand-lockup { animation: op-in 420ms ease-out both, op-travel 700ms cubic-bezier(0.65, 0, 0.25, 1) 1000ms both; }
+/* the slot holds the wordmark's place in the masthead; the wordmark inside is drawn large and shrinks into it */
+.app.opening.go .brand-slot { position: relative; width: var(--lw); height: var(--lh); }
+.app.opening.go .brand-lockup { position: absolute; width: max-content; white-space: nowrap; left: 0; top: 0; zoom: var(--os); animation: op-in 420ms ease-out both, op-travel 800ms cubic-bezier(0.6, 0, 0.2, 1) 1000ms both; }
 .app.opening.go .wm-it { animation: op-stamp 380ms cubic-bezier(0.3, 1.4, 0.5, 1) 300ms both; }
-.app.opening.go .opening-tag { animation: op-up 360ms ease-out 560ms both, op-out 260ms ease-in 1000ms forwards; }
-.app.opening.go .opening-play { animation: op-up 320ms ease-out 760ms both, op-out 260ms ease-in 1000ms forwards; }
-.app.opening.go > :not(.masthead):not(.opening-layer), .app.opening.go .levels, .app.opening.go .tagline { animation: op-reveal 420ms ease-out 1150ms both; }
-.app.opening.go .suitcase { animation: ent-settle 480ms cubic-bezier(0.2, 0.9, 0.3, 1) 1200ms both; }
-.app.opening.go .suitcase::after {
-  content: ''; position: absolute; inset: 14px; z-index: 8; border-radius: 24px; border: 3px solid var(--case-rim); pointer-events: none;
-  background: linear-gradient(180deg, var(--case-hi), var(--case-shell) 45%, var(--case-rim)); transform-origin: 50% 0;
-  animation: ent-lid 440ms cubic-bezier(0.55, 0, 0.3, 1) 1360ms both;
-}
-.app.opening.go .tray { animation: ent-fade 300ms ease-out 1360ms both; }
-.app.opening.go .toolbar { animation: ent-fade 280ms ease-out 1500ms both; }
+.app.opening.go .opening-tag { animation: op-up 360ms ease-out 560ms both, op-out 240ms ease-in 950ms forwards; }
+.app.opening.go .opening-play { animation: op-up 320ms ease-out 760ms both, op-out 240ms ease-in 950ms forwards; }
+/* the table fades up as the wordmark settles into the masthead, one gentle reveal, no per-piece effects */
+.app.opening.go > :not(.masthead):not(.opening-layer), .app.opening.go .levels, .app.opening.go .tagline { animation: op-reveal 500ms ease-out 1380ms both; }
 @keyframes op-in { from { opacity: 0; } }
-@keyframes op-travel { from { transform: translate(var(--ox, 0px), var(--oy, 0px)) scale(var(--os, 1)); } to { transform: none; } }
+@keyframes op-travel { from { transform: translate(calc(var(--ox, 0px) / var(--os, 1)), calc(var(--oy, 0px) / var(--os, 1))) scale(1); } to { transform: translate(0, 0) scale(var(--is, 1)); } }
 @keyframes op-stamp { from { opacity: 0; transform: rotate(-3deg) translateY(-0.45em) scale(1.45); } to { opacity: 1; transform: rotate(-3deg); } }
 @keyframes op-up { from { opacity: 0; transform: translateY(10px); } }
 @keyframes op-out { to { opacity: 0; } }
 @keyframes op-reveal { from { opacity: 0; transform: translateY(10px); } }
-@keyframes ent-fade { from { opacity: 0; transform: translateY(-6px); } }
-@keyframes ent-settle { from { opacity: 0; transform: translateY(20px) scale(0.97) rotate(-0.8deg); } }
-@keyframes ent-lid { 0% { transform: scaleY(1); opacity: 1; } 70% { opacity: 1; } 100% { transform: scaleY(0.03); opacity: 0; } }
 .opening-play:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
   .app.opening .opening-layer { display: none; }

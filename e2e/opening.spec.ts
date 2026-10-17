@@ -183,3 +183,19 @@ test('the opening never changes saved progress or the saved note state', async (
   expect(await page.evaluate(() => localStorage.getItem('make-it-fit:boards:v1'))).toBeNull()
   expect(await page.evaluate((k) => localStorage.getItem(k), INTRO)).toBeNull()
 })
+
+test('the wordmark lands exactly where it rests: no jump when the opening hands over, and it is drawn large (never an enlarged small bitmap)', async ({ page }) => {
+  await page.goto('/?intro')
+  await expect(page.locator('.app')).toHaveClass(/go/)
+  const rect = () => page.evaluate(() => { const r = (document.querySelector('.brand-lockup') as HTMLElement).getBoundingClientRect(); return [r.left, r.top, r.width, r.height] })
+  await page.evaluate(() => document.getAnimations().forEach((a) => { a.pause(); a.currentTime = 600 }))
+  const big = await page.evaluate(() => { const l = document.querySelector('.brand-lockup') as HTMLElement; return { zoom: getComputedStyle(l).zoom, h1: parseFloat(getComputedStyle(l.querySelector('h1')!).fontSize), w: l.getBoundingClientRect().width } })
+  expect(Number(big.zoom)).toBeGreaterThan(1.4) // laid out large, so text is rasterised large
+  await page.evaluate(() => document.getAnimations().forEach((a) => { a.currentTime = 1900 }))
+  await page.waitForTimeout(150)
+  const before = await rect()
+  await page.getByRole('button', { name: /^Play/ }).evaluate((b: HTMLElement) => b.click())
+  await expect(page.locator('.app')).not.toHaveClass(/opening/)
+  const after = await rect()
+  for (let i = 0; i < 4; i++) expect(Math.abs(before[i] - after[i])).toBeLessThan(1)
+})

@@ -29,7 +29,7 @@ const LEVELS = loadLevels().filter((l) => IDS.includes(l.id))
 // The branded opening plays once per browsing session, for a player with nothing saved yet (a returning player goes
 // straight in), never with reduced motion or under browser automation. `?intro` forces it, to review it.
 const OPENING_KEY = 'make-it-fit:opening:v1'
-const OPENING_MS = 1900
+const OPENING_MS = 1950
 function shouldPlayOpening(returning: boolean): boolean {
   if (typeof window === 'undefined') return false
   try {
@@ -85,9 +85,15 @@ export default function App() {
       const w = r.width * scale
       const h = r.height * scale
       const top = Math.max(8, (vh - (h + 112)) / 2 - vh * 0.03)
+      // The wordmark is drawn at its large size (CSS zoom) and shrinks into place, so its text and mark are always
+      // rasterised at least as large as they are shown (scaling a small bitmap up is what made the old version soft).
+      // The slot keeps the masthead's layout; the start position is a whole pixel.
+      app.style.setProperty('--lw', `${r.width}px`)
+      app.style.setProperty('--lh', `${r.height}px`)
       app.style.setProperty('--os', String(scale))
-      app.style.setProperty('--ox', `${(vw - w) / 2 - r.left}px`)
-      app.style.setProperty('--oy', `${top - r.top}px`)
+      app.style.setProperty('--is', String(1 / scale))
+      app.style.setProperty('--ox', `${Math.round((vw - w) / 2) - r.left}px`)
+      app.style.setProperty('--oy', `${Math.round(top) - r.top}px`)
       app.style.setProperty('--tag-top', `${top + h + 18}px`)
       setGo(true)
       timer = window.setTimeout(stop, OPENING_MS)
@@ -167,6 +173,7 @@ export default function App() {
     <div className={`app${opening ? ` opening${go ? ' go' : ''}` : ''}`} ref={appRef}>
       <header className="masthead">
         <div className="brand">
+          <div className="brand-slot">
           <div className="brand-lockup" ref={lockupRef}>
           <svg className="brand-mark" viewBox="0 0 44 40" width="44" height="40" aria-hidden="true">
             <path d="M15 9V6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3" fill="none" stroke="#2b2433" strokeWidth="2.6" strokeLinecap="round" />
@@ -177,6 +184,7 @@ export default function App() {
             <path d="M28 26h8v6h-8z" fill="none" stroke="#fff8e9" strokeWidth="1.6" strokeDasharray="3 2" />
           </svg>
           <h1>Make <span className="wm-it">It</span> Fit</h1>
+          </div>
           </div>
           <p className="tagline">Bad decisions. Limited luggage.</p>
         </div>
