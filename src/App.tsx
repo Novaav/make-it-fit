@@ -29,7 +29,7 @@ const LEVELS = loadLevels().filter((l) => IDS.includes(l.id))
 // The branded opening plays once per browsing session, for a player with nothing saved yet (a returning player goes
 // straight in), never with reduced motion or under browser automation. `?intro` forces it, to review it.
 const OPENING_KEY = 'make-it-fit:opening:v1'
-const OPENING_MS = 1950
+const OPENING_MS = 2480
 function shouldPlayOpening(returning: boolean): boolean {
   if (typeof window === 'undefined') return false
   try {

@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { dragItem, piece } from './helpers'
 
 // The opening: a branded first impression. The wordmark is centred large on the empty table with a luggage tag and a
-// Play button, then travels to the masthead while the packing table fades up. About 1.9 s, transform and opacity only,
+// Play button, then travels to the masthead while the packing table fades up. About 2.4 s, transform and opacity only,
 // once per browsing session for a new player; a tap, key press or Play ends it; reduced motion has none. Automation
 // (navigator.webdriver) skips it, so `?intro` forces it (that is also how the owner reviews it). Runs on Chromium and on
 // Playwright's WebKit engine (which is not Safari itself).
@@ -40,7 +40,7 @@ const record = (page: Page) => page.evaluate(() => (window as unknown as { __e: 
 const hasOpening = (page: Page) => page.locator('.app.opening').count()
 const note = (page: Page) => page.getByRole('region', { name: /^How to play Level/ })
 
-test('the opening: wordmark centred on the empty table, tag and Play, then it travels into the masthead; transform and opacity only, about 1.9 s, no layout shift', async ({ page }) => {
+test('the opening: wordmark centred on the empty table, tag and Play, then it travels into the masthead; transform and opacity only, about 2.5 s, no layout shift', async ({ page }) => {
   await instrument(page)
   await page.goto('/?intro')
   await expect(page.locator('.app')).toHaveClass(/opening/)
@@ -70,8 +70,8 @@ test('the opening: wordmark centred on the empty table, tag and Play, then it tr
   await expect(page.locator('.app')).not.toHaveClass(/opening/, { timeout: 5000 })
   const m = await record(page)
   const ms = m.end! - m.start!
-  expect(ms).toBeGreaterThan(1500)
-  expect(ms).toBeLessThan(2600)
+  expect(ms).toBeGreaterThan(2000)
+  expect(ms).toBeLessThan(3300)
   const sorted = m.frames.slice(1).sort((a, b) => a - b)
   // frame pacing is only meaningful where the browser runs at full rate; this machine's headless Chrome is capped at 30 Hz, so allow for that
   expect(sorted[Math.floor(sorted.length * 0.95)]).toBeLessThan(80)
@@ -191,7 +191,7 @@ test('the wordmark lands exactly where it rests: no jump when the opening hands 
   await page.evaluate(() => document.getAnimations().forEach((a) => { a.pause(); a.currentTime = 600 }))
   const big = await page.evaluate(() => { const l = document.querySelector('.brand-lockup') as HTMLElement; return { zoom: getComputedStyle(l).zoom, h1: parseFloat(getComputedStyle(l.querySelector('h1')!).fontSize), w: l.getBoundingClientRect().width } })
   expect(Number(big.zoom)).toBeGreaterThan(1.4) // laid out large, so text is rasterised large
-  await page.evaluate(() => document.getAnimations().forEach((a) => { a.currentTime = 1900 }))
+  await page.evaluate(() => document.getAnimations().forEach((a) => { a.currentTime = 2700 }))
   await page.waitForTimeout(150)
   const before = await rect()
   await page.getByRole('button', { name: /^Play/ }).evaluate((b: HTMLElement) => b.click())
