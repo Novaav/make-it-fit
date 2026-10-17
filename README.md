@@ -4,7 +4,19 @@
 
 A small browser puzzle game about packing an open suitcase. Drag, rotate and fit illustrated belongings into the case, stay within the packing allowance, and collect as much Chaos as the suitcase allows. Three hand-made levels, no timer, no sound, no account, no server.
 
-Status: feature-complete (three levels). Hosting instructions are in [DEPLOYMENT.md](DEPLOYMENT.md). All artwork is original, drawn as SVG in code.
+**Built with:** React 19, TypeScript, Vite, Vitest, Playwright, a Python puzzle solver, GitHub Actions. All artwork is original, drawn as SVG in code.
+
+Status: feature-complete (three levels). <!-- Add the playable link and screenshots here once the game is published. -->
+
+## Why the engineering is interesting
+
+- **The puzzles are proven, not guessed.** A separate exhaustive solver (Python) shows every level is solvable and finds its perfect score; CI fails if the committed puzzle data drifts from what it derives.
+- **The rules are a pure TypeScript engine** (grid shapes, rotation, collision, undo, win and weight rules) with no React in it, so they are tested headlessly.
+- **Dragging is tuned for Safari's engine.** Pointer input is applied once per frame and React re-renders only when the snapped target changes; browser tests measure it on Chrome and Playwright's WebKit.
+- **Saved data is treated as untrusted.** Progress and arrangements are versioned, validated and replayed through the engine, so a corrupt save can never put an invalid board on screen.
+- **Accessible by construction:** full keyboard play, screen-reader announcements, visible focus, reduced-motion support.
+
+How it fits together: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## How to play
 
@@ -27,7 +39,9 @@ Status: feature-complete (three levels). Hosting instructions are in [DEPLOYMENT
 
 A new player's first visit of a browsing session opens with a branded start: the wordmark sits large on the empty table with its tagline and a Play button, and it waits, with no timer, until Play is pressed (no other tap or key starts the game); Play moves the wordmark into the masthead as the packing table fades up (about 0.85 s), and the how-to-play note follows once that has settled. Returning players, browser automation and a visit already started in the same session go straight in, reduced motion shows the start without movement, and `?intro` on the address replays it for review. Rotation and the layout of the "To pack" tray are designed so that rotating an item never changes the size of the panel. Reduced-motion preferences are respected.
 
-## Run it
+## Build and run (for the author and anyone the author has permitted)
+
+The [licence](LICENSE) lets you read this code and play the hosted game; it does not grant permission to run, copy or modify the code, so please ask first (contact in the licence). These commands document how the project is built and verified.
 
 Requires Node.js 22 or newer (CI uses 24) and npm.
 
@@ -61,13 +75,20 @@ On `npm run dev` a small **Dev tools** panel (bottom-left) offers *Test win & co
 
 ## Quality notes
 
-- **Puzzle data is proven, not guessed.** `verify_levels.py` is an independent exhaustive solver: it shows each level is solvable, finds the perfect Chaos, and CI fails if the committed puzzle data and solution fixtures drift from its output. The game engine is pure TypeScript with no React dependency and is unit-tested headlessly.
+- **Puzzle data is proven, not guessed.** `verify_levels.py` is a separate exhaustive solver, written in Python: it shows each level is solvable, finds the perfect Chaos, and CI fails if the committed puzzle data and solution fixtures drift from its output. The game engine is pure TypeScript with no React dependency and is unit-tested headlessly.
 - **Accessibility.** Everything can be played from the keyboard, the running score, weight left and the win are announced to screen readers, focus is visible, dialogs manage focus, and `prefers-reduced-motion` removes the opening movement and other animation.
 - **Browsers.** Automated tests run on Chrome, Playwright's WebKit engine (which is not Safari itself) and a Firefox smoke subset, at phone, tablet and desktop sizes, against both the development server and the production build. Checking real Safari and a physical iPhone is a manual step.
 - **Production build.** Static files only, no third-party requests; a strict Content-Security-Policy and caching headers are in `public/_headers` and are covered by a test. The build is checked to contain no developer tools or solution data (`npm run check:prod-clean`).
 - **Third-party material.** React (MIT) and three fonts (SIL OFL 1.1) are used; their notices ship with the game in `public/third-party-notices.txt`.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the engine, the solver, state and persistence fit together.
+
+## Limitations
+
+- Three levels, one device: progress and saved arrangements live in the browser's `localStorage`; there are no accounts or sync.
+- Real Safari and physical-phone behaviour have only been checked informally, not by an automated or documented device test; the automated suite uses Playwright's WebKit engine, which is not Safari.
+- The browser test suite expects Google Chrome (`channel: 'chrome'`) plus Playwright's WebKit and Firefox builds (`npx playwright install chrome webkit firefox`).
+- Rotation and layouts are tuned for the three shipped levels; adding a level means regenerating the puzzle data with the solver.
 
 ## Project layout
 
@@ -86,6 +107,6 @@ VERIFIED_LEVELS.json, verify_levels.py, LEVEL_DESIGN.md   puzzle data, its verif
 
 The suitcase is a hidden cell grid and every item is a set of cells, so geometry, overlap and rotation are deterministic and unit-tested headlessly. Level data (including the verified perfect Chaos per level) comes from `VERIFIED_LEVELS.json`.
 
-## License
+## Licence
 
-Copyright © the author. **All rights reserved.** No licence is granted to use, copy, modify or distribute this code or artwork.
+Source-available, not open source. Copyright (c) 2026 Nova Zandkarimi, all rights reserved: the code is public to read and the game is free to play, and no other permission is granted to use, copy, modify, redistribute or commercially exploit it. See [`LICENSE`](LICENSE). Nothing there limits rights the law or GitHub's terms of service give you (for example viewing and forking on GitHub). Third-party components (React under MIT, three fonts under the SIL Open Font License) keep their own licences; see [`public/third-party-notices.txt`](public/third-party-notices.txt).

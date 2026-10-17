@@ -1,6 +1,8 @@
 {
   "name": "make-it-fit",
   "private": true,
+  "license": "UNLICENSED",
+  "author": "Nova Zandkarimi",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
