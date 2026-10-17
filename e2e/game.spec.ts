@@ -90,7 +90,9 @@ test('Level 1: solving it shows the success dialog, Next level moves on, progres
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('heading', { name: 'Packed!' })).toBeVisible()
   await expect(dialog).toContainText('Required items 5/5')
-  await expect(dialog).not.toContainText('Chaos') // Level 1 is unchanged: no Chaos
+  await expect(dialog).toContainText('Chaos packed 9') // Level 1 shows Chaos but has no target
+  await expect(dialog).not.toContainText('needed')
+  await expect(dialog).not.toContainText('Maximum Chaos')
   await expect(dialog.getByRole('button', { name: 'Next level' })).toBeFocused()
   expect(await board(page).boundingBox()).toEqual(boardBefore) // success state never shifts the layout
   await expect(tab(page, 2)).toBeEnabled()

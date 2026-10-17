@@ -8,8 +8,8 @@ Status: playable local build. Not deployed. Artwork is original but temporary.
 
 ## How to play
 
-- **Goal (Level 1):** pack every item; rotate where needed.
-- **Goal (Levels 2-3):** reach the target **Chaos** (every item has a Chaos number, always visible) within the weight allowance (6.5 kg, then 21 kg); exactly the allowance is fine. Level 3 also has two **MUST** items that must come. A perfect pack beats the target by a few points; the game never reveals which combination does it. Weights under 1 kg are shown in grams (900 g), the rest in kilograms (2.25 kg).
+- **Goal (Level 1):** pack every item; rotate where needed. Every item carries a stamped Chaos number and the total counts up as you pack, but nothing has to be reached.
+- **Goal (Levels 2-3):** reach the target **Chaos** (every item has a Chaos number, always visible) within the weight allowance (6.5 kg, then 21 kg); exactly the allowance is fine. Level 3 also has two **MUST** items that must come. A perfect pack beats the target by a few points; the game never reveals which combination does it, and reaching it earns a gold meter, a stitched-gold flourish and a PERFECT PACK seal on the boarding pass. Weights under 1 kg are shown in grams (900 g), the rest in kilograms (2.25 kg).
 - **Feedback:** while placing, green means the item fits there and red means it overlaps something or sticks out. Each item shows its weight on levels with an allowance.
 - **Finish:** a normal win and a perfect win each show their own dialog once; **Next level** or **Keep packing** (you can keep chasing a perfect pack). Unlimited undo and reset. A short handwritten how-to note opens the first time you enter each level; **How to play** replays it.
 - **Progress:** completed levels and best Chaos are saved in your browser's `localStorage` only, and so is the arrangement you left in each level. A level completed earlier keeps its check mark, but the suitcase is only "Packed!" while its current arrangement is valid. Levels unlock in order.

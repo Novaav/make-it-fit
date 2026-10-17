@@ -185,7 +185,7 @@ test.describe('item identification', () => {
     await piece(page, 'jeans').hover()
     await expect(page.locator('.item-info')).toContainText('Jeans')
     await expect(page.locator('.item-info')).not.toContainText('kg') // Level 1 has no allowance, so no weights
-    await expect(page.locator('.item-info')).toContainText('Required')
+    await expect(page.locator('.item-info')).toContainText('Chaos 2') // Level 1 shows Chaos but no weights
   })
 })
 
@@ -198,6 +198,6 @@ test.describe('touch', () => {
     await page.evaluate(() => window.scrollTo(0, 150))
     await page.locator('[data-item="shirt"]').tap()
     await expect(page.locator('.item-info')).toContainText('T-shirt')
-    await expect(page.locator('.item-info')).toContainText('Required')
+    await expect(page.locator('.item-info')).toContainText('Chaos 2')
   })
 })
