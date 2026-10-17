@@ -4,7 +4,7 @@
 
 A small browser puzzle game about packing an open suitcase. Drag, rotate and fit illustrated belongings into the case, stay within the packing allowance, and collect as much Chaos as the suitcase allows. Three hand-made levels, no timer, no sound, no account, no server.
 
-Status: playable local build. Not deployed. Artwork is original but temporary.
+Status: feature-complete and release-prepared; not deployed yet (see [DEPLOYMENT.md](DEPLOYMENT.md)). All artwork is original, drawn as SVG in code.
 
 ## How to play
 
@@ -25,7 +25,7 @@ Status: playable local build. Not deployed. Artwork is original but temporary.
 | Take an item out | Drag it back to the tray, or `Remove` | `Delete` / `Backspace` |
 | Undo | `Undo` button | `Ctrl`/`⌘` + `Z` |
 
-Rotation and the layout of the "To pack" tray are designed so that rotating an item never changes the size of the panel. Reduced-motion preferences are respected.
+The first load of a browsing session opens with a short (about 1.3 s) entrance in which the table comes to life; any touch or key skips it, and it is not played with reduced motion. Rotation and the layout of the "To pack" tray are designed so that rotating an item never changes the size of the panel. Reduced-motion preferences are respected.
 
 ## Run it
 
@@ -45,10 +45,11 @@ npx tsc -b                     # type check
 npm test                       # unit tests (Vitest): engine, UI helpers, progress, markup
 python3 verify_levels.py       # re-verifies the puzzle data with the reference solver
 npm run check:prod-clean       # production build must contain no dev tools or solution data
-npm run test:e2e               # browser tests (Playwright) in a real browser
+npm run test:e2e               # browser tests (Playwright): Chrome, WebKit and the production build
+PW_FIREFOX=1 npm run test:e2e  # also a Firefox smoke test (npx playwright install firefox first)
 ```
 
-- The browser tests use your locally installed **Google Chrome** (`channel: 'chrome'` in `playwright.config.ts`), start their own dev and preview servers on ports 5180 and 5181, and play real drags, rotations, keyboard flows, progression and persistence at desktop and phone sizes.
+- The browser tests use your locally installed **Google Chrome** (plus Playwright's WebKit engine, which is not Safari itself) (`channel: 'chrome'` in `playwright.config.ts`), start their own dev and preview servers on ports 5180 and 5181, and play real drags, rotations, keyboard flows, progression and persistence at desktop and phone sizes.
 - `TEST_SOLUTIONS.md` lists engine-verified layouts for every level (coordinates, rotations and grids). A test fails if the file drifts from the engine; regenerate with `npx vitest run -u src/dev/solutionsDoc.test.ts`.
 
 ### Dev-only test tools
@@ -60,7 +61,8 @@ On `npm run dev` a small **Dev tools** panel (bottom-left) offers *Test win & co
 ```
 src/engine/       pure TypeScript rules: shapes, rotation, placement, undo, win/weight checks (no React)
 src/ui/           pointer/grid maths and the fixed per-level tray layouts
-src/components/   temporary SVG item artwork
+src/art/          original SVG item artwork per level, plus STYLE.md (the art style guide)
+src/components/   item art renderer, Chaos stamps, perfect-pack seal and flourish, the how-to-play note
 src/LevelPlay.tsx the playable level screen
 src/App.tsx       level tabs, progression and the dev-only test session
 src/progress.ts   validated localStorage persistence

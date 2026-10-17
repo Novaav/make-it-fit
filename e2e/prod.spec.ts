@@ -59,3 +59,31 @@ test('production assets load with relative paths, so the build works from a sub-
   const html = await page.content()
   expect(html).not.toMatch(/(?:src|href)="\/assets\//)
 })
+
+test('the shipped Content-Security-Policy and headers file work: the game runs and plays with no violations', async ({ page, request, baseURL }) => {
+  const { readFileSync } = await import('node:fs')
+  const headersFile = readFileSync('public/_headers', 'utf8')
+  const csp = /Content-Security-Policy:\s*(.+)/.exec(headersFile)![1].trim()
+  expect(csp).toContain("default-src 'self'")
+  expect(csp).not.toMatch(/https?:\/\//) // no third-party origin is ever allowed
+  expect(csp).not.toContain("'unsafe-eval'")
+  expect(headersFile).toMatch(/\/assets\/\*\s+Cache-Control: public, max-age=31536000, immutable/)
+  expect((await request.get(`${baseURL}/_headers`)).ok()).toBe(true) // Vite copies it into the build for Cloudflare Pages
+
+  const problems: string[] = []
+  page.on('pageerror', (e) => problems.push(e.message))
+  page.on('console', (m) => m.type() === 'error' && problems.push(m.text()))
+  await page.addInitScript(() => document.addEventListener('securitypolicyviolation', (e) => console.error(`CSP violation: ${e.violatedDirective} ${e.blockedURI}`)))
+  await page.route('**/*', async (route) => {
+    if (route.request().resourceType() !== 'document') return route.continue()
+    const response = await route.fetch()
+    await route.fulfill({ response, headers: { ...response.headers(), 'content-security-policy': csp } })
+  })
+  await page.goto('/')
+  await page.evaluate(() => localStorage.clear())
+  await page.reload()
+  await page.getByRole('button', { name: 'Skip' }).click({ timeout: 4000 }).catch(() => undefined)
+  await packStep(page, LEVEL1[4])
+  await expect(page.getByRole('region', { name: 'Objective' })).toContainText('1/5')
+  expect(problems).toEqual([])
+})
