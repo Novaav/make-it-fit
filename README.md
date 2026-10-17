@@ -4,7 +4,7 @@
 
 A small browser puzzle game about packing an open suitcase. Drag, rotate and fit illustrated belongings into the case, stay within the packing allowance, and collect as much Chaos as the suitcase allows. Three hand-made levels, no timer, no sound, no account, no server.
 
-Status: feature-complete and release-prepared; not deployed yet (see [DEPLOYMENT.md](DEPLOYMENT.md)). All artwork is original, drawn as SVG in code.
+Status: feature-complete (three levels). Hosting instructions are in [DEPLOYMENT.md](DEPLOYMENT.md). All artwork is original, drawn as SVG in code.
 
 ## How to play
 
@@ -29,7 +29,7 @@ A new player's first visit of a browsing session opens with a branded start: the
 
 ## Run it
 
-Requires Node.js (LTS) and npm.
+Requires Node.js 22 or newer (CI uses 24) and npm.
 
 ```bash
 npm install
@@ -39,6 +39,8 @@ npx vite preview     # serve the production build locally
 ```
 
 ## Test it
+
+The browser tests need Chrome and the Playwright browsers once: `npx playwright install chrome webkit firefox`.
 
 ```bash
 npx tsc -b                     # type check
@@ -55,6 +57,14 @@ PW_FIREFOX=1 npm run test:e2e  # also a Firefox smoke test (npx playwright insta
 ### Dev-only test tools
 
 On `npm run dev` a small **Dev tools** panel (bottom-left) offers *Test win & continue*, level jump, filling a verified layout, and clearing saved progress. These never write to saved progress; test unlocks live in memory and disappear on reload, and a yellow **TEST MODE** strip marks the session. The panel and the solution data are compiled out of production builds (`npm run check:prod-clean`).
+
+## Quality notes
+
+- **Puzzle data is proven, not guessed.** `verify_levels.py` is an independent exhaustive solver: it shows each level is solvable, finds the perfect Chaos, and CI fails if the committed puzzle data and solution fixtures drift from its output. The game engine is pure TypeScript with no React dependency and is unit-tested headlessly.
+- **Accessibility.** Everything can be played from the keyboard, the running score, weight left and the win are announced to screen readers, focus is visible, dialogs manage focus, and `prefers-reduced-motion` removes the opening movement and other animation.
+- **Browsers.** Automated tests run on Chrome, Playwright's WebKit engine (which is not Safari itself) and a Firefox smoke subset, at phone, tablet and desktop sizes, against both the development server and the production build. Checking real Safari and a physical iPhone is a manual step.
+- **Production build.** Static files only, no third-party requests; a strict Content-Security-Policy and caching headers are in `public/_headers` and are covered by a test. The build is checked to contain no developer tools or solution data (`npm run check:prod-clean`).
+- **Third-party material.** React (MIT) and three fonts (SIL OFL 1.1) are used; their notices ship with the game in `public/third-party-notices.txt`.
 
 ## Project layout
 
