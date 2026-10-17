@@ -144,10 +144,23 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
   const placementOf = (id: string) => gameRef.current.placements.find((p) => p.itemId === id)
   const orientationOf = (id: string): Orientation => placementOf(id)?.orientation ?? trayTurnsRef.current[id] ?? 0
 
+  // What a screen reader hears after every change: the running score, the weight left and a win, since the objective card is not a live region.
+  const scoreLine = (g: typeof game) => {
+    if (!LEVEL.items.some((i) => i.chaos > 0)) return ''
+    const parts = [`Chaos ${totalChaos(g)}${LEVEL.target !== undefined ? ` of ${LEVEL.target}` : ''}.`]
+    if (LEVEL.weightLimit !== undefined) {
+      const w = totalWeight(g)
+      parts.push(w > LEVEL.weightLimit ? `Over the allowance by ${formatWeight(w - LEVEL.weightLimit)}.` : `${formatWeight(LEVEL.weightLimit - w)} left.`)
+    }
+    if (isPerfect(g)) parts.push('Perfect pack!')
+    else if (isWon(g)) parts.push('That wins the level.')
+    return ` ${parts.join(' ')}`
+  }
+
   const apply = (result: ActionResult, ok: string) => {
     if (result.ok) {
       setGame(result.state)
-      setMessage(ok)
+      setMessage(ok + scoreLine(result.state))
     } else setMessage(`Can't do that: ${REASONS[result.error]}.`)
     return result.ok
   }
