@@ -48,7 +48,16 @@ describe('Level 1 copy', () => {
     expect(h).not.toContain('allowance')
     expect(h).not.toContain('data-weight')
     expect(h).not.toContain('chip-w')
-    expect(h).not.toContain('chaos')
+  })
+
+  it('introduces Chaos with no target: every item is stamped, the total counts up, and nothing must be reached', () => {
+    const h = play('01')
+    expect(h.match(/class="chaos-badge"/g)).toHaveLength(5)
+    for (const [value, n] of [['2', 2], ['3', 1], ['1', 2]] as const) expect(h.match(new RegExp(`data-chaos="${value}"`, 'g')), `Chaos ${value}`).toHaveLength(n)
+    expect(h).toMatch(/Chaos<\/span><b>0<\/b>/)
+    expect(h).toMatch(/Required<\/span><b>0\/5<\/b>/)
+    for (const word of ['to win', 'perfect', 'chaos-bar', 'Must pack', 'MUST']) expect(h, word).not.toContain(word)
+    expect(h).toContain('Chaos 2.') // item descriptions mention it for screen readers
   })
 })
 

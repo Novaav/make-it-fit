@@ -32,6 +32,8 @@ import { chooseArrangement } from './ui/fit'
 import { useViewport } from './ui/useViewport'
 import TableProps from './components/TableProps'
 import { ChaosBadge } from './components/ChaosBadge'
+import PerfectFlourish from './components/PerfectFlourish'
+import PerfectSeal from './components/PerfectSeal'
 import IntroNote from './components/IntroNote'
 import { ITEM_NAMES, LEVEL_TITLES } from './levelMeta'
 import { formatLoad, formatWeight } from './weight'
@@ -455,6 +457,19 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const won = isWon(game)
   const perfectNow = isPerfect(game)
   const chaos = totalChaos(game)
+  // The flourish plays whenever the pack BECOMES perfect (also after taking something out and packing it back),
+  // never for a restored perfect pack or a historical completion. Derived from the current arrangement only.
+  const [spark, setSpark] = useState(false)
+  const [wasPerfect, setWasPerfect] = useState(perfectNow)
+  if (perfectNow !== wasPerfect) {
+    setWasPerfect(perfectNow)
+    setSpark(perfectNow)
+  }
+  useEffect(() => {
+    if (!spark) return
+    const t = window.setTimeout(() => setSpark(false), 2800)
+    return () => window.clearTimeout(t)
+  }, [spark])
   useEffect(() => {
     if (!won) return
     // Dev-tool fills must never write real progress.
@@ -508,6 +523,8 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const weight = totalWeight(game)
   const overWeight = isOverWeight(game)
   const solved = isWon(game)
+  // Chaos is shown on every item from Level 1; only Levels 2-3 have a Chaos target (Level 1 is still won by packing all five).
+  const scored = LEVEL.items.some((i) => i.chaos > 0)
   const hasChaos = LEVEL.target !== undefined
   const target = LEVEL.target ?? 0
   const perfectScore = LEVEL.perfect ?? 0
@@ -533,7 +550,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   // not on the bounding-box corner, which is empty for T/U/L shapes.
   const chips = (id: string, o: Orientation, room = '0px') => {
     const item = itemById(id)
-    const badge = hasChaos ? <ChaosBadge item={item} orientation={o} /> : null
+    const badge = scored ? <ChaosBadge item={item} orientation={o} /> : null
     if (limit === undefined) return badge
     // Redrawn items print the weight on a label zone built into the illustration; others still use a chip.
     if (hasLabelZone(id))
@@ -559,10 +576,11 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
       </>
     )
   }
-  const describe = (id: string) =>
-    limit === undefined
-      ? ''
-      : ` ${itemById(id).required ? 'Mandatory' : `Chaos ${itemById(id).chaos}`}, ${formatWeight(itemById(id).weight)}.`
+  const describe = (id: string) => {
+    const it = itemById(id)
+    const parts = [it.required && it.chaos === 0 ? 'Mandatory' : scored ? `Chaos ${it.chaos}` : '', limit !== undefined ? formatWeight(it.weight) : ''].filter(Boolean)
+    return parts.length ? ` ${parts.join(', ')}.` : ''
+  }
 
   // What the info line shows: the item being carried, else the one under the mouse, else the focused one, else the selected one.
   const infoId = carry?.itemId ?? hoverId ?? focusId ?? selected
@@ -634,7 +652,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
             </p>
             <div className="pills">
               {hasChaos && (
-                <span className={`pill chaos${solved ? ' ok' : ''}${perfectNow ? ' max' : ''}`}>
+                <span className={`pill chaos${solved ? ' ok' : ''}${perfectNow ? ' max' : ''}${spark ? ' spark' : ''}`}>
                   <span className="pill-label">Chaos</span>
                   <b>{chaos}</b>
                   <span className="of">of {target} to win</span>
@@ -648,9 +666,10 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                     aria-valuetext={`${chaos} Chaos. ${target} wins, ${perfectScore} is perfect.`}
                   >
                     <span className="fill" style={{ width: `${Math.min(100, (chaos / perfectScore) * 100)}%` }} />
+                    {perfectNow && <span className="sheen" aria-hidden="true" />}
                     <i className="tick win" style={{ left: `${(target / perfectScore) * 100}%` }} aria-hidden="true" />
                   </span>
-                  <span className="of perfect">perfect {perfectScore}</span>
+                  <span className="of perfect">{perfectNow ? '★ perfect' : `perfect ${perfectScore}`}</span>
                 </span>
               )}
               {required.length > 0 && (
@@ -658,6 +677,12 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                   <span className="pill-label">{hasChaos ? 'Must pack' : 'Required'}</span>
                   <b>{packedCount}/{required.length}</b>
                   {packedCount === required.length && <span aria-hidden="true">✓</span>}
+                </span>
+              )}
+              {scored && !hasChaos && (
+                <span className="pill chaos plain">
+                  <span className="pill-label">Chaos</span>
+                  <b>{chaos}</b>
                 </span>
               )}
               {limit !== undefined && (
@@ -690,7 +715,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
           </section>
           <div className="case-stick">
           <p className="case-strip" aria-hidden="true">
-            {hasChaos ? <span>Chaos {chaos}/{target}</span> : <span>Packed {packedCount}/{required.length}</span>}
+            {hasChaos ? <span>Chaos {chaos}/{target}</span> : <span>Packed {packedCount}/{required.length}{scored && ` · Chaos ${chaos}`}</span>}
             {limit !== undefined && <span className={overWeight ? 'over' : ''}>{formatLoad(weight)}/{formatWeight(limit)}</span>}
           </p>
           <div className={`suitcase${overWeight ? ' strain' : ''}`}>
@@ -701,6 +726,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
             <span className="hw corner br" aria-hidden="true" />
             <span className="hw latch l" aria-hidden="true" />
             <span className="hw latch r" aria-hidden="true" />
+            {spark && <PerfectFlourish />}
             <div
               ref={boardRef}
               className={`board${carry?.mode === 'keyboard' ? ' keyboard-active' : ''}`}
@@ -755,7 +781,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               <>
                 <b>{name(infoItem.id)}</b>
                 {limit !== undefined && <span>{formatWeight(infoItem.weight)}</span>}
-                <span className={infoItem.required ? 'req' : 'opt'}>{infoItem.required ? (hasChaos ? 'Mandatory' : 'Required') : `Chaos ${infoItem.chaos}`}</span>
+                <span className={infoItem.required ? 'req' : 'opt'}>{infoItem.required && infoItem.chaos === 0 ? (hasChaos ? 'Mandatory' : 'Required') : `Chaos ${infoItem.chaos}`}</span>
               </>
             ) : (
               'Hover, tap or focus an item to see what it is.'
@@ -773,10 +799,10 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                   ? 'Drop here to take it out.'
                   : selected && !placedIds.has(selected)
                     ? name(selected)
-                    : hasChaos
-                      ? required.length
-                        ? 'MUST = mandatory · circles = Chaos'
-                        : 'Circles show each item’s Chaos'
+                    : scored
+                      ? hasChaos && required.length
+                        ? 'MUST = mandatory · stamps = Chaos'
+                        : 'Stamps show each item’s Chaos'
                       : ''}
               </span>
             </div>
@@ -863,6 +889,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               <span>{dialogKind === 'perfect' ? 'First class' : 'Boarding pass'}</span>
               <span>Gate {Number(LEVEL.id)}</span>
             </div>
+            {dialogKind === 'perfect' && <PerfectSeal />}
             <p className="dialog-kicker">Level {Number(LEVEL.id)} · {LEVEL_TITLES[LEVEL.id]}</p>
             {import.meta.env.DEV && devTainted.current && <p className="test-tag">TEST RUN — not saved</p>}
             <h2 id="done-title">{dialogKind === 'perfect' ? 'Maximum Chaos!' : 'Packed!'}</h2>
@@ -875,6 +902,11 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               {hasChaos && (
                 <li>
                   <span className="ok">✓</span> Chaos <b>{chaos}</b> (needed {target})
+                </li>
+              )}
+              {scored && !hasChaos && (
+                <li>
+                  <span className="ok">✓</span> Chaos packed <b>{chaos}</b>
                 </li>
               )}
               {limit !== undefined && (

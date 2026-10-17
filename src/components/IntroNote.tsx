@@ -14,31 +14,25 @@ export interface IntroPage {
 export function introPages(level: Level): IntroPage[] {
   const allowance = level.weightLimit !== undefined ? formatWeight(level.weightLimit) : ''
   if (level.target === undefined) {
+    // Level 1: the familiar pack-everything rule, plus the first look at Chaos (it only counts up; nothing to reach).
     return [
       { title: 'Pack it all.', lines: ['Drag each item into the suitcase.', 'Green means it fits. Red means it doesn’t.'], doodle: 'drag' },
       { title: 'Turn things.', lines: ['Press R (or Rotate) to turn an item.', 'Everything has to fit. Yes, even the jeans.'], doodle: 'turn' },
+      { title: 'Packing makes Chaos.', lines: ['Every item carries a stamped Chaos number.', 'Watch your total climb. No target yet.'], doodle: 'chaos' },
     ]
   }
   const mandatory = level.items.filter((i) => i.required)
-  const first: IntroPage = mandatory.length
-    ? {
-        title: 'Baggage you can’t leave.',
-        lines: ['The cutout and the laundry bag are MUST-PACK.', 'They take their space and weight first.'],
-        doodle: 'lock',
-      }
-    : {
-        title: 'Collect Chaos.',
-        lines: ['Every item has a Chaos number.', `Pack ${level.target} Chaos to win. Nothing is mandatory.`],
-        doodle: 'chaos',
-      }
+  if (mandatory.length) {
+    // Later levels only need the new rule; Chaos was explained on Levels 1 and 2.
+    return [
+      { title: 'Baggage you can’t leave.', lines: ['Items stamped MUST always come.', 'They take their space and weight first.'], doodle: 'lock' },
+      { title: 'Then collect Chaos.', lines: [`Reach ${level.target} Chaos within ${allowance}.`, `A perfect pack is ${level.perfect}.`], doodle: 'chaos' },
+    ]
+  }
   return [
-    first,
-    mandatory.length
-      ? { title: 'Then collect Chaos.', lines: [`Reach ${level.target} Chaos within ${allowance}.`, `A perfect pack is ${level.perfect}.`], doodle: 'chaos' }
-      : { title: 'Mind the limits.', lines: [`Weight limit: ${allowance}.`, 'The suitcase is only so big. Rotate to squeeze things in.'], doodle: 'limits' },
-    mandatory.length
-      ? { title: 'Chaos isn’t free.', lines: ['Big Chaos can weigh a lot.', 'Check weight and space before you commit.'], doodle: 'limits' }
-      : { title: 'Want it perfect?', lines: [`Perfect is ${level.perfect} Chaos.`, 'Full but short? Swap something for a more chaotic item.'], doodle: 'perfect' },
+    { title: 'Now you choose.', lines: ['Nothing is mandatory.', `Pack ${level.target} Chaos to win.`], doodle: 'chaos' },
+    { title: 'Mind the limits.', lines: [`Weight limit: ${allowance}.`, 'The suitcase is only so big. Rotate to squeeze things in.'], doodle: 'limits' },
+    { title: 'Want it perfect?', lines: [`Perfect is ${level.perfect} Chaos.`, 'Full but short? Swap something for a more chaotic item.'], doodle: 'perfect' },
   ]
 }
 
