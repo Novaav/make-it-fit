@@ -88,7 +88,7 @@ interface Props {
   onDevFillUsed?: () => void
   /** The how-to-play note: shown on a first visit (`open`), replayable from the objective. */
   /** `replay` is true when the player asked for the note again; a first-visit note steps aside when they start playing. */
-  intro?: { open: boolean; replay?: boolean; onOpen: () => void; onClose: () => void }
+  intro?: { open: boolean; replay?: boolean; /** a first-visit note that has not been seen yet (it may still be waiting for the entrance) */ pending?: boolean; onOpen: () => void; onClose: () => void }
 }
 
 export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLast, devFill, saved, onBoardChange, onDevFillUsed, intro }: Props) {
@@ -300,7 +300,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
 
   // A first-visit note steps aside as soon as the player starts playing (picks something up or turns it).
   const dismissNote = () => {
-    if (intro?.open && !intro.replay) intro.onClose()
+    if (intro && !intro.replay && (intro.open || intro.pending)) intro.onClose()
   }
 
   const startPointer = (e: ReactPointerEvent, itemId: string, source: Source) => {
@@ -858,7 +858,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
                   Everything is in the suitcase.
                 </p>
               )}
-              {LEVEL.items.map((item) => {
+              {LEVEL.items.map((item, index) => {
                 if (placedIds.has(item.id)) return null
                 const o = trayTurns[item.id] ?? 0
                 const slot = layout.slots[item.id]
@@ -872,7 +872,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
                     <button
                       type="button"
                       className={`piece in-tray${selected === item.id ? ' selected' : ''}`}
-                      style={pieceVars(item.id, o)}
+                      style={{ ...pieceVars(item.id, o), '--i': index } as React.CSSProperties}
                       data-item={item.id}
                       aria-label={`${name(item.id)}, not packed.${describe(item.id)} Enter to pick up, R to rotate.`}
                       {...infoHandlers(item.id)}

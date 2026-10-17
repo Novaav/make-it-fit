@@ -193,7 +193,9 @@ test.describe('perfect-pack transition timing', () => {
     return page.evaluate(() => {
       const m = (window as unknown as { __m: { frames: number[]; goldAt: number; dialogAt: number } }).__m
       const sorted = m.frames.slice(1).sort((a, b) => a - b)
-      return { goldAt: m.goldAt, dialogAt: m.dialogAt, p95: sorted[Math.floor(sorted.length * 0.95)], max: sorted[sorted.length - 1] }
+      // the machine's own frame time (before the drop) is the yardstick: some headless browsers run at 30 Hz
+      const idle = m.frames.slice(1, 20).sort((a, b) => a - b)[9]
+      return { goldAt: m.goldAt, dialogAt: m.dialogAt, p95: sorted[Math.floor(sorted.length * 0.95)], max: sorted[sorted.length - 1], idle }
     })
   }
 
@@ -202,7 +204,7 @@ test.describe('perfect-pack transition timing', () => {
     expect(m.goldAt).toBeLessThan(250)
     expect(m.dialogAt).toBeGreaterThan(250) // a beat after the meter, not simultaneous
     expect(m.dialogAt).toBeLessThan(800) // and no long pause
-    expect(m.p95).toBeLessThan(40)
+    expect(m.p95).toBeLessThan(Math.max(40, m.idle * 1.8))
     expect(m.max).toBeLessThan(250)
   })
 

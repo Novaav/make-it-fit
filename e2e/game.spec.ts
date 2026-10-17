@@ -201,7 +201,7 @@ for (const [w, h] of [[1440, 900], [1280, 720]] as const) {
 }
 
 // Responsive matrix: the chosen arrangement must work at desktop, tablet, phone and landscape-phone sizes.
-for (const [w, h] of [[1440, 900], [1280, 720], [1100, 700], [1024, 768], [768, 1024], [430, 932], [390, 844], [360, 740], [844, 390]] as const) {
+for (const [w, h] of [[1440, 900], [1280, 720], [1180, 820], [1100, 700], [1024, 768], [768, 1024], [430, 932], [390, 844], [360, 740], [932, 430], [844, 390]] as const) {
   for (const id of ['L1', 'L2', 'L3']) {
     test(`layout ${w}×${h} ${id}: no horizontal scroll, suitcase and tools on screen, weight chips never clipped`, async ({ page }) => {
       await page.setViewportSize({ width: w, height: h })

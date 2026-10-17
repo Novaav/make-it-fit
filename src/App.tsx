@@ -26,6 +26,19 @@ const countCommit = () => {
 }
 const LEVELS = loadLevels().filter((l) => IDS.includes(l.id))
 
+// The table comes to life once per browsing session (not on reload, level switch or return), never with reduced motion.
+const ENTRANCE_KEY = 'make-it-fit:entrance:v1'
+const ENTRANCE_MS = 1350
+function shouldPlayEntrance(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
+    return window.sessionStorage.getItem(ENTRANCE_KEY) === null
+  } catch {
+    return false
+  }
+}
+
 export default function App() {
   const [progress, setProgress] = useState<Progress>(() => loadProgress(browserStorage()))
   const [levelId, setLevelId] = useState(() => startingLevel(progress, IDS))
@@ -39,6 +52,25 @@ export default function App() {
   // Which how-to-play notes were seen (kept apart from progress), and a level whose note is being replayed on request.
   const [introSeen, setIntroSeen] = useState<IntroSeen>(() => loadIntroSeen(browserStorage()))
   const [replayIntro, setReplayIntro] = useState<string | null>(null)
+  const [entrance, setEntrance] = useState(shouldPlayEntrance)
+  useEffect(() => {
+    if (!entrance) return
+    try {
+      window.sessionStorage.setItem(ENTRANCE_KEY, '1')
+    } catch {
+      // private mode: it simply plays again next time
+    }
+    const stop = () => setEntrance(false)
+    const timer = window.setTimeout(stop, ENTRANCE_MS)
+    // the first touch, click or key press ends it at once, so the game is never made to wait
+    window.addEventListener('pointerdown', stop, { capture: true, once: true })
+    window.addEventListener('keydown', stop, { capture: true, once: true })
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('pointerdown', stop, { capture: true })
+      window.removeEventListener('keydown', stop, { capture: true })
+    }
+  }, [entrance])
   // Why a locked level is locked, shown briefly when its tab is pressed (a disabled button would stay silent, especially on touch).
   const [lockNote, setLockNote] = useState<string | null>(null)
   useEffect(() => {
@@ -81,8 +113,10 @@ export default function App() {
       onDevFillUsed={() => setDevFill(undefined)}
       intro={{
         // a first visit shows the note; TEST MODE never does (and never saves that it was seen)
-        open: replayIntro === levelId || (!inTestMode && !introSeen[levelId]),
+        // a first-visit note waits for the entrance to finish (or be skipped), so the two never compete
+        open: replayIntro === levelId || (!inTestMode && !introSeen[levelId] && !entrance),
         replay: replayIntro === levelId,
+        pending: !inTestMode && !introSeen[levelId],
         onOpen: () => setReplayIntro(levelId),
         onClose: () => {
           setReplayIntro(null)
@@ -99,7 +133,7 @@ export default function App() {
   )
 
   return (
-    <div className="app">
+    <div className={`app${entrance ? ' entrance' : ''}`}>
       <header className="masthead">
         <div className="brand">
           <svg className="brand-mark" viewBox="0 0 44 40" width="44" height="40" aria-hidden="true">

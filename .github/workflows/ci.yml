@@ -51,10 +51,12 @@ jobs:
         run: npm run check:prod-clean
 
       - name: Install Chrome and WebKit (the Safari engine) for Playwright
-        run: npx playwright install --with-deps chrome webkit
+        run: npx playwright install --with-deps chrome webkit firefox
 
       - name: Browser tests
         run: npx playwright test
+        env:
+          PW_FIREFOX: "1"
 
       - name: Upload browser test report on failure
         if: failure()
