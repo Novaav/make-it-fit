@@ -44,6 +44,7 @@ The browser tests need Chrome and the Playwright browsers once: `npx playwright 
 
 ```bash
 npx tsc -b                     # type check
+npm run lint                   # static analysis (Oxlint)
 npm test                       # unit tests (Vitest): engine, UI helpers, progress, markup
 python3 verify_levels.py       # re-verifies the puzzle data with the reference solver
 npm run check:prod-clean       # production build must contain no dev tools or solution data
@@ -65,6 +66,8 @@ On `npm run dev` a small **Dev tools** panel (bottom-left) offers *Test win & co
 - **Browsers.** Automated tests run on Chrome, Playwright's WebKit engine (which is not Safari itself) and a Firefox smoke subset, at phone, tablet and desktop sizes, against both the development server and the production build. Checking real Safari and a physical iPhone is a manual step.
 - **Production build.** Static files only, no third-party requests; a strict Content-Security-Policy and caching headers are in `public/_headers` and are covered by a test. The build is checked to contain no developer tools or solution data (`npm run check:prod-clean`).
 - **Third-party material.** React (MIT) and three fonts (SIL OFL 1.1) are used; their notices ship with the game in `public/third-party-notices.txt`.
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the engine, the solver, state and persistence fit together.
 
 ## Project layout
 
