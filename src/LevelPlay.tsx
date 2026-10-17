@@ -539,7 +539,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const mandatoryNames = required.map((i) => ITEM_NAMES[i.id] ?? i.id)
   const goalText = !hasChaos
     ? `Fit all ${required.length} items into the suitcase. Green = fits, red = doesn't.`
-    : `${required.length ? `${mandatoryNames.join(' and ')} must come. Then reach` : 'Reach'} ${target} Chaos within ${formatWeight(limit ?? 0)}. Perfect: ${perfectScore}.`
+    : `${required.length ? `${mandatoryNames.join(' and ')} must come. Then reach` : 'Reach'} ${target} Chaos within ${formatWeight(limit ?? 0)}.${required.length ? '' : ` Perfect: ${perfectScore}.`}`
   const liveHint =
     carry && snapped && preview
       ? preview.error

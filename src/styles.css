@@ -529,3 +529,7 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   .chaos-bar .sheen::after { animation: none; display: none; }
   .perfect-seal { animation: none; }
 }
+
+/* On a narrow objective card the little weight bar gives way, so "Must pack" and "Weight" stay on one row */
+.pills { container-type: inline-size; }
+@container (max-width: 400px) { .pill.weight .mini-bar { display: none; } }

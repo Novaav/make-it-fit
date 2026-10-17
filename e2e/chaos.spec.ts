@@ -135,8 +135,8 @@ test.describe('perfect pack celebration', () => {
 
 test.describe('Level 3 items', () => {
   const NAMES: Record<string, string> = {
-    cutout: 'Cardboard cutout', laundry: 'Laundry bag', outfit: 'Party outfit', hangover: 'Hangover kit', heels: 'Red-soled heels', hotel_lamp: 'Hotel lamp',
-    ceramic_foot: 'Ceramic foot', gnome: 'Concrete garden gnome', cheese: 'Wheel of cheese', liquor: 'Bottle of local spirit', robe: 'Hotel bathrobe', emergency_socks: 'Emergency socks',
+    painting: 'Hotel Painting', laundry: 'Laundry bag', outfit: 'Party outfit', hangover: 'Hangover kit', heels: 'Overpriced Heels', hotel_lamp: 'Hotel lamp',
+    ceramic_foot: 'Marble foot', gnome: 'Garden gnome', cheese: 'Wheel of cheese', liquor: 'Badcardi Rum', robe: 'Bathrobe', emergency_socks: 'Socks',
   }
   test('are all illustrated, named for assistive tech with their Chaos or MUST, and stamped identically in the tray and the suitcase', async ({ page }) => {
     await page.goto('/')
@@ -151,13 +151,13 @@ test.describe('Level 3 items', () => {
     for (const [id, name] of Object.entries(NAMES)) {
       const label = await piece(page, id).getAttribute('aria-label')
       expect(label, id).toContain(name)
-      expect(label, id).toMatch(id === 'cutout' || id === 'laundry' ? /Mandatory/ : /Chaos \d/)
+      expect(label, id).toMatch(id === 'painting' || id === 'laundry' ? /Mandatory/ : /Chaos \d/)
       const box = (await piece(page, id).boundingBox())!
       expect(Math.min(box.width, box.height), `${id} hit target`).toBeGreaterThanOrEqual(30)
     }
     const trayStamp = await piece(page, 'ceramic_foot').locator('.chaos-badge').evaluate((e) => e.outerHTML)
     await piece(page, 'ceramic_foot').focus()
-    await expect(piece(page, 'ceramic_foot').locator('.chaos-badge')).toHaveText('6')
-    expect(trayStamp).toContain('data-chaos="6"')
+    await expect(piece(page, 'ceramic_foot').locator('.chaos-badge')).toHaveText('7')
+    expect(trayStamp).toContain('data-chaos="7"')
   })
 })

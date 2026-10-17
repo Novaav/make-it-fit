@@ -12,7 +12,7 @@ def rotations(cells):
   cur=norm([(y,-x) for x,y in cur])
  return r
 
-def pack(items, W, H, no_rotate=False, timeout=120):
+def pack(items, W, H, no_rotate=False, timeout=120, prefer_rot=False):
  """Exact search: a placement (id, rotation index, x, y) for every item on the board, or None. Raises TimeoutError."""
  items=sorted(items,key=lambda i:-len(i['cells']))
  start=time.monotonic(); nodes=0
@@ -24,6 +24,7 @@ def pack(items, W, H, no_rotate=False, timeout=120):
    for oy in range(H-sh+1):
     for ox in range(W-sw+1):
      opts.append((sum(1<<((oy+y)*W+ox+x) for x,y in shape),rot,ox,oy))
+  if prefer_rot:opts.sort(key=lambda o:-(o[1]>0))   # stable: rotated placements are tried first
   placements.append(opts)
  if sum(len(i['cells']) for i in items)>W*H or any(not p for p in placements):return None
  @lru_cache(None)
@@ -61,13 +62,57 @@ def solve(level, no_rotate=False, timeout=120):
  if best is None:return {'solvable':False}
  optimal=[m for m in legal if chaos(m)==best]
  target=-(-8*best//10)   # ceil(0.8 * perfect)
- # an intuitive normal win: take the most chaotic items first, keeping whatever still fits
+ names=lambda m:[optional[i]['id'] for i in range(n) if m>>i&1]
+ passing=sorted(m for m in legal if chaos(m)>=target)
+ weight=lambda m:rg+sum(optional[i]['weight'] for i in range(n) if m>>i&1)
+ # an intuitive normal win: take the most chaotic items first, keeping whatever still fits; if that does not reach the
+ # target (a harder level), use the lightest pack that scores exactly the target
  cur=0
  for i in sorted(range(n),key=lambda i:-optional[i]['chaos']):
   if (cur|(1<<i)) in legal:cur|=1<<i
- names=lambda m:[optional[i]['id'] for i in range(n) if m>>i&1]
- return {'solvable':True,'perfect':best,'target':target,'legal_packs':len(legal),'passing_packs':sum(1 for m in legal if chaos(m)>=target),
-         'optimal_sets':[names(m) for m in optimal],'placements':legal[optimal[0]],'normal_example':{'items':names(cur),'chaos':chaos(cur),'placements':legal[cur]}}
+ if chaos(cur)<target:
+  cur=min((m for m in passing if chaos(m)==target),key=lambda m:(weight(m),m))
+ return {'solvable':True,'perfect':best,'target':target,'legal_packs':len(legal),'passing_packs':len(passing),
+         'optimal_sets':[names(m) for m in optimal],'placements':legal[optimal[0]],'normal_example':{'items':names(cur),'chaos':chaos(cur),'placements':legal[cur]},
+         'explorer':explorer(level,optional,required,passing,chaos,weight,names,best,timeout)}
+
+def explorer(level,optional,required,passing,chaos,weight,names,best,timeout):
+ """Solver-verified complete placements for the developer Solution Explorer: every perfect pack plus a handful of
+ representative normal wins (fewest/most items, lowest and lightest/heaviest, most rotated, a deterministic random one).
+ Each item subset is packed again preferring rotated placements, so 'rotated' is the most the solver finds, not an average."""
+ import random as _r
+ W,H=level['board']; n=len(optional)
+ def arrangement(m):
+  sub=[optional[i] for i in range(n) if m>>i&1]
+  p=pack(required+sub,W,H,False,timeout,prefer_rot=True)
+  assert p is not None
+  return p
+ info={m:(len([1 for i in range(n) if m>>i&1]),chaos(m),weight(m)) for m in passing}
+ arr={m:arrangement(m) for m in passing}
+ rotated={m:sum(1 for p in arr[m] if p[1]>0) for m in passing}
+ perfect=[m for m in passing if chaos(m)==best]
+ pick=[]
+ for m in perfect:pick.append(('Perfect pack',m))
+ normal=[m for m in passing if chaos(m)<best]
+ if normal:
+  pick+= [('Fewest items',min(normal,key=lambda m:(info[m][0],info[m][2],m))),
+          ('Most items',max(normal,key=lambda m:(info[m][0],-info[m][2],-m))),
+          ('Lowest score',min(normal,key=lambda m:(info[m][1],info[m][2],m))),
+          ('Highest short of perfect',max(normal,key=lambda m:(info[m][1],-info[m][2],-m))),
+          ('Lightest',min(normal,key=lambda m:(info[m][2],m))),
+          ('Heaviest',max(normal,key=lambda m:(info[m][2],-m))),
+          ('Most rotated',max(normal,key=lambda m:(rotated[m],-m))),
+          ('Random win',_r.Random('explorer-'+level['id']).choice(sorted(normal)))]
+ merged=[]
+ for label,m in pick:
+  for e in merged:
+   if e['mask']==m:e['labels'].append(label);break
+  else:merged.append({'mask':m,'labels':[label]})
+ out=[]
+ for e in merged:
+  m=e['mask']
+  out.append({'label':' · '.join(e['labels']),'perfect':chaos(m)==best,'items':names(m),'chaos':chaos(m),'weight':weight(m),'count':info[m][0],'rotated':rotated[m],'placements':[list(p) for p in arr[m]]})
+ return out
 
 def I(id,shape,w,req=True,chaos=0):return {'id':id,'cells':norm(shape),'weight':w,'required':req,'chaos':chaos}
 # Shapes (cells are x,y; one grid cell is roughly 9 cm of suitcase).
@@ -79,7 +124,6 @@ L4=[(0,0),(1,0),(1,1),(1,2)]            # hotel lamp
 U5=[(0,0),(0,1),(1,0),(2,0),(2,1)]      # sneakers, heels, ceramic foot (arch is the empty cell)
 P5=[(0,0),(1,0),(0,1),(1,1),(0,2)]      # folded bathrobe, Mom's DVD collection (a stack with one corner missing)
 TOTE=[(1,0),(0,1),(1,1),(2,1),(0,2),(1,2),(2,2)]  # oversized handbag: a 3x2 body with its handles above (3x3 minus both top corners)
-CUTOUT=[(0,0),(1,0),(2,0),(3,0),(4,0),(2,1),(2,2),(1,3),(2,3),(3,3)]
 # Weights are integer GRAMS. Allowances are game limits on the weight of the items (the game does not model the suitcase itself).
 # Level 1 keeps its pack-all-five rule; its Chaos values are display-only (no target, no allowance).
 levels=[
@@ -90,17 +134,17 @@ levels=[
   I('handbag',TOTE,2250,False,6),I('outfit',T4,900,False,2),I('toiletries',rect(2,2),1000,False,1),I('flamingo',rect(3,2),1000,False,5),
   I('vibrator',line(3),400,False,3),I('frame',rect(2,3),1000,False,3),I('boa',line(4),300,False,3),I('ringlight',T5,800,False,2),
   I('disco_ball',rect(2,2),1500,False,4),I('dvds',P5,1500,False,6)]},
- {'id':'03','board':(7,6),'weight_limit':21000,'target':21,'perfect':26,'items':[
-  I('cutout',CUTOUT,4000),I('laundry',rect(3,2),5000),
-  I('outfit',T4,900,False,2),I('hangover',rect(2,2),800,False,3),I('heels',U5,1300,False,2),I('hotel_lamp',L4,3600,False,2),
-  I('ceramic_foot',U5,3200,False,6),I('gnome',rect(2,3),6500,False,8),I('cheese',rect(2,2),2800,False,5),I('liquor',line(3),1500,False,5),
+ {'id':'03','board':(7,6),'weight_limit':20500,'target':24,'perfect':29,'items':[
+  I('painting',rect(3,3),4000),I('laundry',rect(3,2),5000),
+  I('outfit',T4,900,False,2),I('hangover',rect(2,2),800,False,3),I('heels',U5,1300,False,3),I('hotel_lamp',L4,3600,False,3),
+  I('ceramic_foot',U5,3600,False,7),I('gnome',rect(2,3),6500,False,9),I('cheese',rect(2,2),2800,False,5),I('liquor',line(3),1500,False,5),
   I('robe',P5,1300,False,4),I('emergency_socks',line(2),150,False,3)]}
 ]
 if __name__=='__main__':
  for l in levels:
   print('\nLEVEL',l['id'])
   r=solve(l)
-  print('solve',{k:v for k,v in r.items() if k!='placements'})
+  print('solve',{k:v for k,v in r.items() if k not in ('placements','explorer')})
   if l['id']=='01':print('NO ROTATE',solve(l,no_rotate=True))
   if 'perfect' in l:
    assert (r['perfect'],r['target'])==(l['perfect'],l['target']),'level data disagrees with the exhaustive solver'
@@ -111,3 +155,9 @@ if __name__=='__main__':
   fix[l['id']]={'perfect':[list(p) for p in r['placements']],'normal':[list(p) for p in (r['normal_example']['placements'] if 'normal_example' in r else r['placements'])]}
  with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'src','engine','solutions.fixture.json'),'w') as f:_j.dump(fix,f)
  with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'VERIFIED_LEVELS.json'),'w') as f:json.dump(levels,f,indent=2)
+ # developer Solution Explorer examples (dev-only data; the app imports it only from the development panel)
+ exp={}
+ for l in levels:
+  if 'target' in l:
+   r=solve(l);exp[l['id']]={'legal':r['legal_packs'],'winning':r['passing_packs'],'perfect':len(r['optimal_sets']),'examples':r['explorer']}
+ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'src','dev','explorer.fixture.json'),'w') as f:_j.dump(exp,f,indent=1)

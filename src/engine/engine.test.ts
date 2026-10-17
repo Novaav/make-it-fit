@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import solutions from './solutions.fixture.json'
+import explorerData from '../dev/explorer.fixture.json'
 import {
   canAddAny,
   createGame,
@@ -30,6 +31,7 @@ import {
 } from './index'
 
 const levels = loadLevels()
+const explorer = explorerData as unknown as Record<string, { examples: { weight: number; placements: unknown[] }[] }>
 const level = (id: string): Level => levels.find((l) => l.id === id)!
 const item = (l: Level, id: string) => l.items.find((i) => i.id === id)!
 const must = (r: ReturnType<typeof place>): GameState => {
@@ -189,7 +191,7 @@ describe('win predicate', () => {
   })
 
   it('Chaos levels: a normal win reaches the target without being perfect; the perfect layout reaches the maximum', () => {
-    for (const [id, target, perfect] of [['02', 20, 25], ['03', 21, 26]] as const) {
+    for (const [id, target, perfect] of [['02', 20, 25], ['03', 24, 29]] as const) {
       const l = level(id)
       expect([l.target, l.perfect]).toEqual([target, perfect])
       const normal = solved(l, 'normal')
@@ -218,7 +220,7 @@ describe('win predicate', () => {
   it('is not won while a mandatory item is missing, even with plenty of Chaos (Level 3)', () => {
     const l = level('03')
     const s = solved(l)
-    expect(isWon(must(remove(s, 'cutout')))).toBe(false)
+    expect(isWon(must(remove(s, 'painting')))).toBe(false)
     expect(isWon(must(remove(s, 'laundry')))).toBe(false)
     expect(isWon(createGame(level('01')))).toBe(false)
     expect(isWon(must(remove(solved(level('01')), 'charger')))).toBe(false)
@@ -306,32 +308,29 @@ describe('interaction helpers', () => {
 
 describe('allowance: placing is always allowed, completion needs total weight at most the allowance', () => {
   const orient = (l: Level, id: string, rot: number) => uniqueRotations(item(l, id).cells)[rot].orientation
-  // Level 3: the normal-win pack (cutout, laundry, hangover kit, ceramic foot, gnome, liquor) weighs exactly 21,000 g.
-  const EXACT: [string, number, number, number][] = [
-    ['cutout', 0, 0, 0], ['laundry', 0, 3, 1], ['gnome', 0, 4, 3], ['ceramic_foot', 0, 0, 4], ['hangover', 0, 0, 1], ['liquor', 1, 6, 0],
-  ]
+  // Level 3: the heaviest solver-verified normal win weighs 20,450 g, 50 g under the 20.5 kg allowance.
+  const heaviest = explorer['03'].examples.reduce((a, b) => (b.weight > a.weight ? b : a))
   const build = (id: string, rows: [string, number, number, number][]): GameState => {
     const l = level(id)
     return rows.reduce((g, [i, rot, x, y]) => must(place(g, { itemId: i, orientation: orient(l, i, rot), x, y })), createGame(l))
   }
 
-  it('a real packing that weighs exactly the 21 kg allowance wins', () => {
-    const g = build('03', EXACT)
-    expect(totalWeight(g)).toBe(21000)
-    expect(g.level.weightLimit).toBe(21000)
+  it('the heaviest verified Level 3 win fits under the 20.5 kg allowance and wins, and still wins with the limit lowered to exactly its weight', () => {
+    const g = build('03', heaviest.placements as [string, number, number, number][])
+    expect(totalWeight(g)).toBe(heaviest.weight)
+    expect(g.level.weightLimit).toBe(20500)
     expect(isOverWeight(g)).toBe(false)
-    expect(totalChaos(g)).toBe(22)
+    expect(totalChaos(g)).toBeGreaterThanOrEqual(24)
     expect(isWon(g)).toBe(true)
+    expect(isWon({ ...g, level: { ...g.level, weightLimit: heaviest.weight } })).toBe(true) // exactly the allowance still wins
   })
 
-  it('one more gram over the allowance is not a win; swapping the hangover kit for the outfit (100 g heavier) loses it', () => {
-    const g = build('03', EXACT)
-    expect(isWon({ ...g, level: { ...g.level, weightLimit: 20999 } })).toBe(false)
-    const swapped = build('03', [['cutout', 0, 0, 0], ['laundry', 0, 3, 1], ['gnome', 0, 4, 3], ['ceramic_foot', 0, 0, 4], ['outfit', 1, 0, 1], ['liquor', 1, 6, 0]])
-    expect(totalWeight(swapped)).toBe(21100)
-    expect(totalChaos(swapped)).toBe(21) // still reaches the target...
-    expect(isWon(swapped)).toBe(false) // ...but is over the allowance
-    expect(isWon(must(undo(swapped)))).toBe(false) // undo removes only the liquor: below the target
+  it('one gram over the allowance is not a win, even though the Chaos target is reached', () => {
+    const g = build('03', heaviest.placements as [string, number, number, number][])
+    const over = { ...g, level: { ...g.level, weightLimit: heaviest.weight - 1 } }
+    expect(totalChaos(over)).toBeGreaterThanOrEqual(24)
+    expect(isOverWeight(over)).toBe(true)
+    expect(isWon(over)).toBe(false)
   })
 
   it('Level 2 with its allowance lowered by 1 g loses a layout that exactly fits', () => {
@@ -349,7 +348,7 @@ describe('allowance: placing is always allowed, completion needs total weight at
     }
     expect(shape('01')).toEqual([5, 6, undefined, undefined, undefined, 5, 0])
     expect(shape('02')).toEqual([6, 5, 6500, 20, 25, 0, 10])
-    expect(shape('03')).toEqual([7, 6, 21000, 21, 26, 2, 10])
+    expect(shape('03')).toEqual([7, 6, 20500, 24, 29, 2, 10])
   })
 
   it('pins every item: weight in grams, Chaos value and mandatory flag', () => {
@@ -359,8 +358,8 @@ describe('allowance: placing is always allowed, completion needs total weight at
       frame: [1000, 3, 'pick'], boa: [300, 3, 'pick'], ringlight: [800, 2, 'pick'], disco_ball: [1500, 4, 'pick'], dvds: [1500, 6, 'pick'],
     })
     expect(table('03')).toEqual({
-      cutout: [4000, 0, 'must'], laundry: [5000, 0, 'must'], outfit: [900, 2, 'pick'], hangover: [800, 3, 'pick'], heels: [1300, 2, 'pick'],
-      hotel_lamp: [3600, 2, 'pick'], ceramic_foot: [3200, 6, 'pick'], gnome: [6500, 8, 'pick'], cheese: [2800, 5, 'pick'], liquor: [1500, 5, 'pick'],
+      painting: [4000, 0, 'must'], laundry: [5000, 0, 'must'], outfit: [900, 2, 'pick'], hangover: [800, 3, 'pick'], heels: [1300, 3, 'pick'],
+      hotel_lamp: [3600, 3, 'pick'], ceramic_foot: [3600, 7, 'pick'], gnome: [6500, 9, 'pick'], cheese: [2800, 5, 'pick'], liquor: [1500, 5, 'pick'],
       robe: [1300, 4, 'pick'], emergency_socks: [150, 3, 'pick'],
     })
   })

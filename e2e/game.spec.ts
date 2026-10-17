@@ -284,16 +284,16 @@ test('dev tools never record progress or unlock levels', async ({ page }) => {
   await expect(tab(page, 1)).toHaveAttribute('aria-current', 'page')
 })
 
-test('Level 3: the verified normal win weighs exactly the 21 kg allowance and succeeds', async ({ page }) => {
+test('Level 3: the verified normal win reaches exactly the 24 Chaos target within the 20.5 kg allowance', async ({ page }) => {
   await page.getByRole('button', { name: 'L3', exact: true }).click()
   const objective = page.getByRole('region', { name: 'Objective' })
-  await expect(objective).toContainText('Cardboard cutout and Laundry bag must come. Then reach 21 Chaos within 21 kg. Perfect: 26.')
-  await expect(objective.locator('.pill.weight')).toContainText('0/21 kg')
+  await expect(objective).toContainText('Hotel Painting and Laundry bag must come. Then reach 24 Chaos within 20.5 kg.')
+  await expect(objective.locator('.pill.weight')).toContainText('0/20.5 kg')
   await page.getByRole('button', { name: 'Fill normal win' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Keep packing' }).click()
-  await expect(objective.locator('.pill.weight')).toContainText('21/21 kg')
+  await expect(objective.locator('.pill.weight')).toContainText('17.25/20.5 kg')
   await expect(objective.locator('.pill.weight')).not.toHaveClass(/over/)
-  await expect(objective.locator('.pill.chaos')).toContainText('22')
+  await expect(objective.locator('.pill.chaos')).toContainText('24')
   await expect(objective).toContainText('Packed!')
   await expect(objective).not.toContainText('Maximum Chaos')
 })
@@ -333,7 +333,7 @@ test('desktop: Level 3 tray stays put while every item is rotated', async ({ pag
   const tray = page.getByLabel('Items to pack')
   const before = await tray.boundingBox()
   const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight)
-  for (const id of ['cutout', 'laundry', 'outfit', 'hangover', 'heels', 'hotel_lamp', 'ceramic_foot', 'gnome', 'cheese', 'liquor', 'robe', 'emergency_socks']) {
+  for (const id of ['painting', 'laundry', 'outfit', 'hangover', 'heels', 'hotel_lamp', 'ceramic_foot', 'gnome', 'cheese', 'liquor', 'robe', 'emergency_socks']) {
     await piece(page, id).click()
     await page.keyboard.press('r')
     expect(await tray.boundingBox()).toEqual(before)
@@ -362,7 +362,7 @@ test.describe('dev workflow: Test win & continue', () => {
     await testWin(page)
     const last = page.getByRole('dialog')
     await expect(last.getByRole('heading', { name: 'Maximum Chaos!' })).toBeVisible()
-    await expect(last).toContainText('Chaos 26 (needed 21)')
+    await expect(last).toContainText('Chaos 29 (needed 24)')
     await expect(last.getByRole('button', { name: 'Play again' })).toBeVisible() // last level: no next
     expect(await stored(page)).toBeNull()
 

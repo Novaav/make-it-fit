@@ -69,19 +69,6 @@ function UnionDash({ cells }: { cells: Shape }) {
 function art(item: Item): ReactNode {
   const s = item.cells
   switch (item.id) {
-    case 'cutout':
-      return (
-        <>
-          <Silhouette cells={s} color="#cfa66b" outline="#8a6636" />
-          <circle cx={2.5} cy={0.5} r={0.28} fill="#f1d6a8" stroke="#8a6636" strokeWidth={0.04} />
-          <path d="M2.38 0.45h0.02M2.6 0.45h0.02" stroke="#8a6636" strokeWidth={0.06} {...line} />
-          <path d="M2.35 0.6Q2.5 0.72 2.65 0.6" stroke="#8a6636" strokeWidth={0.04} {...line} />
-          <path d="M0.2 0.5H2.1M2.9 0.5H4.8" stroke="#8a6636" strokeWidth={0.03} strokeDasharray="0.1 0.08" {...line} />
-          <path d="M2.5 0.85V1.15M2.5 1.35V1.65" stroke="#8a6636" strokeWidth={0.05} {...line} />
-          <path d="M2.25 1.1h0.5l0.15 0.8h-0.8Z" fill="#e8736a" />
-          <path d="M1.5 3.2V3.8M3.5 3.2V3.8" stroke="#8a6636" strokeWidth={0.05} {...line} />
-        </>
-      )
     case 'hotel_lamp':
       return (
         <>

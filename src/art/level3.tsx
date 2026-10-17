@@ -6,85 +6,116 @@ import { Contact, Inked, Lod1, Stitch, line, type ItemArtDef } from './kit'
  * and a plain label zone for the printed weight.
  */
 
-/* ---------- Cardboard cutout (5x4, MUST): a kraft standee of a very pleased man, arms out, on a folded foot ---------- */
-const KRAFT = '#d3a967'
-const KRAFT_D = '#a87c3d'
-const KRAFT_L = '#ecd09a'
-const KRAFT_INK = '#5b3b14'
-const SUIT = '#34456f'
-const CUT =
-  'M.12 .03H4.88Q4.97 .03 4.97 .12V.94Q4.97 1 4.9 1H3.0V3H3.88Q3.97 3 3.97 3.09V3.88Q3.97 3.97 3.88 3.97H1.12Q1.03 3.97 1.03 3.88V3.09Q1.03 3 1.12 3H2V1H.1Q.03 1 .03 .94V.12Q.03 .03 .12 .03Z'
+/* ---------- Hotel Painting (3x3, MUST): a gilt-framed sunset with a chipped corner, a torn hanger, a room tag and an inventory sticker ---------- */
+const GILT = '#d9aa4a'
+const GILT_D = '#8f6414'
+const GILT_L = '#f6dd8e'
+const FRAME_INK = '#4a2f0a'
+const PANEL = 'M.14 .04H2.86Q2.96 .04 2.96 .14V2.86Q2.96 2.96 2.86 2.96H.14Q.04 2.96 .04 2.86V.14Q.04 .04 .14 .04Z'
 
-const cutout: ItemArtDef = {
-  zone: { x: 2.5, y: 3.58, tone: 'dark' },
+const painting: ItemArtDef = {
+  zone: { x: 1.38, y: 2.7, tone: 'dark' },
   draw: (uid) => (
     <>
       <defs>
-        <pattern id={`${uid}-flute`} width={0.09} height={0.09} patternUnits="userSpaceOnUse">
-          <path d="M0 .045H.09" stroke={KRAFT_D} strokeWidth={0.012} opacity={0.35} />
-        </pattern>
-        <linearGradient id={`${uid}-print`} x1={0} y1={0} x2={0} y2={1}>
-          <stop offset="0" stopColor="#fff" stopOpacity={0.2} />
-          <stop offset="0.5" stopColor="#fff" stopOpacity={0} />
-          <stop offset="1" stopColor="#10162c" stopOpacity={0.22} />
+        <linearGradient id={`${uid}-gilt`} x1={0} y1={0} x2={1} y2={1}>
+          <stop offset="0" stopColor={GILT_L} />
+          <stop offset="0.5" stopColor={GILT} />
+          <stop offset="1" stopColor="#a97a1e" />
         </linearGradient>
+        <linearGradient id={`${uid}-sky`} x1={0} y1={0} x2={0} y2={1}>
+          <stop offset="0" stopColor="#7a5fc4" />
+          <stop offset="0.45" stopColor="#ff7f8e" />
+          <stop offset="0.75" stopColor="#ffb36b" />
+          <stop offset="1" stopColor="#ffd98a" />
+        </linearGradient>
+        <linearGradient id={`${uid}-sea`} x1={0} y1={0} x2={0} y2={1}>
+          <stop offset="0" stopColor="#3f8fc8" />
+          <stop offset="1" stopColor="#1f4f86" />
+        </linearGradient>
+        <clipPath id={`${uid}-canvas`}>
+          <rect x={0.42} y={0.42} width={2.16} height={1.92} rx={0.03} />
+        </clipPath>
       </defs>
-      <Contact d={CUT} />
-      <Inked d={CUT} fill={KRAFT} ink={KRAFT_INK} w={0.045} />
-      <path d={CUT} fill={`url(#${uid}-flute)`} />
-      {/* printed face: arms band, jacket, tie, trousers */}
-      <path d="M.13 .58H4.87Q4.94 .58 4.94 .66V.86Q4.94 .93 4.87 .93H.13Q.06 .93 .06 .86V.66Q.06 .58 .13 .58Z" fill={SUIT} stroke="#161d36" strokeWidth={0.025} />
-      <path d="M2.05 .93H2.95V2.02H2.05Z" fill={SUIT} stroke="#161d36" strokeWidth={0.025} />
-      <path d="M2.05 2.02H2.48V3H2.05ZM2.52 2.02H2.95V3H2.52Z" fill="#3b3d4c" stroke="#161d36" strokeWidth={0.02} />
-      <path d="M2.25 .93L2.5 1.35L2.75 .93Z" fill="#fbf6ea" />
-      <path d="M2.5 1.0L2.58 1.14L2.55 1.72L2.5 1.82L2.45 1.72L2.42 1.14Z" fill="#d64a3f" stroke="#7a1f1a" strokeWidth={0.015} strokeLinejoin="round" />
-      <path d="M2.05 .93L2.3 1.5L2.2 2.02M2.95 .93L2.7 1.5L2.8 2.02" stroke="#1d2744" strokeWidth={0.02} {...line} />
-      <path d="M2.12 1.2h.1v.08h-.1z" fill="#fbf6ea" />
-      <path d="M2.05 1.98H2.95" stroke="#1a1d2a" strokeWidth={0.05} {...line} />
-      {/* sleeves, cuffs and thumbs-up hands */}
-      <path d="M.52 .6V.92M4.48 .6V.92" stroke="#1d2744" strokeWidth={0.02} {...line} />
-      <circle cx={0.2} cy={0.76} r={0.13} fill="#f0c4a0" stroke="#7a4b2c" strokeWidth={0.02} />
-      <circle cx={4.8} cy={0.76} r={0.13} fill="#f0c4a0" stroke="#7a4b2c" strokeWidth={0.02} />
-      <path {...line} d="M0.2 .66V.5Q.2 .42 .26 .45L.28 .62M4.8 .66V.5Q4.8 .42 4.74 .45L4.72 .62" stroke="#7a4b2c" strokeWidth={0.02} fill="#f0c4a0" />
-      {/* head: smug grin, big hair, ears */}
-      <circle cx={2.2} cy={0.34} r={0.06} fill="#e7b690" stroke="#7a4b2c" strokeWidth={0.015} />
-      <circle cx={2.8} cy={0.34} r={0.06} fill="#e7b690" stroke="#7a4b2c" strokeWidth={0.015} />
-      <ellipse cx={2.5} cy={0.32} rx={0.3} ry={0.28} fill="#f3c9a4" stroke="#7a4b2c" strokeWidth={0.025} />
-      <path d="M2.2 .26C2.22 .06 2.5 .02 2.62 .06C2.74 .08 2.82 .14 2.8 .26C2.7 .16 2.5 .12 2.2 .26Z" fill="#4a2f1b" stroke="#2a1a0e" strokeWidth={0.02} strokeLinejoin="round" />
-      <path d="M2.36 .36h.01M2.64 .36h.01" stroke="#2a1a0e" strokeWidth={0.06} {...line} />
-      <path d="M2.34 .44Q2.5 .58 2.66 .44Z" fill="#fff" stroke="#7a2a22" strokeWidth={0.02} strokeLinejoin="round" />
-      <path d="M2.3 .27Q2.36 .23 2.42 .26M2.58 .26Q2.64 .23 2.7 .27" stroke="#2a1a0e" strokeWidth={0.02} {...line} />
-      <path d={CUT} fill={`url(#${uid}-print)`} opacity={0.5} />
-      {/* shoes and the folded stand: corrugated edge, crease, tape, 'this way up' arrows */}
-      <path d="M1.95 2.9Q1.95 2.78 2.1 2.8H2.46V3.14H1.95ZM3.05 2.9Q3.05 2.78 2.9 2.8H2.54V3.14H3.05Z" fill="#2a2430" stroke="#120e16" strokeWidth={0.02} />
-      <path d="M1.1 3.06H3.9" stroke={KRAFT_D} strokeWidth={0.03} strokeDasharray="0.07 0.05" {...line} />
-      <path d="M1.1 3.82H3.9" stroke={KRAFT_D} strokeWidth={0.04} {...line} />
-      <path d="M1.14 3.88Q1.3 3.78 1.46 3.88T1.78 3.88T2.1 3.88T2.42 3.88T2.74 3.88T3.06 3.88T3.38 3.88T3.7 3.88T3.86 3.88" stroke={KRAFT_D} strokeWidth={0.025} opacity={0.8} {...line} />
-      <path d="M1.4 3.75V3.28M1.4 3.28L1.28 3.42M1.4 3.28L1.52 3.42M3.6 3.75V3.28M3.6 3.28L3.48 3.42M3.6 3.28L3.72 3.42" stroke="#c4453a" strokeWidth={0.06} {...line} />
-      <rect x={3.15} y={0.97} width={0.7} height={0.16} rx={0.02} fill="#f3e6a8" opacity={0.75} transform="rotate(-8 3.5 1.05)" />
-      <Lod1>
-        <path d="M.1 .08L.3 .03L.22 .16Z" fill={KRAFT_L} stroke={KRAFT_D} strokeWidth={0.012} />
-        <rect x={3.2} y={3.2} width={0.55} height={0.3} rx={0.02} fill="#fbf6ea" stroke="#b6a77f" strokeWidth={0.012} />
-        <path d="M3.26 3.26V3.44M3.3 3.26V3.44M3.36 3.26V3.44M3.4 3.26V3.44M3.48 3.26V3.44M3.54 3.26V3.44M3.6 3.26V3.44M3.66 3.26V3.44M3.7 3.26V3.44" stroke="#2b2433" strokeWidth={0.02} />
-      </Lod1>
+      <Contact d={PANEL} />
+      <Inked d={PANEL} fill={`url(#${uid}-gilt)`} ink={FRAME_INK} w={0.05} />
+      {/* moulded frame: a raised bead line, an inner bevel, and simple corner rosettes */}
+      <path d="M.2 .2H2.8V2.8H.2Z" fill="none" stroke={GILT_D} strokeWidth={0.025} strokeDasharray="0.05 0.04" opacity={0.75} />
+      <path d="M.3 .3H2.7V2.46H.3Z" fill="#f2e6c8" stroke={GILT_D} strokeWidth={0.04} />
+      {[
+        [2.7, 0.3],
+        [2.7, 2.7],
+        [0.3, 2.7],
+      ].map(([x, y]) => (
+        <g key={`${x}${y}`}>
+          <circle cx={x} cy={y} r={0.1} fill={GILT_L} stroke={GILT_D} strokeWidth={0.025} />
+          <circle cx={x} cy={y} r={0.04} fill={GILT_D} />
+        </g>
+      ))}
+      {/* the picture: a very orange sunset, a sailing boat, one palm tree, birds, a signature */}
+      <g clipPath={`url(#${uid}-canvas)`}>
+        <rect x={0.42} y={0.42} width={2.16} height={1.92} fill={`url(#${uid}-sky)`} />
+        <circle cx={1.55} cy={1.35} r={0.42} fill="#ffe27a" stroke="#f3a43a" strokeWidth={0.03} />
+        <rect x={0.42} y={1.38} width={2.16} height={0.96} fill={`url(#${uid}-sea)`} />
+        <path d="M1.2 1.55H1.9M1.28 1.68H1.82M1.34 1.82H1.76M1.4 1.96H1.7" stroke="#ffe27a" strokeWidth={0.04} {...line} />
+        <path d="M.5 1.62Q.9 1.55 1.3 1.62M1.9 1.75Q2.2 1.7 2.55 1.77M.6 2.1Q1.1 2.02 1.6 2.1" stroke="#7fb8e6" strokeWidth={0.025} opacity={0.7} {...line} />
+        <path d="M2.0 1.3L2.0 .72L2.38 1.3ZM2.0 1.32H2.46L2.36 1.46H2.04Z" fill="#fff6e6" stroke="#4a2a5a" strokeWidth={0.02} strokeLinejoin="round" />
+        <path d="M2.0 .72V1.32" stroke="#4a2a5a" strokeWidth={0.025} />
+        <path d="M.62 1.62Q.6 1.1 .72 .8" stroke="#3a1f4a" strokeWidth={0.05} {...line} />
+        <path d="M.72 .8Q.5 .72 .4 .84M.72 .8Q.78 .62 .98 .64M.72 .8Q.98 .78 1.08 .96M.72 .8Q.6 .96 .5 1.0" stroke="#2a3f2a" strokeWidth={0.05} {...line} />
+        <path d="M1.0 .62q.05-.06 .1 0q.05-.06 .1 0M1.3 .5q.05-.06 .1 0q.05-.06 .1 0" stroke="#3a1f4a" strokeWidth={0.02} {...line} />
+        <path d="M2.0 2.2Q2.12 2.12 2.2 2.22T2.4 2.2" stroke="#fff6e6" strokeWidth={0.02} {...line} />
+        <path d="M0 0L3 3" stroke="#fff" strokeWidth={0.25} opacity={0.0} />
+        <path d="M.42 1.2L1.2 .42H1.55L.42 1.55Z" fill="#fff" opacity={0.18} />
+      </g>
+      <path d="M.3 .3H2.7V2.46H.3Z" fill="none" stroke={FRAME_INK} strokeWidth={0.025} opacity={0.6} />
+      {/* the chipped corner: bare wood and a few splinters */}
+      <path d="M.04 2.42L.3 2.56L.2 2.7L.46 2.78L.38 2.96H.04Z" fill="#5a3a1c" stroke={FRAME_INK} strokeWidth={0.025} strokeLinejoin="round" />
+      <path d="M.1 2.62L.2 2.56M.14 2.8L.28 2.78" stroke="#c89a5a" strokeWidth={0.025} {...line} />
+      <path d="M.52 2.86l.07-.04.03.07z" fill={GILT_L} stroke={GILT_D} strokeWidth={0.012} />
+      {/* brass plate: where the weight is printed */}
+      <rect x={0.72} y={2.56} width={1.34} height={0.3} rx={0.04} fill="#f2dc92" stroke={GILT_D} strokeWidth={0.03} />
+      {/* torn hanger: a steel bracket with a lump of wall still attached, and the wire */}
+      <path d="M.36 .36L1.5 .1L2.64 .36" stroke="#3a3a42" strokeWidth={0.02} opacity={0.75} {...line} />
+      <path d="M1.18 .04L1.34 .1L1.5 .03L1.68 .1L1.84 .04L1.78 .24L1.64 .32L1.5 .26L1.36 .34L1.22 .24Z" fill="#fbf7ee" stroke="#b6ad98" strokeWidth={0.02} strokeLinejoin="round" />
+      <rect x={1.34} y={0.08} width={0.32} height={0.14} rx={0.025} fill="#9aa0ac" stroke="#3a3f4a" strokeWidth={0.02} />
+      <circle cx={1.4} cy={0.15} r={0.025} fill="#3a3f4a" />
+      <circle cx={1.6} cy={0.15} r={0.025} fill="#3a3f4a" />
+      {/* inventory sticker with a barcode */}
+      <rect x={2.2} y={2.54} width={0.62} height={0.34} rx={0.025} fill="#fffaf0" stroke="#c4b48a" strokeWidth={0.015} />
+      <rect x={2.2} y={2.54} width={0.62} height={0.08} rx={0.02} fill="#e8602c" />
+      <path d="M2.26 2.68V2.84M2.3 2.68V2.84M2.36 2.68V2.84M2.4 2.68V2.84M2.46 2.68V2.84M2.5 2.68V2.84M2.58 2.68V2.84M2.62 2.68V2.84M2.68 2.68V2.84M2.74 2.68V2.84M2.78 2.68V2.84" stroke="#2b2433" strokeWidth={0.016} />
+      {/* a paper room tag tied to the frame */}
+      <path d="M2.9 .62Q2.98 1.0 2.82 1.1" stroke="#7a6a48" strokeWidth={0.025} {...line} />
+      <g transform="rotate(9 2.7 1.4)">
+        <rect x={2.5} y={1.08} width={0.42} height={0.6} rx={0.04} fill="#fbf1de" stroke="#b6a77f" strokeWidth={0.02} />
+        <rect x={2.5} y={1.08} width={0.42} height={0.13} rx={0.03} fill="#c8323a" />
+        <circle cx={2.71} cy={1.145} r={0.03} fill="#fbf1de" />
+        <text x={2.71} y={1.5} textAnchor="middle" fontSize={0.21} fontWeight={800} fill="#3a2a1a" style={{ fontFamily: 'var(--ui)' }}>
+          214
+        </text>
+      </g>
     </>
   ),
 }
 
-/* ---------- Laundry bag (3x2, MUST): a canvas drawstring sack on its side, a stray sock escaping ---------- */
+/* ---------- Laundry bag (3x2, MUST): a canvas sack on its side, hotel towels spilling from its open mouth ---------- */
 const CANVAS = '#efe5cf'
 const CANVAS_D = '#cbbb98'
 const NAVY = '#2f4a7d'
-const BAG = 'M.62 .4C1.1 .08 2.3 .0 2.75 .26Q3.0 .6 2.96 1Q3.02 1.45 2.74 1.76C2.3 2.02 1.1 1.94 .62 1.62Q.5 1.45 .5 1Q.5 .58 .62 .4Z'
-const NECK = 'M.05 .62Q.3 .5 .66 .4V1.62Q.3 1.5 .05 1.38Q-.02 1 .05 .62Z'
+const BAG = 'M.74 .4C1.2 .08 2.3 .0 2.75 .26Q3.0 .6 2.96 1Q3.02 1.45 2.74 1.76C2.3 2.02 1.2 1.94 .74 1.62Q.6 1.45 .6 1Q.6 .58 .74 .4Z'
 
 const laundry: ItemArtDef = {
-  zone: { x: 1.9, y: 1.02, tone: 'dark' },
+  zone: { x: 1.95, y: 1.02, tone: 'dark' },
   draw: (uid) => (
     <>
       <defs>
         <pattern id={`${uid}-weave`} width={0.06} height={0.06} patternUnits="userSpaceOnUse">
           <path d="M0 .03H.06M.03 0V.06" stroke={CANVAS_D} strokeWidth={0.008} opacity={0.5} />
+        </pattern>
+        <pattern id={`${uid}-terry`} width={0.07} height={0.07} patternUnits="userSpaceOnUse">
+          <circle cx={0.02} cy={0.02} r={0.012} fill="#d8d4c8" />
+          <circle cx={0.055} cy={0.05} r={0.012} fill="#d8d4c8" />
         </pattern>
         <linearGradient id={`${uid}-belly`} x1={0} y1={0} x2={0.2} y2={1}>
           <stop offset="0" stopColor="#fff" stopOpacity={0.35} />
@@ -93,32 +124,33 @@ const laundry: ItemArtDef = {
         </linearGradient>
       </defs>
       <Contact d={BAG} />
-      <Contact d={NECK} />
-      {/* the sock that escaped */}
-      <path d="M.18 1.42Q.1 1.62 .22 1.84Q.4 1.98 .58 1.86Q.6 1.7 .48 1.52Z" fill="#e9a0b8" stroke="#8a3a56" strokeWidth={0.03} strokeLinejoin="round" />
-      <path d="M.2 1.62Q.35 1.7 .5 1.62M.26 1.78Q.4 1.84 .55 1.76" stroke="#fbf1de" strokeWidth={0.05} {...line} />
-      <Inked d={NECK} fill={CANVAS} ink="#5c4a28" />
+      {/* towels spilling out of the open mouth: three stacked folds, the top one with a gold monogram */}
+      <g>
+        <Inked d="M.06 1.36Q.04 1.2 .2 1.18H.82V1.7H.2Q.06 1.68 .06 1.5Z" fill="#f4f1ea" ink="#6b6a62" w={0.035} />
+        <path d="M.1 1.5H.8" stroke="#8aa4c8" strokeWidth={0.04} />
+        <Inked d="M.1 .96Q.08 .8 .24 .78H.84V1.28H.24Q.1 1.26 .1 1.1Z" fill="#fbfaf6" ink="#6b6a62" w={0.035} />
+        <path d="M.14 1.14H.82" stroke="#8aa4c8" strokeWidth={0.04} />
+        <Inked d="M.14 .6Q.12 .44 .3 .42H.86V.88H.3Q.14 .86 .14 .7Z" fill="#fffefb" ink="#6b6a62" w={0.035} />
+        <circle cx={0.52} cy={0.66} r={0.13} fill="none" stroke="#d9aa4a" strokeWidth={0.03} />
+        <path d="M.45 .59V.73M.59 .59V.73M.45 .66H.59" stroke="#d9aa4a" strokeWidth={0.035} {...line} />
+        <path d="M.18 .46H.84M.18 .58H.4M.66 .58H.84" stroke="#f0eee6" strokeWidth={0.02} opacity={0.9} {...line} />
+      </g>
       <Inked d={BAG} fill={CANVAS} ink="#5c4a28" w={0.045} />
       <path d={BAG} fill={`url(#${uid}-weave)`} />
-      <path d={NECK} fill={`url(#${uid}-weave)`} />
-      {/* navy bands round the sack and the gathers at the neck */}
-      <path d="M1.2 .06Q1.35 1 1.2 1.96M2.45 .08Q2.62 1 2.45 1.9" stroke={NAVY} strokeWidth={0.2} opacity={0.9} {...line} />
-      <path d="M1.2 .06Q1.35 1 1.2 1.96M2.45 .08Q2.62 1 2.45 1.9" stroke="#fff" strokeWidth={0.02} strokeDasharray="0.05 0.05" opacity={0.6} {...line} />
-      <path d="M.18 .66Q.3 1 .18 1.34M.3 .58Q.42 1 .3 1.42M.42 .5Q.54 1 .42 1.5" stroke="#6b5a36" strokeWidth={0.022} opacity={0.55} {...line} />
+      {/* navy bands round the sack and loose stitching at the mouth */}
+      <path d="M1.35 .06Q1.5 1 1.35 1.96M2.5 .08Q2.67 1 2.5 1.9" stroke={NAVY} strokeWidth={0.2} opacity={0.9} {...line} />
+      <path d="M1.35 .06Q1.5 1 1.35 1.96M2.5 .08Q2.67 1 2.5 1.9" stroke="#fff" strokeWidth={0.02} strokeDasharray="0.05 0.05" opacity={0.6} {...line} />
+      <path d="M.7 .44Q.78 1 .7 1.6" stroke="#6b5a36" strokeWidth={0.035} opacity={0.6} {...line} />
       <path d={BAG} fill={`url(#${uid}-belly)`} />
-      {/* drawstring: a cord pulled tight, a bow, toggle and dangling ends */}
-      <path d="M.66 .42Q.72 1 .66 1.6" stroke="#22304e" strokeWidth={0.1} {...line} />
-      <path d="M.66 .42Q.72 1 .66 1.6" stroke="#4a6aa8" strokeWidth={0.05} {...line} />
-      <path d="M.66 1.0C.5 .86 .36 .9 .4 1.02C.44 1.12 .58 1.06 .66 1.0ZM.66 1.0C.5 1.14 .36 1.12 .4 1.0" fill="#4a6aa8" stroke="#22304e" strokeWidth={0.025} strokeLinejoin="round" />
-      <path d="M.66 1.02C.6 1.2 .5 1.3 .42 1.32M.66 1.02C.7 1.2 .62 1.34 .56 1.4" stroke="#22304e" strokeWidth={0.05} {...line} />
-      <circle cx={0.42} cy={1.33} r={0.05} fill="#d9a441" stroke="#6a4a12" strokeWidth={0.015} />
-      {/* sewn label patch: the weight goes here */}
-      <rect x={1.55} y={0.68} width={0.7} height={0.68} rx={0.05} fill="#fbf6ea" stroke="#c4b48a" strokeWidth={0.02} />
-      <Stitch d="M1.6 .73H2.2V1.31H1.6Z" color={NAVY} w={0.014} dash="0.04 0.035" />
+      {/* the slack drawstring, a toggle and a sewn label patch for the weight */}
+      <path d="M.72 .5C.9 .7 .8 .9 .92 1.2C1.0 1.4 .86 1.6 .96 1.78" stroke="#22304e" strokeWidth={0.07} {...line} />
+      <path d="M.72 .5C.9 .7 .8 .9 .92 1.2C1.0 1.4 .86 1.6 .96 1.78" stroke="#4a6aa8" strokeWidth={0.035} {...line} />
+      <circle cx={0.96} cy={1.8} r={0.055} fill="#d9a441" stroke="#6a4a12" strokeWidth={0.015} />
+      <rect x={1.6} y={0.68} width={0.7} height={0.68} rx={0.05} fill="#fbf6ea" stroke="#c4b48a" strokeWidth={0.02} />
+      <Stitch d="M1.65 .73H2.25V1.31H1.65Z" color={NAVY} w={0.014} dash="0.04 0.035" />
       <Lod1>
-        <path d="M1.78 .43Q1.9 .38 2.0 .43" stroke="#7a5a3a" strokeWidth={0.02} {...line} />
+        <path d="M1.84 .43Q1.96 .38 2.06 .43" stroke="#7a5a3a" strokeWidth={0.02} {...line} />
         <ellipse cx={2.7} cy={1.5} rx={0.1} ry={0.07} fill="#8a6a46" opacity={0.3} />
-        <path d="M2.62 1.44l.16.1M2.66 1.58l.12-.06" stroke="#8a6a46" strokeWidth={0.015} opacity={0.5} {...line} />
       </Lod1>
     </>
   ),
@@ -171,63 +203,60 @@ const hangover: ItemArtDef = {
   ),
 }
 
-/* ---------- Red-soled heels (3x2 U): a pair of patent stilettos tied together by a gold chain and a padlock ---------- */
-const HEEL_INK = '#1a1018'
-const SHOE_L =
-  'M.5 .03C.7 .1 .88 .42 .9 .7C.92 .95 .74 1.05 .72 1.25C.7 1.5 .78 1.75 .66 1.9Q.5 1.98 .34 1.9C.22 1.75 .3 1.5 .28 1.25C.26 1.05 .08 .95 .1 .7C.12 .42 .3 .1 .5 .03Z'
+/* ---------- Overpriced Heels (3x2 U): a pair of patent stilettos soles-up (red lacquer soles), a price tag hung between them ---------- */
+const SOLE =
+  'M.5 .05C.72 .1 .9 .42 .9 .75C.9 1 .72 1.1 .7 1.3C.68 1.55 .8 1.75 .66 1.9Q.5 1.98 .34 1.9C.2 1.75 .32 1.55 .3 1.3C.28 1.1 .1 1 .1 .75C.1 .42 .28 .1 .5 .05Z'
+const HEEL_INK = '#140a10'
 
 const heels: ItemArtDef = {
-  zone: { x: 1.5, y: 0.99, tone: 'dark' },
+  zone: { x: 1.5, y: 1.16, tone: 'dark' },
   draw: (uid) => (
     <>
       <defs>
-        <linearGradient id={`${uid}-gloss`} x1={0} y1={0} x2={1} y2={0.4}>
-          <stop offset="0" stopColor="#fff" stopOpacity={0.55} />
-          <stop offset="0.3" stopColor="#fff" stopOpacity={0.05} />
-          <stop offset="1" stopColor="#000" stopOpacity={0.25} />
+        <linearGradient id={`${uid}-lacquer`} x1={0} y1={0} x2={1} y2={1}>
+          <stop offset="0" stopColor="#f0454a" />
+          <stop offset="0.55" stopColor="#d3202a" />
+          <stop offset="1" stopColor="#8f0f19" />
         </linearGradient>
         <g id={`${uid}-shoe`}>
-          {/* the stiletto: a slim black pin with a red tip lift and a gold cap, below the heel cup */}
-          <path d="M.5 1.42V1.93" stroke="#0e070d" strokeWidth={0.14} {...line} />
-          <path d="M.5 1.42V1.93" stroke="#2a1d2a" strokeWidth={0.08} {...line} />
-          <path d="M.47 1.5V1.85" stroke="#fff" strokeWidth={0.015} opacity={0.6} {...line} />
-          <path d="M.5 1.93V1.97" stroke="#e6bd55" strokeWidth={0.09} {...line} />
-          <g transform="translate(0 .04) scale(1 .76)">
-          <Contact d={SHOE_L} />
-          <Inked d={SHOE_L} fill="#2a1d2a" ink={HEEL_INK} w={0.045} />
-          <path d={SHOE_L} fill={`url(#${uid}-gloss)`} />
-          {/* the foot opening lined in red, a pointed toe cap seam, the ankle strap with a buckle and the stiletto tip */}
-          <path d="M.5 .74C.68 .78 .74 .98 .68 1.18Q.5 1.34 .32 1.18C.26 .98 .32 .78 .5 .74Z" fill="#c8323a" stroke={HEEL_INK} strokeWidth={0.03} strokeLinejoin="round" />
-          <path d="M.34 .84Q.5 .8 .66 .84" stroke="#ff8a8f" strokeWidth={0.025} opacity={0.7} {...line} />
-          <path d="M.14 .6Q.5 .5 .86 .6" stroke="#0e070d" strokeWidth={0.03} {...line} />
-          <path d="M.3 1.5H.7" stroke="#0e070d" strokeWidth={0.1} {...line} />
-          <path d="M.3 1.5H.7" stroke="#c8323a" strokeWidth={0.05} {...line} />
-          <rect x={0.44} y={1.44} width={0.12} height={0.12} rx={0.02} fill="#e6bd55" stroke="#6a4a12" strokeWidth={0.02} />
-          <path d="M.34 .16C.4 .1 .5 .08 .56 .1" stroke="#fff" strokeWidth={0.035} opacity={0.8} {...line} />
-          </g>
+          <Contact d={SOLE} />
+          <Inked d={SOLE} fill="#1b0f17" ink={HEEL_INK} w={0.05} />
+          {/* the red lacquered sole inside a black patent welt */}
+          <path d={SOLE} fill={`url(#${uid}-lacquer)`} transform="translate(.5 1) scale(.86 .9) translate(-.5 -1)" />
+          <path d="M.32 .3C.4 .16 .55 .12 .66 .2" stroke="#fff" strokeWidth={0.04} opacity={0.75} {...line} />
+          <path d="M.24 .8C.34 1.0 .66 1.0 .76 .8" stroke="#8f0f19" strokeWidth={0.025} opacity={0.7} {...line} />
+          <path d="M.5 .9l.05.07l-.05.07l-.05-.07z" fill="#f0c860" stroke="#7a5a12" strokeWidth={0.012} />
+          {/* the stiletto: a black pin seen end-on with a gold cap, on a patent heel seat */}
+          <circle cx={0.5} cy={1.66} r={0.15} fill="#1b0f17" stroke={HEEL_INK} strokeWidth={0.02} />
+          <circle cx={0.5} cy={1.66} r={0.06} fill="#f0c860" stroke="#7a5a12" strokeWidth={0.012} />
+          <path d="M.42 1.58Q.46 1.54 .52 1.55" stroke="#fff" strokeWidth={0.02} opacity={0.6} {...line} />
         </g>
       </defs>
-      <use href={`#${uid}-shoe`} transform="translate(-.07 0) scale(1.14 1) rotate(-7 .5 1)" />
-      <use href={`#${uid}-shoe`} transform="translate(3 0) scale(-1 1) translate(-.07 0) scale(1.14 1) rotate(-7 .5 1)" />
-      {/* gold chain between the toe boxes, a padlock charm and a hang tag */}
-      <path d="M.82 .3Q1.5 .66 2.18 .3" stroke="#6a4a12" strokeWidth={0.075} {...line} />
-      <path d="M.82 .3Q1.5 .66 2.18 .3" stroke="#e6bd55" strokeWidth={0.045} strokeDasharray="0.06 0.03" {...line} />
-      <rect x={1.36} y={0.4} width={0.28} height={0.22} rx={0.04} fill="#e6bd55" stroke="#6a4a12" strokeWidth={0.025} />
-      <path {...line} d="M1.42 .4V.34Q1.5 .22 1.58 .34V.4" fill="none" stroke="#6a4a12" strokeWidth={0.04} />
-      <circle cx={1.5} cy={0.52} r={0.03} fill="#6a4a12" />
-      <path d="M1.5 .62V.7" stroke="#6a4a12" strokeWidth={0.02} {...line} />
-      <rect x={1.08} y={0.7} width={0.84} height={0.58} rx={0.05} fill="#fbf1de" stroke="#b6a77f" strokeWidth={0.02} transform="rotate(2 1.5 .95)" />
-      <circle cx={1.5} cy={0.76} r={0.025} fill="#b6a77f" />
+      <use href={`#${uid}-shoe`} transform="translate(-.02 0) rotate(-5 .5 1)" />
+      <use href={`#${uid}-shoe`} transform="translate(3.02 0) scale(-1 1) rotate(-5 .5 1)" />
+      {/* a cord ties them together; the hang tag carries the absurd price */}
+      <path d="M.78 .95Q1.5 .4 2.22 .95" stroke="#140a10" strokeWidth={0.03} {...line} />
+      <g transform="rotate(2 1.5 .8)">
+        <rect x={1.12} y={0.36} width={0.76} height={0.96} rx={0.05} fill="#fbf1de" stroke="#b6a77f" strokeWidth={0.02} />
+        <circle cx={1.5} cy={0.48} r={0.035} fill="#b6a77f" />
+        <text x={1.5} y={0.7} textAnchor="middle" fontSize={0.11} fill="#7a6a58" style={{ fontFamily: 'var(--ui)' }}>
+          €2,990
+        </text>
+        <path d="M1.28 .66H1.72" stroke="#7a6a58" strokeWidth={0.012} />
+        <text x={1.5} y={0.94} textAnchor="middle" fontSize={0.2} fontWeight={800} fill="#c8323a" style={{ fontFamily: 'var(--ui)' }}>
+          €2,490
+        </text>
+      </g>
     </>
   ),
 }
 
 /* ---------- Hotel lamp (L4): a pleated shade, a brass-collared wooden baluster and a swiped room-key tag ---------- */
 const LAMP_SHADE = 'M.08 .92L.3 .12Q.32 .08 .38 .08H1.62Q1.68 .08 1.7 .12L1.92 .92Q1.94 .98 1.86 .98H.14Q.06 .98 .08 .92Z'
-const BALUSTER = 'M1.34 .98H1.66V1.32Q1.82 1.5 1.84 1.8Q1.86 2.1 1.68 2.3H1.32Q1.14 2.1 1.16 1.8Q1.18 1.5 1.34 1.32Z'
+const BALUSTER = 'M1.34 .98H1.66V1.32Q1.82 1.5 1.84 1.8Q1.86 2.08 1.68 2.26H1.32Q1.14 2.08 1.16 1.8Q1.18 1.5 1.34 1.32Z'
 
 const hotelLamp: ItemArtDef = {
-  zone: { x: 1.5, y: 1.85, tone: 'light' },
+  zone: { x: 1.5, y: 1.82, tone: 'light' },
   draw: (uid) => (
     <>
       <defs>
@@ -244,13 +273,19 @@ const hotelLamp: ItemArtDef = {
       <Contact d={LAMP_SHADE} />
       <Contact d={BALUSTER} />
       {/* base block and baluster */}
-      <Inked d="M1.0 2.34H2.0Q2.02 2.34 2.02 2.38V2.88Q2.02 2.94 1.96 2.94H1.04Q.98 2.94 .98 2.88V2.38Q.98 2.34 1.0 2.34Z" fill="#5a3418" ink="#24120a" />
-      <path d="M1.06 2.42H1.7" stroke="#d9b47c" strokeWidth={0.03} opacity={0.5} {...line} />
+      <Inked d="M1.1 2.3H1.9Q1.94 2.3 1.94 2.34V2.7Q1.94 2.76 1.88 2.76H1.12Q1.06 2.76 1.06 2.7V2.34Q1.06 2.3 1.1 2.3Z" fill="#5a3418" ink="#24120a" />
+      <path d="M1.14 2.37H1.7" stroke="#d9b47c" strokeWidth={0.03} opacity={0.5} {...line} />
+      {/* the cord ends in an unplugged plug, still holding a chip of the wall socket */}
+      <path d="M1.08 2.62C1.0 2.84 1.06 2.9 1.2 2.9" stroke="#2a1a10" strokeWidth={0.05} {...line} />
+      <rect x={1.2} y={2.82} width={0.3} height={0.14} rx={0.04} fill="#2a1a10" stroke="#0e0804" strokeWidth={0.015} />
+      <path d="M1.5 2.86H1.62M1.5 2.93H1.62" stroke="#c8c4b8" strokeWidth={0.04} {...line} />
+      <path d="M1.64 2.8L1.92 2.82L1.9 2.96L1.7 2.98Z" fill="#f4f1e8" stroke="#a49c88" strokeWidth={0.015} strokeLinejoin="round" />
+      <circle cx={1.8} cy={2.89} r={0.025} fill="#8c8678" />
       <Inked d={BALUSTER} fill={`url(#${uid}-wood)`} ink="#24120a" />
       <path d="M1.3 1.45Q1.24 1.8 1.32 2.12" stroke="#e1b98c" strokeWidth={0.035} opacity={0.6} {...line} />
       {/* brass collar and finial */}
       <rect x={1.3} y={0.98} width={0.4} height={0.14} rx={0.03} fill="#e1b04a" stroke="#6a4a12" strokeWidth={0.025} />
-      <rect x={1.3} y={2.22} width={0.4} height={0.1} rx={0.03} fill="#e1b04a" stroke="#6a4a12" strokeWidth={0.025} />
+      <rect x={1.3} y={2.2} width={0.4} height={0.1} rx={0.03} fill="#e1b04a" stroke="#6a4a12" strokeWidth={0.025} />
       <path d="M1.34 1.02H1.6" stroke="#fff3b0" strokeWidth={0.02} {...line} />
       {/* the shade: a lit pleated drum with a bright inner rim */}
       <Inked d={LAMP_SHADE} fill="#f3e6c4" ink="#6a5428" />
@@ -271,63 +306,65 @@ const hotelLamp: ItemArtDef = {
   ),
 }
 
-/* ---------- Ceramic foot (3x2 U): a delft-glazed reflexology foot, broken off at the ankle ---------- */
+/* ---------- Marble foot (3x2 U): a statue's foot broken off at the ankle, iron dowel and a museum tag ---------- */
 const FOOT =
-  'M.12 .06H1.6Q1.8 .08 1.98 .2Q2.4 .28 2.66 .72Q2.74 1.1 2.7 1.55Q2.66 1.95 2.4 1.95H2.24Q2.02 1.95 2.02 1.72Q2.0 1.36 1.5 1.12Q1.0 1.36 .98 1.72Q.98 1.95 .78 1.95H.46Q.12 1.95 .08 1.55Q0 1.0 .12 .06Z'
-const BLUE = '#2f5aa8'
+  'M.12 .06H1.6Q1.8 .08 1.98 .2Q2.3 .28 2.5 .72Q2.58 1.1 2.56 1.55Q2.52 1.95 2.3 1.95H2.24Q2.02 1.95 2.02 1.72Q2 1.36 1.5 1.12Q1 1.36 .98 1.72Q.98 1.95 .78 1.95H.46Q.12 1.95 .08 1.55Q0 1 .12 .06Z'
 
 const ceramicFoot: ItemArtDef = {
-  zone: { x: 1.15, y: 0.52, tone: 'dark' },
+  zone: { x: 1.15, y: 0.56, tone: 'dark' },
   draw: (uid) => (
     <>
       <defs>
-        <linearGradient id={`${uid}-glaze`} x1={0} y1={0} x2={1} y2={1}>
-          <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.6" stopColor="#e9eef8" />
-          <stop offset="1" stopColor="#b9c6de" />
+        <linearGradient id={`${uid}-marble`} x1={0} y1={0} x2={1} y2={1}>
+          <stop offset="0" stopColor="#fffdf6" />
+          <stop offset="0.5" stopColor="#e7dfcb" />
+          <stop offset="1" stopColor="#9d9279" />
         </linearGradient>
+        <clipPath id={`${uid}-foot`}>
+          <path d={FOOT} />
+        </clipPath>
       </defs>
       <Contact d={FOOT} />
-      <Inked d={FOOT} fill={`url(#${uid}-glaze)`} ink="#1d3768" w={0.045} />
-      {/* toes, in front of the instep: big toe first, each with a painted nail */}
+      {/* toes first, so the instep overlaps them: big toe largest, a chipped second toe */}
       {[
-        [2.8, 0.78, 0.21, 0.19],
-        [2.84, 1.1, 0.15, 0.14],
-        [2.82, 1.37, 0.13, 0.12],
-        [2.78, 1.6, 0.12, 0.11],
-        [2.72, 1.8, 0.1, 0.1],
+        [2.66, 0.8, 0.21, 0.19],
+        [2.7, 1.1, 0.15, 0.14],
+        [2.68, 1.37, 0.13, 0.12],
+        [2.64, 1.6, 0.12, 0.11],
+        [2.58, 1.8, 0.1, 0.1],
       ].map(([cx, cy, rx, ry]) => (
-        <g key={cy}>
-          <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#f6f8fd" stroke="#1d3768" strokeWidth={0.035} />
-          <path d={`M${cx + rx * 0.35} ${cy - ry * 0.5}Q${cx + rx * 0.9} ${cy} ${cx + rx * 0.35} ${cy + ry * 0.5}Z`} fill="#d6483c" opacity={0.9} />
-        </g>
+        <ellipse key={cy} cx={cx} cy={cy} rx={rx} ry={ry} fill="#f3ecdb" stroke="#3a342a" strokeWidth={0.045} />
       ))}
-      {/* the broken ankle: a gold repair line (kintsugi) across the top */}
-      <path d="M.14 .1H1.58Q1.7 .1 1.8 .16" stroke="#d9a93e" strokeWidth={0.07} {...line} />
-      <path d="M.2 .09H1.2" stroke="#fff3b0" strokeWidth={0.02} {...line} />
-      {/* cobalt vine and flowers, reflexology zone lines */}
-      <path d="M.2 1.0Q.5 .7 .85 .85T1.45 .62Q1.9 .5 2.3 .8" stroke={BLUE} strokeWidth={0.04} {...line} />
-      <path d="M.2 1.4Q.6 1.2 .9 1.5" stroke={BLUE} strokeWidth={0.03} {...line} />
-      {[
-        [0.45, 0.78],
-        [1.6, 0.55],
-        [0.38, 1.55],
-        [2.35, 0.86],
-        [2.5, 1.45],
-      ].map(([x, y]) => (
-        <g key={`${x}${y}`}>
-          {[0, 72, 144, 216, 288].map((a) => (
-            <ellipse key={a} cx={x} cy={y - 0.09} rx={0.05} ry={0.08} fill={BLUE} transform={`rotate(${a} ${x} ${y})`} />
-          ))}
-          <circle cx={x} cy={y} r={0.04} fill="#f4d36b" />
-        </g>
+      <path d="M2.76 1.0l.07.05l-.04.07l.06.04" stroke="#4a4338" strokeWidth={0.02} fill="none" strokeLinejoin="round" />
+      <Inked d={FOOT} fill={`url(#${uid}-marble)`} ink="#3a342a" w={0.06} />
+      <g clipPath={`url(#${uid}-foot)`}>
+        {/* veining and a lit edge */}
+        <path d="M.1 .9C.5 .7 .7 1.1 1.2 .8S1.9 .7 2.4 1.1M.2 1.5C.6 1.3 .8 1.7 1.0 1.5M1.6 .3C1.8 .5 1.7 .7 1.95 .85M2.2 1.5C2.4 1.4 2.5 1.6 2.65 1.5" stroke="#8a8f9a" strokeWidth={0.02} opacity={0.5} {...line} />
+        <path d="M.3 1.2C.5 1.1 .7 1.3 .9 1.2M1.4 .5C1.55 .55 1.7 .5 1.8 .6" stroke="#b9a98a" strokeWidth={0.014} opacity={0.6} {...line} />
+        {/* carved sandal straps */}
+        <path d="M.35 .3Q.42 .8 .38 1.3M.62 .3Q.7 .8 .66 1.25" stroke="#6f6757" strokeWidth={0.055} {...line} />
+        <path d="M.35 .3Q.42 .8 .38 1.3M.62 .3Q.7 .8 .66 1.25" stroke="#fff" strokeWidth={0.012} opacity={0.8} {...line} />
+        <path d="M2.0 .25Q2.1 .7 2.35 .95" stroke="#6f6757" strokeWidth={0.05} {...line} />
+        <path d="M.1 1.75Q1.0 1.9 2.1 1.8" stroke="#8d8576" strokeWidth={0.04} opacity={0.35} {...line} />
+      </g>
+      {[0.94, 1.24, 1.49, 1.7].map((y) => (
+        <path key={y} d={`M2.48 ${y}Q2.66 ${y + 0.03} 2.82 ${y - 0.02}`} stroke="#3a342a" strokeWidth={0.03} {...line} />
       ))}
-      <path d="M2.0 1.0Q2.4 1.3 2.8 1.2M2.1 1.4H2.7" stroke="#8aa4d6" strokeWidth={0.02} strokeDasharray="0.04 0.04" {...line} />
-      <path d="M1.2 .22Q1.3 .5 1.15 .75M1.9 .28Q1.8 .5 1.95 .7" stroke="#aebbd6" strokeWidth={0.012} opacity={0.8} {...line} />
-      <path d="M.2 .2Q.5 .14 .9 .18" stroke="#fff" strokeWidth={0.04} opacity={0.9} {...line} />
-      <Lod1>
-        <path d="M.9 1.1l.1.12l.12-.08M2.55 1.2l.08.1" stroke="#8aa4d6" strokeWidth={0.012} {...line} />
-      </Lod1>
+      <path d="M2.72 .68Q2.82 .76 2.74 .88" stroke="#8d8576" strokeWidth={0.03} {...line} />
+      {/* the break at the ankle: a flat, crystalline plane with a rusted iron dowel */}
+      <path d="M.12 .12L.28 .03L.46 .12L.7 .03L.95 .13L1.2 .04L1.45 .12L1.62 .06L1.82 .16L1.5 .3L.9 .27L.3 .28Z" fill="#b9b09b" stroke="#3a342a" strokeWidth={0.025} strokeLinejoin="round" />
+      <rect x={0.7} y={0.1} width={0.14} height={0.12} rx={0.02} fill="#9a5a2a" stroke="#4a2a12" strokeWidth={0.02} />
+      <path d="M1.1 .12h.05M1.3 .2h.05M.5 .2h.05" stroke="#8a8372" strokeWidth={0.02} {...line} />
+      {/* museum inventory tag tied round the big toe */}
+      <path d="M2.55 .88Q2.2 1.1 2.3 1.3" stroke="#6a5a38" strokeWidth={0.025} {...line} />
+      <g transform="rotate(-8 2.3 1.5)">
+        <rect x={2.08} y={1.3} width={0.44} height={0.5} rx={0.03} fill="#fbf1de" stroke="#b6a77f" strokeWidth={0.02} />
+        <circle cx={2.3} cy={1.36} r={0.025} fill="#b6a77f" />
+        <text x={2.3} y={1.62} textAnchor="middle" fontSize={0.12} fontWeight={800} fill="#3a2a1a" style={{ fontFamily: 'var(--ui)' }}>
+          1847
+        </text>
+        <path d="M2.14 1.7H2.46" stroke="#b6a77f" strokeWidth={0.015} />
+      </g>
     </>
   ),
 }
@@ -461,11 +498,11 @@ const cheese: ItemArtDef = {
   ),
 }
 
-/* ---------- Bottle of local spirit (3x1): amber glass, wax-sealed cork, a chilli floating inside ---------- */
+/* ---------- Badcardi Rum (3x1): amber glass, a black-and-gold label, wax and cork, a duty-free sticker ---------- */
 const BOTTLE = 'M.2 .14H1.8Q2.05 .14 2.15 .3Q2.3 .44 2.6 .44Q2.7 .44 2.7 .5Q2.7 .56 2.6 .56Q2.3 .56 2.15 .7Q2.05 .86 1.8 .86H.2Q.1 .86 .1 .76V.24Q.1 .14 .2 .14Z'
 
 const liquor: ItemArtDef = {
-  zone: { x: 1.1, y: 0.5, tone: 'dark' },
+  zone: { x: 1.15, y: 0.69, tone: 'light' },
   draw: (uid) => (
     <>
       <defs>
@@ -477,26 +514,24 @@ const liquor: ItemArtDef = {
       </defs>
       <Contact d={BOTTLE} />
       <Inked d={BOTTLE} fill={`url(#${uid}-glass)`} ink="#3a1a06" w={0.04} />
-      {/* chilli drifting in the spirit */}
-      <path d="M.18 .66Q.35 .74 .56 .66Q.6 .62 .56 .6Q.36 .64 .2 .58Z" fill="#d9362c" stroke="#6a0f0a" strokeWidth={0.02} strokeLinejoin="round" />
-      <path d="M.18 .6Q.12 .56 .13 .5" stroke="#3f7a2a" strokeWidth={0.035} {...line} />
-      {/* label */}
-      <rect x={0.58} y={0.2} width={1.12} height={0.6} rx={0.03} fill="#f4e7c7" stroke="#6a4a22" strokeWidth={0.025} />
-      <rect x={0.63} y={0.25} width={1.02} height={0.5} rx={0.02} fill="none" stroke="#9a2a22" strokeWidth={0.02} />
-      <path d="M.7 .31H1.58" stroke="#9a2a22" strokeWidth={0.04} {...line} />
-      <path d="M.7 .69H1.58" stroke="#9a2a22" strokeWidth={0.02} {...line} />
-      <Lod1>
-        <path d="M.68 .5l.06-.1l.06.1l.06-.1l.06.1" stroke="#9a2a22" strokeWidth={0.02} {...line} />
-      </Lod1>
-      {/* neck: twine, red wax seal and cork */}
-      <path d="M2.18 .34Q2.24 .5 2.18 .66" stroke="#d9c08c" strokeWidth={0.05} {...line} />
-      <path d="M2.34 .44V.56" stroke="#3a1a06" strokeWidth={0.015} />
+      {/* the label: black with a gold border, a gull on the wing, the name in cream capitals */}
+      <rect x={0.52} y={0.17} width={1.26} height={0.66} rx={0.04} fill="#1c1514" stroke="#d9aa4a" strokeWidth={0.03} />
+      <rect x={0.58} y={0.23} width={1.14} height={0.54} rx={0.025} fill="none" stroke="#d9aa4a" strokeWidth={0.012} />
+      <path d="M1.0 .33Q1.07 .24 1.15 .32Q1.23 .24 1.3 .33" stroke="#d9aa4a" strokeWidth={0.03} {...line} />
+      <text x={1.15} y={0.5} textAnchor="middle" textLength={0.98} lengthAdjust="spacingAndGlyphs" fontSize={0.17} fontWeight={800} fill="#fbf1de" style={{ fontFamily: 'var(--ui)' }}>
+        BADCARDI
+      </text>
+      <path d="M.7 .56H1.6" stroke="#d9aa4a" strokeWidth={0.012} />
+      {/* a duty-free sticker on the shoulder, gold foil on the neck, wax and cork */}
+      <circle cx={1.94} cy={0.62} r={0.1} fill="#2f6fc4" stroke="#fff" strokeWidth={0.02} />
+      <path d="M1.94 .55l.02.05h.05l-.04.03.02.05l-.05-.03l-.05.03l.02-.05l-.04-.03h.05z" fill="#ffd23a" />
+      <path d="M2.18 .36Q2.25 .5 2.18 .64" stroke="#d9aa4a" strokeWidth={0.06} {...line} />
       <path d="M2.55 .38H2.74Q2.8 .38 2.8 .44V.56Q2.8 .62 2.74 .62H2.55Q2.5 .54 2.52 .5Q2.5 .44 2.55 .38Z" fill="#c7362c" stroke="#6a0f0a" strokeWidth={0.025} strokeLinejoin="round" />
       <path d="M2.68 .62Q2.7 .74 2.64 .8" stroke="#c7362c" strokeWidth={0.05} {...line} />
       <rect x={2.74} y={0.4} width={0.2} height={0.2} rx={0.04} fill="#d6a86a" stroke="#6a4520" strokeWidth={0.025} />
       {/* highlight streaks on the glass */}
-      <path d="M.3 .2H1.7" stroke="#fff" strokeWidth={0.035} opacity={0.65} {...line} />
-      <path d="M.3 .82H1.6" stroke="#ffd38a" strokeWidth={0.02} opacity={0.5} {...line} />
+      <path d="M.3 .2H.5M1.8 .2H1.9" stroke="#fff" strokeWidth={0.035} opacity={0.65} {...line} />
+      <path d="M.3 .8H.5" stroke="#ffd38a" strokeWidth={0.02} opacity={0.5} {...line} />
     </>
   ),
 }
@@ -604,7 +639,7 @@ const socks: ItemArtDef = {
 }
 
 export const LEVEL3_ART: Record<string, ItemArtDef> = {
-  cutout,
+  painting,
   laundry,
   hangover,
   heels,

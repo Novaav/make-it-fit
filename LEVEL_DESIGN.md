@@ -36,11 +36,13 @@ Board 6×5 (30 cells), allowance **6.5 kg**, no mandatory items, 10 selectable i
 Verified (`verify_levels.py` and the independent enumeration in `src/engine/enumerate.test.ts` agree): perfect score 25 with two optimal sets (handbag+outfit+flamingo+massager+boa+DVDs and handbag+flamingo+massager+boa+ring light+DVDs); 719 legal packs, 102 of them reach 20. Both the space and the weight limit bind.
 
 ## Level 3 — Excess Baggage
-Board 7×6 (42 cells), allowance **21 kg**, two mandatory items (cardboard cutout 4 kg, laundry bag 5 kg), 10 selectable items. Win at **21 Chaos**; perfect **26**. The concrete gnome (Chaos 8, 6.5 kg) is a deliberate trap: it looks best per item but the perfect pack leaves it out.
+Board 7×6 (42 cells), allowance **20.5 kg**, two mandatory items (Hotel Painting 3×3, 4 kg; Laundry bag 3×2, 5 kg), 10 selectable items. Win at **24 Chaos**; perfect **29**.
 
-Selectable items and Chaos: outfit 2, hangover kit 3, heels 2, hotel lamp 2, ceramic foot 6, gnome 8, wheel of cheese 5, bottle of local spirit 5, hotel bathrobe 4, emergency socks 3.
+Selectable items (cells, weight, Chaos): party outfit (4, 900 g, 2), hangover kit (4, 800 g, 3), overpriced heels (5, 1.3 kg, 3), hotel lamp (4, 3.6 kg, 3), marble foot (5, 3.6 kg, 7), garden gnome (6, 6.5 kg, 9), wheel of cheese (4, 2.8 kg, 5), Badcardi rum (3, 1.5 kg, 5), bathrobe (5, 1.3 kg, 4), socks (2, 150 g, 3).
 
-Verified: perfect 26 has exactly one optimal set (hangover kit, ceramic foot, cheese, spirit, bathrobe, socks), packed with slack; 571 legal packs, 82 of them reach 21. A normal win (22 Chaos) can weigh exactly 21 kg.
+Verified (`verify_levels.py` and the independent enumeration in `src/engine/enumerate.test.ts` agree): **532** legal item combinations (within the allowance and packable), **37** of which win, **1** perfect combination (outfit, hangover kit, marble foot, cheese, rum, bathrobe, socks: 29 Chaos, 20.05 kg, fills all 42 cells; 5,516 physical arrangements, none without rotation). Exact arrangement counts, rotation need and the sampled difficulty proxies are in the audit scripts (`.local/audit3`, not committed). Weight and space both bind; the gnome is a real but imperfect option (it appears in 6 winning combinations and in no perfect one).
+
+Design notes: the painting is a believable 3×3 rectangle (a larger or oddly notched shape was tested and rejected as contrived). With it the perfect pack must rotate, "most chaotic first" no longer wins, and no mandatory layout dead-ends a normal win (65% of mandatory layouts do block the perfect pack, which is the planning puzzle).
 
 ## Scoring rules
 Win = every mandatory item packed, weight at most the allowance (exactly equal is fine) and Chaos at least the target (80% of perfect, rounded up). There is no partial credit and no star bonus. Chaos values are joke-driven design numbers, not measurements.

@@ -34,7 +34,7 @@ describe('introPages', () => {
   it('Level 3 teaches only the new mandatory rule instead of repeating the Chaos tutorial', () => {
     const t = text('03')
     expect(t).toContain('MUST')
-    expect(t).toContain('21 Chaos')
+    expect(t).toContain('24 Chaos')
     expect(t).not.toContain('Every item has a Chaos number')
     expect(introPages(level('03'))).toHaveLength(2)
   })

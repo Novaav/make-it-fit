@@ -89,50 +89,53 @@ row 4  D D D B B B
 
 ## Level 3 — Excess Baggage
 
-- Board: 7 columns × 6 rows. Packing allowance: 21 kg (a total equal to the allowance succeeds).
-- Chaos: win at 21, perfect pack at 26. Mandatory: Cardboard cutout, Laundry bag.
-- Items (Chaos, weight): Cardboard cutout (mandatory, 4 kg); Laundry bag (mandatory, 5 kg); Party outfit (2, 900 g); Hangover kit (3, 800 g); Red-soled heels (2, 1.3 kg); Hotel lamp (2, 3.6 kg); Ceramic foot (6, 3.2 kg); Concrete garden gnome (8, 6.5 kg); Wheel of cheese (5, 2.8 kg); Bottle of local spirit (5, 1.5 kg); Hotel bathrobe (4, 1.3 kg); Emergency socks (3, 150 g).
+- Board: 7 columns × 6 rows. Packing allowance: 20.5 kg (a total equal to the allowance succeeds).
+- Chaos: win at 24, perfect pack at 29. Mandatory: Hotel Painting, Laundry bag.
+- Items (Chaos, weight): Hotel Painting (mandatory, 4 kg); Laundry bag (mandatory, 5 kg); Party outfit (2, 900 g); Hangover kit (3, 800 g); Overpriced Heels (3, 1.3 kg); Hotel lamp (3, 3.6 kg); Marble foot (7, 3.6 kg); Garden gnome (9, 6.5 kg); Wheel of cheese (5, 2.8 kg); Badcardi Rum (5, 1.5 kg); Bathrobe (4, 1.3 kg); Socks (3, 150 g).
 
-### Normal win (a pack of the most chaotic items that fit): Chaos 22 of the 21 needed; total weight 21 kg
-
-| Item | Mandatory | Chaos | Weight | Rotation (presses) | Position (column,row) | Letter |
-|---|---|---|---|---|---|---|
-| Cardboard cutout | yes | 0 | 4 kg | 0 | (0,0) | A |
-| Laundry bag | yes | 0 | 5 kg | 0 | (3,1) | B |
-| Concrete garden gnome |  | 8 | 6.5 kg | 0 | (4,3) | H |
-| Ceramic foot |  | 6 | 3.2 kg | 0 | (0,4) | G |
-| Hangover kit |  | 3 | 800 g | 0 | (0,1) | D |
-| Bottle of local spirit |  | 5 | 1.5 kg | 1 | (6,0) | J |
-
-```
-       0 1 2 3 4 5 6
-row 0  A A A A A . J
-row 1  D D A B B B J
-row 2  D D A B B B J
-row 3  . A A A H H .
-row 4  G G G . H H .
-row 5  G . G . H H .
-```
-
-### Perfect pack: Chaos 26, the maximum; total weight 18.75 kg
+### Normal win (a pack of the most chaotic items that fit): Chaos 24 of the 24 needed; total weight 17.25 kg
 
 | Item | Mandatory | Chaos | Weight | Rotation (presses) | Position (column,row) | Letter |
 |---|---|---|---|---|---|---|
-| Cardboard cutout | yes | 0 | 4 kg | 0 | (0,0) | A |
-| Laundry bag | yes | 0 | 5 kg | 0 | (3,1) | B |
-| Ceramic foot |  | 6 | 3.2 kg | 0 | (4,3) | G |
-| Hotel bathrobe |  | 4 | 1.3 kg | 0 | (0,1) | K |
-| Hangover kit |  | 3 | 800 g | 0 | (0,4) | D |
-| Wheel of cheese |  | 5 | 2.8 kg | 0 | (2,4) | I |
-| Bottle of local spirit |  | 5 | 1.5 kg | 0 | (4,5) | J |
-| Emergency socks |  | 3 | 150 g | 0 | (5,0) | L |
+| Hotel Painting | yes | 0 | 4 kg | 0 | (0,0) | A |
+| Laundry bag | yes | 0 | 5 kg | 0 | (3,0) | B |
+| Marble foot |  | 7 | 3.6 kg | 0 | (3,2) | G |
+| Bathrobe |  | 4 | 1.3 kg | 0 | (0,3) | K |
+| Party outfit |  | 2 | 900 g | 0 | (2,4) | C |
+| Hangover kit |  | 3 | 800 g | 0 | (5,4) | D |
+| Badcardi Rum |  | 5 | 1.5 kg | 1 | (6,0) | J |
+| Socks |  | 3 | 150 g | 0 | (1,5) | L |
 
 ```
        0 1 2 3 4 5 6
-row 0  A A A A A L L
-row 1  K K A B B B .
-row 2  K K A B B B .
-row 3  K A A A G G G
-row 4  D D I I G . G
-row 5  D D I I J J J
+row 0  A A A B B B J
+row 1  A A A B B B J
+row 2  A A A G G G J
+row 3  K K . G . G .
+row 4  K K C C C D D
+row 5  K L L C . D D
+```
+
+### Perfect pack: Chaos 29, the maximum; total weight 20.05 kg
+
+| Item | Mandatory | Chaos | Weight | Rotation (presses) | Position (column,row) | Letter |
+|---|---|---|---|---|---|---|
+| Hotel Painting | yes | 0 | 4 kg | 0 | (0,0) | A |
+| Laundry bag | yes | 0 | 5 kg | 0 | (3,0) | B |
+| Marble foot |  | 7 | 3.6 kg | 0 | (0,3) | G |
+| Bathrobe |  | 4 | 1.3 kg | 1 | (4,2) | K |
+| Party outfit |  | 2 | 900 g | 2 | (0,4) | C |
+| Hangover kit |  | 3 | 800 g | 0 | (3,4) | D |
+| Wheel of cheese |  | 5 | 2.8 kg | 0 | (5,4) | I |
+| Badcardi Rum |  | 5 | 1.5 kg | 1 | (6,0) | J |
+| Socks |  | 3 | 150 g | 1 | (3,2) | L |
+
+```
+       0 1 2 3 4 5 6
+row 0  A A A B B B J
+row 1  A A A B B B J
+row 2  A A A L K K J
+row 3  G G G L K K K
+row 4  G C G D D I I
+row 5  C C C D D I I
 ```

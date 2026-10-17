@@ -121,31 +121,32 @@ describe('independent enumeration of the three levels (the TypeScript engine aga
     for (const dumb of ['lowest Chaos first', 'lightest first', 'heaviest first', 'biggest first'] as const) expect(s[dumb]).toBeLessThan(20)
   })
 
-  it('level 3: perfect 26 Chaos with one optimal pack that leaves room; 21 wins; the gnome is a trap', () => {
+  it('level 3: perfect 29 Chaos with one optimal pack that fills the board; 24 wins; the gnome is a decoy', () => {
     const l = lv('03')
     const a = analyse(l)
-    expect(a.perfect).toBe(26)
+    expect(a.perfect).toBe(29)
     expect(l.perfect).toBe(a.perfect)
     expect(l.target).toBe(Math.ceil(0.8 * a.perfect))
-    expect(a.optimalSets).toEqual(['hangover+ceramic_foot+cheese+liquor+robe+emergency_socks'].map((x) => x.split('+').sort().join('+')))
-    expect(a.legal).toHaveLength(571)
-    expect(a.passing(21)).toBe(82)
-    expect(a.bestIgnoringWeight).toBe(31)
+    expect(a.optimalSets).toEqual(['outfit+hangover+ceramic_foot+cheese+liquor+robe+emergency_socks'].map((x) => x.split('+').sort().join('+')))
+    expect(a.legal).toHaveLength(532)
+    expect(a.passing(24)).toBe(37)
+    expect(a.bestIgnoringWeight).toBe(33)
     expect(a.bestIgnoringSpace).toBe(30)
-    // the most chaotic item (the 8-Chaos, 6.5 kg gnome) is in no perfect pack
+    // the most chaotic item (the 9-Chaos, 6.5 kg gnome) is in no perfect pack
     expect(a.optimalSets.every((x) => !x.includes('gnome'))).toBe(true)
     const gnome = l.items.find((i) => i.id === 'gnome')!
     expect(Math.max(...l.items.map((i) => i.chaos))).toBe(gnome.chaos)
   })
 
-  it('level 3: no simple strategy reaches the perfect score; only reasoned or Chaos-first play wins', () => {
+  it('level 3: no simple strategy reaches the perfect score, and "most chaotic first" no longer wins', () => {
     const { strategies: s } = analyse(lv('03'))
     expect(s).toEqual({
-      'highest Chaos first': 22, 'lowest Chaos first': 16, 'lightest first': 19, 'heaviest first': 18,
-      'smallest first': 22, 'biggest first': 18, 'Chaos per kg': 23, 'Chaos per cell': 24,
+      'highest Chaos first': 20, 'lowest Chaos first': 23, 'lightest first': 25, 'heaviest first': 15,
+      'smallest first': 24, 'biggest first': 19, 'Chaos per kg': 25, 'Chaos per cell': 22,
     })
-    expect(Math.max(...Object.values(s))).toBeLessThan(26)
-    for (const dumb of ['lowest Chaos first', 'lightest first', 'heaviest first', 'biggest first'] as const) expect(s[dumb]).toBeLessThan(21)
+    expect(Math.max(...Object.values(s))).toBeLessThan(29)
+    expect(s['highest Chaos first']).toBeLessThan(24) // the Level 2 shortcut fails here
+    for (const dumb of ['lowest Chaos first', 'heaviest first', 'biggest first', 'Chaos per cell'] as const) expect(s[dumb]).toBeLessThan(24)
   })
 
   it('every mandatory item fits together with the lightest pack, and mandatory items carry no Chaos', () => {
