@@ -555,7 +555,16 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   min-height: 48px; padding: 0 34px; border: 2px solid var(--ink); border-radius: 8px; background: var(--ink); color: var(--paper); cursor: pointer;
   font: 700 0.95rem var(--ui); letter-spacing: 0.16em; text-transform: uppercase; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.3);
 }
-.opening-play:hover { background: var(--paper); color: var(--ink); }
+.opening-play {
+  transition: transform 150ms cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 150ms ease-out, background-color 150ms ease-out, color 150ms ease-out, outline-offset 150ms ease-out;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+/* hover only where there is a real pointer (touch screens would leave it stuck): it lifts a little and turns to paper */
+@media (hover: hover) {
+  .opening-play:hover:not(:active) { background: var(--paper); color: var(--ink); transform: translateY(-2px); box-shadow: 3px 5px 0 rgba(43, 36, 51, 0.3); }
+}
+/* pressed: a small, controlled compression, on mouse, keyboard and touch */
+.opening-play:active { background: var(--paper); color: var(--ink); transform: translateY(1px) scale(0.97); box-shadow: 1px 1px 0 rgba(43, 36, 51, 0.3); transition-duration: 70ms; }
 .brand-lockup { display: flex; align-items: center; gap: 12px; transform-origin: 0 0; }
 /* waiting for the fonts and the measurements: the table is empty, nothing flashes */
 .app.opening:not(.go) .brand-lockup, .app.opening:not(.go) .opening-stack { opacity: 0; }
@@ -570,18 +579,22 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 }
 .app.opening.go .wm-it { animation: op-stamp 460ms cubic-bezier(0.3, 1.5, 0.45, 1) 450ms both; }
 .app.opening.go .opening-tag { animation: op-up 420ms ease-out 900ms both; }
-.app.opening.go .opening-play { animation: op-up 380ms ease-out 1100ms both; }
+.app.opening.go .opening-play { animation: op-up 380ms ease-out 1100ms backwards; }
 /* Play: the tag and button leave, the wordmark travels home, the table fades up as it settles (about 0.85 s) */
 .app.opening.leaving .brand-lockup { animation: op-in 500ms ease-out both, op-travel 800ms cubic-bezier(0.45, 0, 0.25, 1) both; }
-.app.opening.leaving .opening-tag, .app.opening.leaving .opening-play { animation: op-out 200ms ease-in forwards; pointer-events: none; }
+.app.opening.leaving .opening-tag { animation: op-out 200ms ease-in forwards; pointer-events: none; }
+/* released: it springs back from the press and fades away while the wordmark starts to travel */
+.app.opening.leaving .opening-play { animation: op-release 340ms ease-out forwards; pointer-events: none; }
 .app.opening.leaving > :not(.masthead):not(.opening-layer), .app.opening.leaving .levels, .app.opening.leaving .tagline { animation: op-reveal 420ms ease-out 430ms both; }
 @keyframes op-in { from { opacity: 0; } }
 @keyframes op-travel { from { transform: translate(calc(var(--ox, 0px) / var(--os, 1)), calc(var(--oy, 0px) / var(--os, 1))) scale(1); } to { transform: translate(0, 0) scale(var(--is, 1)); } }
 @keyframes op-stamp { from { opacity: 0; transform: rotate(-3deg) translateY(-0.45em) scale(1.45); } to { opacity: 1; transform: rotate(-3deg); } }
 @keyframes op-up { from { opacity: 0; transform: translateY(10px); } }
 @keyframes op-out { to { opacity: 0; } }
+@keyframes op-release { 0% { transform: translateY(1px) scale(0.97); opacity: 1; } 35% { transform: translateY(-1px) scale(1.02); opacity: 1; } 100% { transform: translateY(3px) scale(0.98); opacity: 0; } }
 @keyframes op-reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .opening-play:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
-  .app.opening *, .app.opening *::after { animation: none !important; }
+  .app.opening *, .app.opening *::after { animation: none !important; transition: none !important; }
+  .opening-play:active, .opening-play:hover:not(:active) { transform: none; }
 }

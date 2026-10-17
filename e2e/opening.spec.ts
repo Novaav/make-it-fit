@@ -93,7 +93,8 @@ test('Play (mouse): the wordmark moves into the masthead and the table fades up 
   const during = await page.evaluate(() => {
     const props = new Set<string>()
     const anims = document.getAnimations()
-    for (const a of anims) for (const k of (a.effect as KeyframeEffect).getKeyframes()) Object.keys(k).forEach((p) => props.add(p))
+    // the movement itself; the Play button's own colour and shadow transitions are small paint changes and are not counted
+    for (const a of anims) if (!(a instanceof CSSTransition)) for (const k of (a.effect as KeyframeEffect).getKeyframes()) Object.keys(k).forEach((p) => props.add(p))
     return { props: [...props], leaving: !!document.querySelector('.app.leaving') }
   })
   for (const p of during.props) expect(['offset', 'easing', 'composite', 'computedOffset', 'transform', 'opacity'], `animated property ${p}`).toContain(p)
@@ -225,4 +226,37 @@ test('the opening never changes saved progress or the saved note state', async (
   expect(await page.evaluate(() => localStorage.getItem('make-it-fit:progress:v1'))).toBeNull()
   expect(await page.evaluate(() => localStorage.getItem('make-it-fit:boards:v1'))).toBeNull()
   expect(await page.evaluate((k) => localStorage.getItem(k), INTRO)).toBeNull()
+})
+
+test('the Play button feels physical: it lifts on hover, compresses when pressed, springs back on release', async ({ page }) => {
+  await page.goto('/?intro')
+  await expect(page.locator('.app')).toHaveClass(/go/)
+  const btn = playButton(page)
+  const scale = () => btn.evaluate((b) => { const m = new DOMMatrix(getComputedStyle(b).transform); return { y: m.m42, s: m.a } })
+  await page.waitForTimeout(1700)
+  await btn.blur()
+  expect((await scale()).s).toBeCloseTo(1, 2)
+  const box = (await btn.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await expect.poll(async () => (await scale()).y).toBeLessThan(-1) // lifted
+  await page.mouse.down()
+  await expect.poll(async () => (await scale()).s).toBeLessThan(0.99) // compressed
+  await page.mouse.up()
+  await expect(page.locator('.app')).toHaveClass(/leaving/)
+  expect(await page.evaluate(() => document.getAnimations().some((a) => a.animationName === 'op-release'))).toBe(true)
+  await expect(page.locator('.app')).not.toHaveClass(/opening/, { timeout: 3000 })
+  await expect(note(page)).toBeVisible() // the tutorial only after the transition has settled
+})
+
+test('with reduced motion the Play button does not move when hovered or pressed', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/?intro')
+  const btn = playButton(page)
+  await expect(btn).toBeVisible()
+  const box = (await btn.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.waitForTimeout(250)
+  expect(await btn.evaluate((b) => getComputedStyle(b).transform)).toBe('none')
+  await page.mouse.up()
 })

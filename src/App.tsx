@@ -281,7 +281,7 @@ export default function App() {
         <div className="opening-layer">
           <div className="opening-stack">
             <p className="opening-tag" aria-hidden="true">Bad decisions. Limited luggage.</p>
-            <button type="button" className="opening-play" ref={playRef} onClick={play}>
+            <button type="button" className="opening-play" ref={playRef} onClick={play} onTouchStart={() => {}}>
               Play
             </button>
           </div>
