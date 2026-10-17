@@ -5,13 +5,11 @@ import {
   createGame,
   isOverWeight,
   isWon,
-  canAddAny,
   isPerfect,
   totalChaos,
   totalWeight,
   itemBounds,
   previewPlacement,
-  rotate,
   remove,
   reset,
   rotatePlaced,
@@ -21,7 +19,6 @@ import {
   type Level,
   type Orientation,
   type Placement,
-  type PlacementError,
   place,
 } from './engine'
 import { ItemArt } from './components/ItemArt'
@@ -35,19 +32,12 @@ import { ChaosBadge } from './components/ChaosBadge'
 import PerfectFlourish from './components/PerfectFlourish'
 import PerfectSeal from './components/PerfectSeal'
 import IntroNote from './components/IntroNote'
-import { ITEM_NAMES, LEVEL_TITLES } from './levelMeta'
+import { LEVEL_TITLES } from './levelMeta'
+import { failureMessage, itemName, reasonText, itemSummary, scoreAnnouncement, statusNote, weightChipAnchor } from './status'
 import { formatLoad, formatWeight } from './weight'
 import { restoreGame, snapshot, type SavedBoard } from './boards'
 
-const name = (id: string) => ITEM_NAMES[id] ?? id
-const REASONS: Record<PlacementError, string> = {
-  'out-of-bounds': 'it sticks out of the suitcase',
-  overlap: 'it overlaps another item',
-  'unknown-item': 'unknown item',
-  'already-placed': 'already packed',
-  'not-placed': 'not packed',
-  'nothing-to-undo': 'nothing to undo',
-}
+const name = itemName
 
 type Source = 'tray' | 'board'
 interface Carry {
@@ -144,24 +134,11 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
   const placementOf = (id: string) => gameRef.current.placements.find((p) => p.itemId === id)
   const orientationOf = (id: string): Orientation => placementOf(id)?.orientation ?? trayTurnsRef.current[id] ?? 0
 
-  // What a screen reader hears after every change: the running score, the weight left and a win, since the objective card is not a live region.
-  const scoreLine = (g: typeof game) => {
-    if (!LEVEL.items.some((i) => i.chaos > 0)) return ''
-    const parts = [`Chaos ${totalChaos(g)}${LEVEL.target !== undefined ? ` of ${LEVEL.target}` : ''}.`]
-    if (LEVEL.weightLimit !== undefined) {
-      const w = totalWeight(g)
-      parts.push(w > LEVEL.weightLimit ? `Over the allowance by ${formatWeight(w - LEVEL.weightLimit)}.` : `${formatWeight(LEVEL.weightLimit - w)} left.`)
-    }
-    if (isPerfect(g)) parts.push('Perfect pack!')
-    else if (isWon(g)) parts.push('That wins the level.')
-    return ` ${parts.join(' ')}`
-  }
-
   const apply = (result: ActionResult, ok: string) => {
     if (result.ok) {
       setGame(result.state)
-      setMessage(ok + scoreLine(result.state))
-    } else setMessage(`Can't do that: ${REASONS[result.error]}.`)
+      setMessage(ok + scoreAnnouncement(result.state))
+    } else setMessage(failureMessage(result.error))
     return result.ok
   }
 
@@ -248,7 +225,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
   const commitCarry = (c: Carry) => {
     const pv = previewPlacement(gameRef.current, c.itemId, c.orientation, c.x, c.y)
     if (pv.error) {
-      setMessage(`${name(c.itemId)} doesn't fit there: ${REASONS[pv.error]}.`)
+      setMessage(`${name(c.itemId)} doesn't fit there: ${reasonText(pv.error)}.`)
       return false
     }
     apply(commitPlacement(gameRef.current, pv.placement), `${name(c.itemId)} packed.`)
@@ -561,14 +538,14 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
   const hasChaos = LEVEL.target !== undefined
   const target = LEVEL.target ?? 0
   const perfectScore = LEVEL.perfect ?? 0
-  const mandatoryNames = required.map((i) => ITEM_NAMES[i.id] ?? i.id)
+  const mandatoryNames = required.map((i) => name(i.id))
   const goalText = !hasChaos
     ? `Fit all ${required.length} items into the suitcase. Green = fits, red = doesn't.`
     : `${required.length ? `${mandatoryNames.join(' and ')} must come. Then reach` : 'Reach'} ${target} Chaos within ${formatWeight(limit ?? 0)}.${required.length ? '' : ` Perfect: ${perfectScore}.`}`
   const liveHint =
     carry && snapped && preview
       ? preview.error
-        ? `Red — ${REASONS[preview.error]}.`
+        ? `Red — ${reasonText(preview.error)}.`
         : 'Green — it fits here.'
       : null
   const overTray = !!carry && carry.mode === 'pointer' && carry.overTray
@@ -579,8 +556,6 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
     return { '--cw': b.width, '--ch': b.height } as React.CSSProperties
   }
   const itemById = (id: string) => LEVEL.items.find((i) => i.id === id)!
-  // Anchor the weight chip on a cell the item really covers (bottom-most, then right-most),
-  // not on the bounding-box corner, which is empty for T/U/L shapes.
   const chips = (id: string, o: Orientation, room = '0px') => {
     const item = itemById(id)
     const badge = scored ? <ChaosBadge item={item} orientation={o} /> : null
@@ -593,8 +568,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
           <WeightLabel item={item} orientation={o} grams={item.weight} />
         </>
       )
-    const cells = rotate(item.cells, o)
-    const anchor = cells.reduce((a, c) => (c.y > a.y || (c.y === a.y && c.x > a.x) ? c : a))
+    const anchor = weightChipAnchor(item, o)
     return (
       <>
         {badge}
@@ -609,11 +583,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
       </>
     )
   }
-  const describe = (id: string) => {
-    const it = itemById(id)
-    const parts = [it.required && it.chaos === 0 ? 'Mandatory' : scored ? `Chaos ${it.chaos}` : '', limit !== undefined ? formatWeight(it.weight) : ''].filter(Boolean)
-    return parts.length ? ` ${parts.join(', ')}.` : ''
-  }
+  const describe = (id: string) => itemSummary(LEVEL, itemById(id))
 
   // What the info line shows: the item being carried, else the one under the mouse, else the focused one, else the selected one.
   const infoId = carry?.itemId ?? hoverId ?? focusId ?? selected
@@ -626,15 +596,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
     onFocus: () => setFocusId(id),
     onBlur: () => setFocusId((f) => (f === id ? null : f)),
   })
-  const missing = required.filter((i) => !placedIds.has(i.id))
-  const full = hasChaos && !solved && !overWeight && game.placements.length > 0 && missing.length === 0 && !canAddAny(game)
-  const note = overWeight
-    ? `Over the allowance by ${formatWeight(weight - (limit ?? 0))} — take something out.`
-    : !solved && game.placements.length > 0 && missing.length > 0
-      ? `Still to pack: ${missing.map((i) => name(i.id)).join(', ')}.`
-      : full
-        ? `Suitcase full at ${chaos} Chaos. Swap something for more Chaos.`
-        : ''
+  const note = statusNote(game)
 
   return (
     <div
