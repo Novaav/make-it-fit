@@ -13,25 +13,25 @@ _Generated from `VERIFIED_LEVELS.json` and `src/engine/solutions.fixture.json`; 
 
 - Run `npm run dev`. A **Dev tools** panel appears at the bottom-left of the page (development server only):
   - **Jump L1 / L2 / L3** opens any level regardless of progress.
-  - **Fill required only** / **Fill max bonus** load the verified layouts below (each item is a separate Undo step), so you can check the completion card, allowance meter and progress saving immediately.
-  - Jump and Fill never save progress or unlock levels; **Clear saved progress** resets real unlocks, ✓ marks and best bonus counts.
+  - **Fill normal win** / **Fill perfect pack** load the verified layouts below (each item is a separate Undo step), so you can check the completion card, meters and progress saving immediately.
+  - Jump and Fill never save progress or unlock levels; **Clear saved progress** resets real unlocks, ✓ marks and best Chaos scores.
   - Browser tests (`npm run test:e2e`) play Level 1 by dragging with exactly these coordinates.
 - The panel and the solution data are not part of the production build (`npm run check:prod-clean` builds and verifies this).
 
 ## Level 1 — Pack Like a Grown-Up
 
 - Board: 5 columns × 6 rows. No weight allowance (this level teaches fitting and rotation only).
-- Required items (5): T-shirt, Jeans, Sneakers, Toiletries, Laptop charger.
-- Optional items: none.
-- **Required-only solution**: pack the 5 required items from the table (weight 3.55 kg).
+- Every item is mandatory: T-shirt, Jeans, Sneakers, Toiletries, Laptop charger.
 
-| Item | Required | Weight | Rotation (presses) | Position (column,row) | Letter |
-|---|---|---|---|---|---|
-| Jeans | yes | 700 g | 1 | (0,0) | B |
-| Sneakers | yes | 1.2 kg | 0 | (1,0) | C |
-| T-shirt | yes | 250 g | 0 | (1,2) | A |
-| Toiletries | yes | 1 kg | 0 | (3,3) | D |
-| Laptop charger | yes | 400 g | 0 | (1,4) | E |
+### Solution; total weight 3.55 kg
+
+| Item | Mandatory | Chaos | Weight | Rotation (presses) | Position (column,row) | Letter |
+|---|---|---|---|---|---|---|
+| Jeans | yes |  | 700 g | 1 | (0,0) | B |
+| Sneakers | yes |  | 1.2 kg | 0 | (1,0) | C |
+| T-shirt | yes |  | 250 g | 0 | (1,2) | A |
+| Toiletries | yes |  | 1 kg | 0 | (3,3) | D |
+| Laptop charger | yes |  | 400 g | 0 | (1,4) | E |
 
 ```
        0 1 2 3 4
@@ -45,57 +45,94 @@ row 5  B . . . .
 
 ## Level 2 — Carry-On, Questionable Decisions
 
-- Board: 6 columns × 5 rows. Packing allowance: 7 kg (a total equal to the allowance succeeds).
-- Required items (4): Louis Regretton handbag, Party outfit, Toiletries, Inflatable flamingo.
-- Optional items (6): Pocket massager, Framed photo of the ex, Feather boa, Ring light and tripod, Disco ball, Mom's Porn Collection.
-- **Required-only solution**: pack the 4 required items from the table (weight 5.15 kg).
-- **Maximum bonus solution**: all required items plus Framed photo of the ex and Pocket massager (bonus 2 of 2, the "Maximum bonus" tier; total weight 6.55 kg). This is the verified maximum for the level; other sets can reach it too.
+- Board: 6 columns × 5 rows. Packing allowance: 6.5 kg (a total equal to the allowance succeeds).
+- Chaos: win at 20, perfect pack at 25. Nothing is mandatory: any items may be packed.
+- Items (Chaos, weight): Louis Regretton handbag (6, 2.25 kg); Party outfit (2, 900 g); Toiletries (1, 1 kg); Inflatable flamingo (5, 1 kg); Pocket massager (3, 400 g); Framed photo of the ex (3, 1 kg); Feather boa (3, 300 g); Ring light and tripod (2, 800 g); Disco ball (4, 1.5 kg); Mom's Porn Collection (6, 1.5 kg).
 
-| Item | Required | Weight | Rotation (presses) | Position (column,row) | Letter |
-|---|---|---|---|---|---|
-| Louis Regretton handbag | yes | 2.25 kg | 0 | (0,2) | A |
-| Inflatable flamingo | yes | 1 kg | 0 | (3,3) | D |
-| Framed photo of the ex | **optional** | 1 kg | 0 | (4,0) | F |
-| Party outfit | yes | 900 g | 1 | (0,0) | B |
-| Toiletries | yes | 1 kg | 0 | (2,1) | C |
-| Pocket massager | **optional** | 400 g | 0 | (1,0) | E |
+### Normal win (a pack of the most chaotic items that fit): Chaos 21 of the 20 needed; total weight 6.25 kg
+
+| Item | Mandatory | Chaos | Weight | Rotation (presses) | Position (column,row) | Letter |
+|---|---|---|---|---|---|---|
+| Louis Regretton handbag |  | 6 | 2.25 kg | 0 | (0,0) | A |
+| Inflatable flamingo |  | 5 | 1 kg | 0 | (3,0) | D |
+| Mom's Porn Collection |  | 6 | 1.5 kg | 0 | (3,2) | J |
+| Disco ball |  | 4 | 1.5 kg | 0 | (0,3) | I |
 
 ```
        0 1 2 3 4 5
-row 0  B E E E F F
-row 1  B B C C F F
-row 2  B A C C F F
-row 3  A A A D D D
-row 4  A A A D D D
+row 0  . A . D D D
+row 1  A A A D D D
+row 2  A A A J J .
+row 3  I I . J J .
+row 4  I I . J . .
+```
+
+### Perfect pack: Chaos 25, the maximum; total weight 6.35 kg
+
+| Item | Mandatory | Chaos | Weight | Rotation (presses) | Position (column,row) | Letter |
+|---|---|---|---|---|---|---|
+| Louis Regretton handbag |  | 6 | 2.25 kg | 0 | (0,0) | A |
+| Inflatable flamingo |  | 5 | 1 kg | 0 | (0,3) | D |
+| Mom's Porn Collection |  | 6 | 1.5 kg | 0 | (3,1) | J |
+| Party outfit |  | 2 | 900 g | 2 | (3,3) | B |
+| Feather boa |  | 3 | 300 g | 0 | (2,0) | G |
+| Pocket massager |  | 3 | 400 g | 1 | (5,1) | E |
+
+```
+       0 1 2 3 4 5
+row 0  . A G G G G
+row 1  A A A J J E
+row 2  A A A J J E
+row 3  D D D J B E
+row 4  D D D B B B
 ```
 
 ## Level 3 — Excess Baggage
 
-- Board: 8 columns × 6 rows. Packing allowance: 23 kg (a total equal to the allowance succeeds).
-- Required items (5): Cardboard cutout, Laundry bag, Party outfit, Hangover kit, Red-soled heels.
-- Optional items (7): Hotel lamp, Ceramic foot, Concrete garden gnome, Wheel of cheese, Bottle of local spirit, Hotel bathrobe, Emergency socks.
-- **Required-only solution**: pack the 5 required items from the table (weight 12 kg).
-- **Maximum bonus solution**: all required items plus Ceramic foot and Hotel bathrobe and Hotel lamp and Bottle of local spirit and Emergency socks (bonus 5 of 5, the "Perfect pack" tier; total weight 21.75 kg). This is the verified maximum for the level; other sets can reach it too.
+- Board: 7 columns × 6 rows. Packing allowance: 21 kg (a total equal to the allowance succeeds).
+- Chaos: win at 21, perfect pack at 26. Mandatory: Cardboard cutout, Laundry bag.
+- Items (Chaos, weight): Cardboard cutout (mandatory, 4 kg); Laundry bag (mandatory, 5 kg); Party outfit (2, 900 g); Hangover kit (3, 800 g); Red-soled heels (2, 1.3 kg); Hotel lamp (2, 3.6 kg); Ceramic foot (6, 3.2 kg); Concrete garden gnome (8, 6.5 kg); Wheel of cheese (5, 2.8 kg); Bottle of local spirit (5, 1.5 kg); Hotel bathrobe (4, 1.3 kg); Emergency socks (3, 150 g).
 
-| Item | Required | Weight | Rotation (presses) | Position (column,row) | Letter |
-|---|---|---|---|---|---|
-| Cardboard cutout | yes | 4 kg | 0 | (0,0) | A |
-| Laundry bag | yes | 5 kg | 0 | (5,0) | B |
-| Red-soled heels | yes | 1.3 kg | 0 | (5,2) | E |
-| Ceramic foot | **optional** | 3.2 kg | 1 | (0,2) | G |
-| Hotel bathrobe | **optional** | 1.3 kg | 2 | (3,3) | K |
-| Party outfit | yes | 900 g | 2 | (5,3) | C |
-| Hangover kit | yes | 800 g | 0 | (3,1) | D |
-| Hotel lamp | **optional** | 3.6 kg | 3 | (0,4) | F |
-| Bottle of local spirit | **optional** | 1.5 kg | 0 | (5,5) | J |
-| Emergency socks | **optional** | 150 g | 0 | (0,1) | L |
+### Normal win (a pack of the most chaotic items that fit): Chaos 22 of the 21 needed; total weight 21 kg
+
+| Item | Mandatory | Chaos | Weight | Rotation (presses) | Position (column,row) | Letter |
+|---|---|---|---|---|---|---|
+| Cardboard cutout | yes | 0 | 4 kg | 0 | (0,0) | A |
+| Laundry bag | yes | 0 | 5 kg | 0 | (3,1) | B |
+| Concrete garden gnome |  | 8 | 6.5 kg | 0 | (4,3) | H |
+| Ceramic foot |  | 6 | 3.2 kg | 0 | (0,4) | G |
+| Hangover kit |  | 3 | 800 g | 0 | (0,1) | D |
+| Bottle of local spirit |  | 5 | 1.5 kg | 1 | (6,0) | J |
 
 ```
-       0 1 2 3 4 5 6 7
-row 0  A A A A A B B B
-row 1  L L A D D B B B
-row 2  G G A D D E E E
-row 3  G A A A K E C E
-row 4  G G F K K C C C
-row 5  F F F K K J J J
+       0 1 2 3 4 5 6
+row 0  A A A A A . J
+row 1  D D A B B B J
+row 2  D D A B B B J
+row 3  . A A A H H .
+row 4  G G G . H H .
+row 5  G . G . H H .
+```
+
+### Perfect pack: Chaos 26, the maximum; total weight 18.75 kg
+
+| Item | Mandatory | Chaos | Weight | Rotation (presses) | Position (column,row) | Letter |
+|---|---|---|---|---|---|---|
+| Cardboard cutout | yes | 0 | 4 kg | 0 | (0,0) | A |
+| Laundry bag | yes | 0 | 5 kg | 0 | (3,1) | B |
+| Ceramic foot |  | 6 | 3.2 kg | 0 | (4,3) | G |
+| Hotel bathrobe |  | 4 | 1.3 kg | 0 | (0,1) | K |
+| Hangover kit |  | 3 | 800 g | 0 | (0,4) | D |
+| Wheel of cheese |  | 5 | 2.8 kg | 0 | (2,4) | I |
+| Bottle of local spirit |  | 5 | 1.5 kg | 0 | (4,5) | J |
+| Emergency socks |  | 3 | 150 g | 0 | (5,0) | L |
+
+```
+       0 1 2 3 4 5 6
+row 0  A A A A A L L
+row 1  K K A B B B .
+row 2  K K A B B B .
+row 3  K A A A G G G
+row 4  D D I I G . G
+row 5  D D I I J J J
 ```

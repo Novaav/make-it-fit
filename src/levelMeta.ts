@@ -37,13 +37,4 @@ export const LEVEL_TITLES: Record<string, string> = {
   '03': 'Excess Baggage',
 }
 
-/**
- * Most optional items any legal layout can hold. Proved by `verify_levels.py` and independently by
- * `src/engine/enumerate.test.ts`, which fails if these drift from the level data.
- */
-export const BEST_OPTIONAL: Record<string, number> = { '01': 0, '02': 2, '03': 5 }
-
-/** Name of the top bonus tier: an optional achievement, never a requirement. "Perfect pack" is reserved for Level 3. */
-export const maxBonusLabel = (levelId: string): string => (levelId === '03' ? 'Perfect pack' : 'Maximum bonus')
-
 export { WEIGHT_UNIT } from './weight'

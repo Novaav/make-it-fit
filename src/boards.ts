@@ -16,10 +16,10 @@ export interface SavedBoard {
 export type Boards = Readonly<Record<string, SavedBoard>>
 export const emptyBoards: Boards = {}
 
-/** Changes whenever a level's board, items, shapes or required flags change, so an old save can never be misapplied. */
+/** Changes whenever a level's board, allowance, targets, items, shapes, weights, Chaos or required flags change, so an old save can never be misapplied. */
 export function levelSignature(level: Level): string {
-  const items = level.items.map((i) => `${i.id}${i.required ? '!' : '?'}${i.cells.map((c) => `${c.x}.${c.y}`).join(',')}`).join('|')
-  return `${level.width}x${level.height}:${items}`
+  const items = level.items.map((i) => `${i.id}${i.required ? '!' : '?'}${i.chaos}@${i.weight}:${i.cells.map((c) => `${c.x}.${c.y}`).join(',')}`).join('|')
+  return `${level.width}x${level.height}/${level.weightLimit ?? '-'}/${level.target ?? '-'}/${level.perfect ?? '-'}:${items}`
 }
 
 export const snapshot = (level: Level, placements: readonly Placement[]): SavedBoard => ({ sig: levelSignature(level), placements })

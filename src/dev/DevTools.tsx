@@ -33,7 +33,7 @@ export default function DevTools({ levelId, onJump, onFill, onTestWin, testMode,
       {open && (
         <>
       <small>Nothing here is saved.</small>
-      <button type="button" className="primary" onClick={() => onTestWin(referenceSolution(level, true))}>
+      <button type="button" className="primary" onClick={() => onTestWin(referenceSolution(level, 'perfect'))}>
         Test win &amp; continue
       </button>
       <div>
@@ -45,8 +45,8 @@ export default function DevTools({ levelId, onJump, onFill, onTestWin, testMode,
         ))}
       </div>
       <div>
-        <button type="button" onClick={() => onFill(referenceSolution(level, false))}>Fill required only</button>
-        <button type="button" onClick={() => onFill(referenceSolution(level, true))}>Fill max bonus</button>
+        <button type="button" onClick={() => onFill(referenceSolution(level, 'normal'))}>Fill normal win</button>
+        <button type="button" onClick={() => onFill(referenceSolution(level, 'perfect'))}>Fill perfect pack</button>
       </div>
       <button type="button" onClick={onClearProgress}>Clear saved progress</button>
         </>

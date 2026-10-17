@@ -5,7 +5,7 @@ import { referenceSolution } from './dev/solutions'
 
 const levels = loadLevels()
 const l2 = levels.find((l) => l.id === '02')!
-const solution = referenceSolution(l2, false)
+const solution = referenceSolution(l2, 'normal')
 const memory = () => {
   const m = new Map<string, string>()
   return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), m }

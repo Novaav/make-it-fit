@@ -17,3 +17,11 @@ export const LEVEL1: Step[] = [
   { id: 'toiletries', rotations: 0, col: 3, row: 3 },
   { id: 'charger', rotations: 0, col: 1, row: 4 },
 ]
+
+/** Level 2 normal win (21 Chaos at 6.25 kg), same data as TEST_SOLUTIONS.md. */
+export const LEVEL2_NORMAL: Step[] = [
+  { id: 'handbag', rotations: 0, col: 0, row: 0 },
+  { id: 'flamingo', rotations: 0, col: 3, row: 0 },
+  { id: 'dvds', rotations: 0, col: 3, row: 2 },
+  { id: 'disco_ball', rotations: 0, col: 0, row: 3 },
+]

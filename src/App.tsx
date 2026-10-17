@@ -2,7 +2,8 @@ import { lazy, Profiler, Suspense, useState } from 'react'
 import { loadLevels, type Placement } from './engine'
 import LevelPlay from './LevelPlay'
 import { loadBoards, saveBoards, type Boards, type SavedBoard } from './boards'
-import { BEST_OPTIONAL, PLAYABLE_LEVEL_IDS } from './levelMeta'
+import { PLAYABLE_LEVEL_IDS } from './levelMeta'
+import { loadIntroSeen, saveIntroSeen, type IntroSeen } from './intro'
 import {
   browserStorage,
   isUnlocked,
@@ -35,6 +36,9 @@ export default function App() {
   // The player's current arrangement in each level. Saved separately from progress; test mode keeps its own, never saved.
   const [boards, setBoards] = useState<Boards>(() => loadBoards(browserStorage()))
   const [testBoards, setTestBoards] = useState<Boards>({})
+  // Which how-to-play notes were seen (kept apart from progress), and a level whose note is being replayed on request.
+  const [introSeen, setIntroSeen] = useState<IntroSeen>(() => loadIntroSeen(browserStorage()))
+  const [replayIntro, setReplayIntro] = useState<string | null>(null)
   const effective: Progress =
     import.meta.env.DEV && testMode ? { ...progress, completed: { ...testDone, ...progress.completed } } : progress
   const level = LEVELS.find((l) => l.id === levelId)!
@@ -51,9 +55,9 @@ export default function App() {
     saveBoards(browserStorage(), next)
   }
 
-  const handleWin = (optionalPacked: number) => {
+  const handleWin = (chaos: number, perfect: boolean) => {
     if (inTestMode) return // TEST MODE: nothing is saved
-    const updated = recordCompletion(progress, levelId, optionalPacked)
+    const updated = recordCompletion(progress, levelId, chaos, perfect)
     if (updated === progress) return
     setProgress(updated)
     saveProgress(browserStorage(), updated)
@@ -67,6 +71,18 @@ export default function App() {
       saved={(inTestMode ? testBoards : boards)[levelId]}
       onBoardChange={(board) => handleBoardChange(levelId, board)}
       onDevFillUsed={() => setDevFill(undefined)}
+      intro={{
+        // a first visit shows the note; TEST MODE never does (and never saves that it was seen)
+        open: replayIntro === levelId || (!inTestMode && !introSeen[levelId]),
+        onOpen: () => setReplayIntro(levelId),
+        onClose: () => {
+          setReplayIntro(null)
+          if (inTestMode || introSeen[levelId]) return
+          const next = { ...introSeen, [levelId]: true as const }
+          setIntroSeen(next)
+          saveIntroSeen(browserStorage(), next)
+        },
+      }}
       isLast={!next}
       devFill={import.meta.env.DEV && devFill?.levelId === levelId ? devFill : undefined}
       onNext={next && isUnlocked(effective, IDS, next) ? () => setLevelId(next) : undefined}
@@ -135,7 +151,7 @@ export default function App() {
             }}
             onTestWin={(placements) => {
               setTestMode(true)
-              setTestDone((t) => ({ ...t, [levelId]: { bestOptional: BEST_OPTIONAL[levelId] ?? 0 } }))
+              setTestDone((t) => ({ ...t, [levelId]: {} }))
               setDevFill((d) => ({ levelId, nonce: (d?.nonce ?? 0) + 1, placements }))
             }}
             onClearProgress={() => {

@@ -32,7 +32,7 @@ interface PieceProps {
   orientation?: Orientation
   cell: number
   lining?: (typeof LININGS)[number]
-  weight?: { grams: number; bonus?: boolean }
+  weight?: { grams: number }
   style?: CSSProperties
   carried?: 'plain' | 'good' | 'bad'
   silhouette?: boolean
@@ -68,7 +68,7 @@ function Piece({ item, orientation = 0, cell, lining = LININGS[0], weight, style
     >
       <div style={{ position: 'absolute', left: cell / 2, top: cell / 2, width: b.w * cell, height: b.h * cell, filter }}>
         <ItemArt item={item} orientation={orientation} />
-        {weight && <WeightLabel item={item} orientation={orientation} grams={weight.grams} bonus={!!weight.bonus} />}
+        {weight && <WeightLabel item={item} orientation={orientation} grams={weight.grams} />}
       </div>
     </div>
   )
@@ -147,8 +147,8 @@ const sections: Record<string, () => React.ReactNode> = {
       ))}
       <div style={row}>
         {[0, 1, 2, 3].map((o) => (
-          <Labelled key={o} name={`${items[0].id}, bonus ★, ${o * 90}° turn: the number stays upright`}>
-            <Piece item={items[0]} orientation={o as Orientation} cell={56} weight={{ grams: items[0].weight, bonus: true }} />
+          <Labelled key={o} name={`${items[0].id}, ${o * 90}° turn: the number stays upright`}>
+            <Piece item={items[0]} orientation={o as Orientation} cell={56} weight={{ grams: items[0].weight }} />
           </Labelled>
         ))}
       </div>

@@ -1,4 +1,4 @@
-import { rotate } from './shape'
+import { rotate, uniqueRotations } from './shape'
 import type {
   ActionResult,
   Cell,
@@ -92,15 +92,47 @@ export function isOverWeight(state: GameState): boolean {
   return limit !== undefined && totalWeight(state) > limit
 }
 
-/** Won when every required item is placed and the weight limit (if any) is respected. */
-export function isWon(state: GameState): boolean {
-  const placed = new Set(state.placements.map((p) => p.itemId))
-  return state.level.items.every((i) => !i.required || placed.has(i.id)) && !isOverWeight(state)
+export function totalChaos(state: GameState): number {
+  return state.placements.reduce((sum, p) => sum + (findItem(state.level, p.itemId)?.chaos ?? 0), 0)
 }
 
-export function optionalPlacedCount(state: GameState): number {
-  const optional = new Set(state.level.items.filter((i) => !i.required).map((i) => i.id))
-  return state.placements.filter((p) => optional.has(p.itemId)).length
+/**
+ * Won when every required item is placed, the weight limit (if any) is respected and, on levels with Chaos, the Chaos
+ * target is reached. Optional items never matter except through their Chaos.
+ */
+export function isWon(state: GameState): boolean {
+  const placed = new Set(state.placements.map((p) => p.itemId))
+  const { target } = state.level
+  return (
+    state.level.items.every((i) => !i.required || placed.has(i.id)) &&
+    !isOverWeight(state) &&
+    (target === undefined || totalChaos(state) >= target)
+  )
+}
+
+/** A win that also reaches the level's maximum Chaos. */
+export function isPerfect(state: GameState): boolean {
+  const { perfect } = state.level
+  return perfect !== undefined && isWon(state) && totalChaos(state) >= perfect
+}
+
+/** True when some unpacked item still fits (within the weight limit and on the board in some orientation). */
+export function canAddAny(state: GameState): boolean {
+  const placed = new Set(state.placements.map((p) => p.itemId))
+  const limit = state.level.weightLimit
+  const weight = totalWeight(state)
+  const { width, height } = state.level
+  for (const item of state.level.items) {
+    if (placed.has(item.id) || (limit !== undefined && weight + item.weight > limit)) continue
+    for (const { orientation } of uniqueRotations(item.cells)) {
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          if (!validatePlacement(state.level, state.placements, { itemId: item.id, orientation, x, y })) return true
+        }
+      }
+    }
+  }
+  return false
 }
 
 /** Atomically relocate and/or reorient an already placed item (one undo step). */

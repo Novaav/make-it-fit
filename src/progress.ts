@@ -2,12 +2,14 @@
 export const PROGRESS_KEY = 'make-it-fit:progress:v1'
 
 export interface LevelResult {
-  /** Most optional items packed in any winning layout. */
-  readonly bestOptional: number
+  /** Highest Chaos reached in a winning pack (absent for Level 1, and for levels completed before Chaos existed). */
+  readonly bestChaos?: number
+  /** True once the level's perfect score has been reached. */
+  readonly perfect?: boolean
 }
 
 export interface Progress {
-  readonly version: 1
+  readonly version: 2
   readonly completed: Readonly<Record<string, LevelResult>>
 }
 
@@ -16,24 +18,35 @@ export interface StorageLike {
   setItem(key: string, value: string): void
 }
 
-export const emptyProgress: Progress = { version: 1, completed: {} }
+export const emptyProgress: Progress = { version: 2, completed: {} }
 
-/** Validates untrusted stored JSON; anything malformed yields empty progress. */
+/**
+ * Validates untrusted stored JSON. Version 1 saves (from before Chaos) migrate to version 2: every level completed
+ * then stays completed (it unlocked what it unlocked), its old optional-item count is dropped because the scoring
+ * rule changed. Anything malformed yields empty progress.
+ */
 export function parseProgress(raw: string | null): Progress {
   if (!raw) return emptyProgress
   try {
     const data: unknown = JSON.parse(raw)
     if (typeof data !== 'object' || data === null) return emptyProgress
-    const completed = (data as { completed?: unknown }).completed
-    if ((data as { version?: unknown }).version !== 1 || typeof completed !== 'object' || completed === null) {
-      return emptyProgress
-    }
+    const { version, completed } = data as { version?: unknown; completed?: unknown }
+    if ((version !== 1 && version !== 2) || typeof completed !== 'object' || completed === null) return emptyProgress
     const clean: Record<string, LevelResult> = {}
     for (const [id, value] of Object.entries(completed)) {
-      const best = (value as { bestOptional?: unknown } | null)?.bestOptional
-      if (typeof best === 'number' && Number.isInteger(best) && best >= 0) clean[id] = { bestOptional: best }
+      if (typeof value !== 'object' || value === null) continue
+      if (version === 1) {
+        const best = (value as { bestOptional?: unknown }).bestOptional
+        if (typeof best === 'number' && Number.isInteger(best) && best >= 0) clean[id] = {}
+        continue
+      }
+      const { bestChaos, perfect } = value as { bestChaos?: unknown; perfect?: unknown }
+      clean[id] = {
+        ...(typeof bestChaos === 'number' && Number.isInteger(bestChaos) && bestChaos >= 0 ? { bestChaos } : {}),
+        ...(perfect === true ? { perfect: true } : {}),
+      }
     }
-    return { version: 1, completed: clean }
+    return { version: 2, completed: clean }
   } catch {
     return emptyProgress
   }
@@ -56,10 +69,13 @@ export function saveProgress(storage: StorageLike | null, progress: Progress): v
 }
 
 /** Returns the same object when nothing improves, so callers can skip saving. */
-export function recordCompletion(progress: Progress, levelId: string, optionalPacked: number): Progress {
-  const best = progress.completed[levelId]?.bestOptional
-  if (best !== undefined && best >= optionalPacked) return progress
-  return { ...progress, completed: { ...progress.completed, [levelId]: { bestOptional: optionalPacked } } }
+export function recordCompletion(progress: Progress, levelId: string, chaos = 0, perfect = false): Progress {
+  const old = progress.completed[levelId]
+  const bestChaos = Math.max(chaos, old?.bestChaos ?? 0)
+  const isPerfect = perfect || old?.perfect === true
+  if (old && bestChaos === (old.bestChaos ?? 0) && isPerfect === (old.perfect === true)) return progress
+  const entry: LevelResult = { ...(bestChaos > 0 ? { bestChaos } : {}), ...(isPerfect ? { perfect: true } : {}) }
+  return { ...progress, completed: { ...progress.completed, [levelId]: entry } }
 }
 
 /** A level is playable when it is first, or the level before it is completed. */

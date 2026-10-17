@@ -48,52 +48,48 @@ describe('Level 1 copy', () => {
     expect(h).not.toContain('allowance')
     expect(h).not.toContain('data-weight')
     expect(h).not.toContain('chip-w')
+    expect(h).not.toContain('chaos')
   })
 })
 
 describe('Level 2 markup', () => {
   const l2 = play('02')
 
-  it('shows all ten items in fixed grid areas and an allowance meter in kilograms', () => {
+  it('shows all ten items, nothing mandatory, and the Chaos, target, perfect score and weight right away', () => {
     expect(l2.match(/grid-column:\d+ \/ span \d+;grid-row:\d+ \/ span \d+/g)).toHaveLength(10)
     expect(l2).toContain('Level 2 · Carry-On, Questionable Decisions')
-    expect(l2).toContain('role="meter"')
-    expect(l2).toContain('aria-label="Packing allowance: 7 kg"')
-    expect(l2).toContain('aria-valuemax="7"')
-    expect(l2).toMatch(/Required<\/span><b>0\/4<\/b>/)
-    expect(l2).toMatch(/Allowance<\/span><b>0\/7 kg<\/b>/)
-    expect(l2).toMatch(/Bonus<\/span><b>0\/2<\/b>/)
+    expect(l2).toMatch(/Chaos<\/span><b>0<\/b><span class="of">of 20 to win<\/span>/)
+    expect(l2).toContain('perfect 25')
+    expect(l2).toMatch(/Weight<\/span><b>0\/6.5 kg<\/b>/)
+    expect(l2).toContain('6.5 kg left')
+    expect(l2).toContain('aria-label="Packing allowance: 6.5 kg"')
+    expect(l2).toContain('aria-valuemax="25"')
+    expect(l2).toContain('aria-valuetext="0 Chaos. 20 wins, 25 is perfect."')
+    expect(l2).not.toContain('Must pack') // no mandatory items on this level
+    expect(l2).not.toContain('MUST')
   })
 
-  it('tells the player the rule in plain words, with an inclusive allowance and no claim about the suitcase', () => {
-    expect(l2).toContain('Pack your items within the allowance. ★ items are optional extras.')
-    expect(l2).toContain('title="Packing allowance: 7 kg"')
+  it('states the rule in one plain sentence, without the old optional-star bonus', () => {
+    expect(l2).toContain('Reach 20 Chaos within 6.5 kg. Perfect: 25.')
+    for (const old of ['Bonus', '★', 'optional', 'Required', 'Maximum bonus', 'Perfect pack']) expect(l2, old).not.toContain(old)
     expect(l2).not.toMatch(/under \d/) // exact-limit packing succeeds, so never "under"
-    expect(l2).not.toContain("doesn't weigh")
   })
 
-  it('every item shows its weight (grams below 1 kg, kilograms above); optional items are marked', () => {
+  it('every item shows its Chaos in a badge and its weight on its label, without hover', () => {
+    expect(l2.match(/class="chaos-badge"/g)).toHaveLength(10)
+    expect(l2.match(/data-chaos="\d"/g)).toHaveLength(10)
+    expect(l2).toMatch(/data-chaos="6"[^>]*>6<\/span>/) // the DVDs and the handbag
     expect(l2.match(/data-weight="\d+"/g)).toHaveLength(10)
-    expect(l2).toContain('Optional, 1.5 kg.')
-    expect(l2).toContain('Optional, 400 g.')
-    expect(l2).toContain('Required, 2.25 kg.')
-    expect(l2).toContain('Required, 900 g.')
+    expect(l2).toContain('Chaos 6, 2.25 kg.')
+    expect(l2).toContain('Chaos 2, 900 g.')
+    expect(l2).toContain('Chaos 3, 300 g.')
+    expect(l2).toContain('Chaos 1, 1 kg.')
     expect(l2).toMatch(/class="wlabel wl-dark"[^>]*data-weight="1000"[^>]*>1<span class="unit"> kg<\/span>/) // toiletries, drawn art
-    expect(l2).toContain('Optional, 300 g.')
   })
 
-  it('the bonus denominator is the verified maximum (2), never the optional item count (6), with no tier claimed before solving', () => {
-    expect(l2).not.toMatch(/Bonus<\/span><b>0\/6<\/b>/)
-    expect(l2).not.toContain('Perfect pack')
-    expect(l2).toContain('6 optional ★ · at most 2 fit')
-  })
-
-  it('keeps the dialog closed and the controls help collapsed by default', () => {
+  it('keeps the dialog closed and the controls help collapsed by default; no placeholder art remains', () => {
     expect(l2).not.toContain('role="dialog"')
     expect(l2).toMatch(/<details class="help">/)
-  })
-
-  it('every Level 2 item is illustrated: no placeholder remains', () => {
     expect(l2).not.toContain('placeholder art')
   })
 })
@@ -103,15 +99,21 @@ describe('Level 3 markup', () => {
   it('unfinished Level 3 artwork is still clearly labelled as a placeholder', () => {
     expect(l3).toContain('placeholder art')
   })
-  it('shows all twelve items in fixed slots, a 23 kg allowance and a 0-5 bonus', () => {
+  it('marks the two mandatory items MUST, and shows Chaos, target, perfect score and weight', () => {
     expect(l3.match(/grid-column:\d+ \/ span \d+;grid-row:\d+ \/ span \d+/g)).toHaveLength(12)
     expect(l3).toContain('Level 3 · Excess Baggage')
-    expect(l3).toContain('aria-label="Packing allowance: 23 kg"')
-    expect(l3).toMatch(/Allowance<\/span><b>0\/23 kg<\/b>/)
-    expect(l3).toMatch(/Required<\/span><b>0\/5<\/b>/)
-    expect(l3).toMatch(/Bonus<\/span><b>0\/5<\/b>/)
+    expect(l3.match(/class="chaos-badge must"/g)).toHaveLength(2)
+    expect(l3.match(/class="chaos-badge"/g)).toHaveLength(10)
+    expect(l3).toContain('Cardboard cutout and Laundry bag must come. Then reach 21 Chaos within 21 kg. Perfect: 26.')
+    expect(l3).toMatch(/Must pack<\/span><b>0\/2<\/b>/)
+    expect(l3).toMatch(/Chaos<\/span><b>0<\/b><span class="of">of 21 to win<\/span>/)
+    expect(l3).toContain('perfect 26')
+    expect(l3).toMatch(/Weight<\/span><b>0\/21 kg<\/b>/)
+    expect(l3).toContain('aria-label="Packing allowance: 21 kg"')
     expect(l3.match(/data-weight="/g)).toHaveLength(12)
-    expect(l3).toContain('Optional, 6.5 kg.')
-    expect(l3).toContain('Optional, 150 g.')
+    expect(l3).toContain('Mandatory, 4 kg.')
+    expect(l3).toContain('Chaos 8, 6.5 kg.') // the gnome
+    expect(l3).toContain('Chaos 3, 150 g.')
+    for (const old of ['Bonus', '★', 'Optional']) expect(l3, old).not.toContain(old)
   })
 })

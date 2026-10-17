@@ -29,7 +29,10 @@ async function scriptedDrag(page: Page, itemId: string) {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await page.evaluate(() => localStorage.clear())
+  await page.evaluate(() => {
+    localStorage.clear()
+    localStorage.setItem('make-it-fit:intro:v1', JSON.stringify({ version: 1, seen: { '01': true, '02': true, '03': true } }))
+  })
   await page.reload()
 })
 
@@ -260,7 +263,7 @@ for (const [w, h] of [[1440, 900], [768, 1024], [390, 844], [844, 390]] as const
     for (const id of ['L1', 'L2', 'L3']) {
       if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
       await page.getByRole('button', { name: id, exact: true }).click()
-      await page.getByRole('button', { name: id === 'L1' ? 'Fill required only' : 'Fill max bonus' }).click()
+      await page.getByRole('button', { name: id === 'L1' ? 'Fill normal win' : 'Fill perfect pack' }).click()
       const dialog = page.locator('.dialog')
       await expect(dialog).toBeVisible()
       const m = await page.locator('.dialog-scroll').evaluate((e) => ({ over: e.scrollWidth - e.clientWidth, outer: getComputedStyle(e.parentElement!).overflowX, doc: document.documentElement.scrollWidth - document.documentElement.clientWidth }))

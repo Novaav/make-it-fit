@@ -2,17 +2,17 @@
 
 **Bad decisions. Limited luggage.**
 
-A small browser puzzle game about packing an open suitcase. Drag, rotate and fit illustrated belongings into the case, stay within the packing allowance, and squeeze in optional bonus items. Three hand-made levels, no timer, no sound, no account, no server.
+A small browser puzzle game about packing an open suitcase. Drag, rotate and fit illustrated belongings into the case, stay within the packing allowance, and collect as much Chaos as the suitcase allows. Three hand-made levels, no timer, no sound, no account, no server.
 
 Status: playable local build. Not deployed. Artwork is original but temporary.
 
 ## How to play
 
-- **Goal:** pack every required item. From Level 2 there is also a packing allowance (7 kg for the cabin bag, 23 kg for the checked bag): the weight of the packed items must be at most the allowance, and exactly the allowance is fine. The game weighs the illustrated items only. Weights under 1 kg are shown in grams (900 g), the rest in kilograms (2.25 kg).
-- **Bonus:** items marked ★ are optional extras. The pill `★ Bonus n/m` compares your count with the verified best possible; reaching it is the *Maximum bonus* (called *Perfect pack* on Level 3). It is never required to complete a level.
+- **Goal (Level 1):** pack every item; rotate where needed.
+- **Goal (Levels 2-3):** reach the target **Chaos** (every item has a Chaos number, always visible) within the weight allowance (6.5 kg, then 21 kg); exactly the allowance is fine. Level 3 also has two **MUST** items that must come. A perfect pack beats the target by a few points; the game never reveals which combination does it. Weights under 1 kg are shown in grams (900 g), the rest in kilograms (2.25 kg).
 - **Feedback:** while placing, green means the item fits there and red means it overlaps something or sticks out. Each item shows its weight on levels with an allowance.
-- **Finish:** a success dialog shows your results. Choose **Next level** or **Keep packing** (you can keep improving the bonus after completing a level). Unlimited undo and reset.
-- **Progress:** completed levels and best bonus counts are saved in your browser's `localStorage` only, and so is the arrangement you left in each level. A level completed earlier keeps its check mark, but the suitcase is only "Packed!" while its current arrangement is valid. Levels unlock in order.
+- **Finish:** a normal win and a perfect win each show their own dialog once; **Next level** or **Keep packing** (you can keep chasing a perfect pack). Unlimited undo and reset. A short handwritten how-to note opens the first time you enter each level; **How to play** replays it.
+- **Progress:** completed levels and best Chaos are saved in your browser's `localStorage` only, and so is the arrangement you left in each level. A level completed earlier keeps its check mark, but the suitcase is only "Packed!" while its current arrangement is valid. Levels unlock in order.
 
 ## Controls
 
@@ -68,7 +68,7 @@ e2e/              Playwright browser tests
 VERIFIED_LEVELS.json, verify_levels.py, LEVEL_DESIGN.md   puzzle data, its verifier and its specification
 ```
 
-The suitcase is a hidden cell grid and every item is a set of cells, so geometry, overlap and rotation are deterministic and unit-tested headlessly. Level data (including the verified maximum bonus per level) comes from `VERIFIED_LEVELS.json`.
+The suitcase is a hidden cell grid and every item is a set of cells, so geometry, overlap and rotation are deterministic and unit-tested headlessly. Level data (including the verified perfect Chaos per level) comes from `VERIFIED_LEVELS.json`.
 
 ## License
 
