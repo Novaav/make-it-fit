@@ -38,9 +38,9 @@ describe('illustrated items', () => {
   })
 })
 
-describe('Level 2 artwork', () => {
-  const level2 = loadLevels().find((l) => l.id === '02')!
-  it('every Level 2 item is illustrated (no placeholder) and clips to its cells at every rotation', () => {
+describe.each(['02', '03'])('Level %s artwork', (levelId) => {
+  const level2 = loadLevels().find((l) => l.id === levelId)!
+  it('every item is illustrated (no placeholder) and clips to its cells at every rotation', () => {
     for (const item of level2.items) {
       for (const o of [0, 1, 2, 3] as const) {
         const markup = renderToStaticMarkup(<ItemArt item={item} orientation={o} />)

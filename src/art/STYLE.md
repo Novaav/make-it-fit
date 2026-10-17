@@ -20,11 +20,8 @@ Rules distilled from the approved Level 1 and Level 2 illustrations. Use them fo
 2. One-second test: can a stranger name it?
 3. Compare against a Level 2 item at the same size for outline weight, shadow and saturation.
 
-## Level 3 art plan (all eleven items are still labelled placeholders; the party outfit reuses Level 2 art)
-Priority order, with the reason:
-1. **Cardboard cutout** (10 cells, MUST) and **laundry bag** (6 cells, MUST): the first things a player sees; largest footprints; define the level's look.
-2. **Concrete garden gnome** (Chaos 8, 6.5 kg): the deliberate trap and the funniest item; needs a heavy stone material and a clear gnome silhouette in a 2x3 block.
-3. **Ceramic foot** (U5, Chaos 6) and **wheel of cheese** (2x2, Chaos 5): high-value, high-weight choices.
-4. **Bottle of local spirit** (line 3), **hotel bathrobe** (P5), **hangover kit** (2x2): mid-value, distinct silhouettes.
-5. **Hotel lamp** (L4), **heels** (U5), **emergency socks** (line 2): lowest value; socks are tiny and need a bold two-colour read.
-Ship in two reviewable batches (1-2 first, then 3-5), each with its contact sheet.
+## Level 3 art (complete)
+All eleven Level 3 items are illustrated in `level3.tsx` (the party outfit reuses its Level 2 art): kraft cardboard cutout (printed standee on a corrugated foot), canvas laundry sack with drawstring and an escaped sock, teal hangover tin with sunglasses and pills, stilettos tied with a gold chain and padlock, hotel lamp with a swiped key tag, delft-glazed ceramic foot, concrete gnome with chipped paint and moss, cheese wheel with a wedge missing and a mouse, chilli-in-spirit bottle, waffle bathrobe and two mismatched socks. Materials are the cue: corrugation, canvas weave, glaze and cobalt, grit and moss, wax and glass, terry waffle, knit.
+
+## Chaos stamps
+Round Chaos stamps are a hand-cut paper dot (slightly irregular edge, soft shadow) with a worn plum rubber-stamp ring and a number that bleeds a little, same on tray and suitcase. MUST items use a square dark-ink stamp. Keep the item's top-left (first cell, 0.3 in) calm so the stamp never hides a detail.

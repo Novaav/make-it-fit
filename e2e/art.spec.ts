@@ -11,6 +11,8 @@ const LEVELS = [
   { level: '01', ids: ['shirt', 'jeans', 'charger', 'toiletries', 'shoes'], reports: 13 },
   // 4 handbag + 4 outfit + 1 toiletries + 2 flamingo + 2 massager + 2 frame + 2 boa + 4 ring light + 1 disco ball + 4 DVDs
   { level: '02', ids: ['handbag', 'outfit', 'toiletries', 'flamingo', 'vibrator', 'frame', 'boa', 'ringlight', 'disco_ball', 'dvds'], reports: 26 },
+  // 4 cutout + 2 laundry + 4 outfit + 1 hangover + 4 heels + 4 lamp + 4 ceramic foot + 2 gnome + 1 cheese + 2 spirit + 4 robe + 2 socks
+  { level: '03', ids: ['cutout', 'laundry', 'outfit', 'hangover', 'heels', 'hotel_lamp', 'ceramic_foot', 'gnome', 'cheese', 'liquor', 'robe', 'emergency_socks'], reports: 34 },
 ]
 
 for (const { level, ids, reports: expected } of LEVELS) test(`Level ${level}: illustrated items paint only their occupied cells, and every occupied cell holds art`, async ({ page }) => {

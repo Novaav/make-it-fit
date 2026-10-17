@@ -105,8 +105,8 @@ describe('Level 2 markup', () => {
 
 describe('Level 3 markup', () => {
   const l3 = play('03')
-  it('unfinished Level 3 artwork is still clearly labelled as a placeholder', () => {
-    expect(l3).toContain('placeholder art')
+  it('every Level 3 item is illustrated: no placeholder art remains', () => {
+    expect(l3).not.toContain('placeholder art')
   })
   it('marks the two mandatory items MUST, and shows Chaos, target, perfect score and weight', () => {
     expect(l3.match(/grid-column:\d+ \/ span \d+;grid-row:\d+ \/ span \d+/g)).toHaveLength(12)
