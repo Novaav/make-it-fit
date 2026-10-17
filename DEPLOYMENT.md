@@ -28,7 +28,7 @@ Every other branch and pull request gets a preview deployment automatically; pro
 ## Before the first public deploy
 
 1. Put the final domain into the page metadata: add `<meta property="og:image" content="https://YOUR-DOMAIN/og.jpg">`, `<meta property="og:url" content="https://YOUR-DOMAIN/">` and `<meta name="twitter:card" content="summary_large_image">` to `index.html` (crawlers need absolute URLs, which is why they are not in the repository yet).
-2. Add the licence file the owner approves (see the licence notes handed over with this release) and keep `src/assets/fonts/LICENSE-*.txt` in place; the SIL Open Font Licence requires them to travel with the fonts.
+2. Add the chosen `LICENSE` file at the repository root and keep `src/assets/fonts/LICENSE-*.txt` and `public/third-party-notices.txt` in place; the SIL Open Font Licence requires the font licences to travel with the fonts.
 3. Make sure GitHub Actions is green on the commit being deployed (type check, unit tests, solver, production-clean, Chrome, WebKit and Firefox browser tests).
 4. Open the preview URL on a real iPhone and in desktop Safari (the automated suite uses Playwright's WebKit engine, which is not Safari itself).
 
