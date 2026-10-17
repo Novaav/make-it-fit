@@ -33,7 +33,7 @@ describe('App initial render (Level 1)', () => {
 
   it('starts on Level 1 with Level 2 locked and no allowance meter or bonus', () => {
     expect(html).toMatch(/aria-current="page"[^>]*>Level 1/)
-    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Level 2/)
+    expect(html).toMatch(/<button[^>]*aria-disabled="true"[^>]*>Level 2/)
     expect(html).not.toContain('role="meter"')
     expect(html).not.toContain('pill bonus')
     expect(html).not.toContain('Bonus')
@@ -123,6 +123,7 @@ describe('Level 3 markup', () => {
     expect(l3).toContain('Mandatory, 4 kg.')
     expect(l3).toContain('Chaos 9, 6.5 kg.') // the gnome
     expect(l3).toContain('Chaos 3, 150 g.')
-    for (const old of ['Bonus', '★', 'Optional']) expect(l3, old).not.toContain(old)
+    // (the old star bonus is gone; a ★ may still appear inside artwork such as the rum label)
+    for (const old of ['Bonus', 'Optional']) expect(l3, old).not.toContain(old)
   })
 })

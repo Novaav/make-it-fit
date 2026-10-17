@@ -1,4 +1,4 @@
-import { lazy, Profiler, Suspense, useState } from 'react'
+import { lazy, Profiler, Suspense, useEffect, useState } from 'react'
 import { loadLevels, type Placement } from './engine'
 import LevelPlay from './LevelPlay'
 import { loadBoards, saveBoards, type Boards, type SavedBoard } from './boards'
@@ -39,6 +39,13 @@ export default function App() {
   // Which how-to-play notes were seen (kept apart from progress), and a level whose note is being replayed on request.
   const [introSeen, setIntroSeen] = useState<IntroSeen>(() => loadIntroSeen(browserStorage()))
   const [replayIntro, setReplayIntro] = useState<string | null>(null)
+  // Why a locked level is locked, shown briefly when its tab is pressed (a disabled button would stay silent, especially on touch).
+  const [lockNote, setLockNote] = useState<string | null>(null)
+  useEffect(() => {
+    if (!lockNote) return
+    const t = window.setTimeout(() => setLockNote(null), 4500)
+    return () => window.clearTimeout(t)
+  }, [lockNote])
   const effective: Progress =
     import.meta.env.DEV && testMode ? { ...progress, completed: { ...testDone, ...progress.completed } } : progress
   const level = LEVELS.find((l) => l.id === levelId)!
@@ -68,12 +75,14 @@ export default function App() {
       key={levelId}
       level={level}
       onWin={handleWin}
+      onTestWin={inTestMode ? () => setTestDone((t) => (t[levelId] ? t : { ...t, [levelId]: {} })) : undefined}
       saved={(inTestMode ? testBoards : boards)[levelId]}
       onBoardChange={(board) => handleBoardChange(levelId, board)}
       onDevFillUsed={() => setDevFill(undefined)}
       intro={{
         // a first visit shows the note; TEST MODE never does (and never saves that it was seen)
         open: replayIntro === levelId || (!inTestMode && !introSeen[levelId]),
+        replay: replayIntro === levelId,
         onOpen: () => setReplayIntro(levelId),
         onClose: () => {
           setReplayIntro(null)
@@ -115,9 +124,20 @@ export default function App() {
                 type="button"
                 className={`level-tab${l.id === levelId ? ' current' : ''}${done ? ' done' : ''}${testOnly ? ' test-done' : ''}`}
                 aria-current={l.id === levelId ? 'page' : undefined}
-                disabled={!unlocked}
-                title={unlocked ? undefined : 'Finish the previous level first'}
-                onClick={() => setLevelId(l.id)}
+                aria-disabled={unlocked ? undefined : true}
+                title={unlocked ? undefined : `Locked: win Level ${Number(IDS[IDS.indexOf(l.id) - 1])} to unlock`}
+                onClick={() => {
+                  if (unlocked) {
+                    setLockNote(null)
+                    setLevelId(l.id)
+                  } else {
+                    const before = Number(IDS[IDS.indexOf(l.id) - 1])
+                    setLockNote(
+                      `Level ${Number(l.id)} is locked. Win Level ${before} to unlock it.` +
+                        (import.meta.env.DEV ? ' (Dev: Jump opens any level, and a filled win unlocks the next one until you reload.)' : ''),
+                    )
+                  }
+                }}
               >
                 Level {Number(l.id)}
                 {done && <span aria-label="completed earlier" title="Completed earlier"> ✓</span>}
@@ -127,6 +147,11 @@ export default function App() {
             )
           })}
         </nav>
+        {lockNote && (
+          <p className="lock-note" role="status">
+            {lockNote}
+          </p>
+        )}
       </header>
       {import.meta.env.DEV ? (
         <Profiler id="level" onRender={countCommit}>

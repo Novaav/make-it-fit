@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import type { Level } from '../engine'
 import { LEVEL_TITLES } from '../levelMeta'
-import { formatWeight } from '../weight'
+import { placeNote, type Avoid } from '../ui/notePlacement'
 
 type Doodle = 'drag' | 'turn' | 'chaos' | 'limits' | 'lock' | 'perfect'
 export interface IntroPage {
@@ -10,29 +10,23 @@ export interface IntroPage {
   doodle: Doodle
 }
 
-/** The how-to-play notes for a level, written from the level's own numbers so they can never disagree with the rules. */
+/**
+ * The how-to-play notes for a level. They say only what the objective card does not (it already states the goal, the
+ * target and the allowance): Level 1 packing, turning and Chaos; Level 2 choosing; Level 3 mandatory items.
+ */
 export function introPages(level: Level): IntroPage[] {
-  const allowance = level.weightLimit !== undefined ? formatWeight(level.weightLimit) : ''
   if (level.target === undefined) {
-    // Level 1: the familiar pack-everything rule, plus the first look at Chaos (it only counts up; nothing to reach).
     return [
-      { title: 'Pack it all.', lines: ['Drag each item into the suitcase.', 'Green means it fits. Red means it doesn’t.'], doodle: 'drag' },
-      { title: 'Turn things.', lines: ['Press R (or Rotate) to turn an item.', 'Everything has to fit. Yes, even the jeans.'], doodle: 'turn' },
+      { title: 'Drag and turn.', lines: ['Drag each item into the suitcase.', 'Press R to turn what won’t fit.'], doodle: 'drag' },
       { title: 'Packing makes Chaos.', lines: ['Every item carries a stamped Chaos number.', 'Watch your total climb. No target yet.'], doodle: 'chaos' },
     ]
   }
-  const mandatory = level.items.filter((i) => i.required)
-  if (mandatory.length) {
-    // Later levels only need the new rule; Chaos was explained on Levels 1 and 2.
-    return [
-      { title: 'Baggage you can’t leave.', lines: ['Items stamped MUST always come.', 'They take their space and weight first.'], doodle: 'lock' },
-      { title: 'Then collect Chaos.', lines: [`Reach ${level.target} Chaos within ${allowance}.`, `A perfect pack is ${level.perfect}.`], doodle: 'chaos' },
-    ]
+  if (level.items.some((i) => i.required)) {
+    return [{ title: 'Baggage you can’t leave.', lines: ['Items stamped MUST always come.', 'They take their space and weight first.'], doodle: 'lock' }]
   }
   return [
-    { title: 'Now you choose.', lines: ['Nothing is mandatory.', `Pack ${level.target} Chaos to win.`], doodle: 'chaos' },
-    { title: 'Mind the limits.', lines: [`Weight limit: ${allowance}.`, 'The suitcase is only so big. Rotate to squeeze things in.'], doodle: 'limits' },
-    { title: 'Want it perfect?', lines: [`Perfect is ${level.perfect} Chaos.`, 'Full but short? Swap something for a more chaotic item.'], doodle: 'perfect' },
+    { title: 'Now you choose.', lines: ['Nothing is mandatory.', 'Heavy things may not be worth it.'], doodle: 'chaos' },
+    { title: 'Short of the target?', lines: ['Swap an item for a more chaotic one.', 'Turning things squeezes in more.'], doodle: 'perfect' },
   ]
 }
 
@@ -57,20 +51,63 @@ interface Props {
 }
 
 /**
- * A handwritten note pinned to the table (not a modal): two or three short pages, Skip / Back / Next, Escape skips.
+ * A handwritten note pinned to the table (not a modal): one or two short pages, Skip / Back / Next (Got it on the last page), Escape skips.
  * Focus starts on the primary button; the paper animations switch off for reduced motion (see styles.css).
  */
 export default function IntroNote({ level, onClose }: Props) {
   const pages = introPages(level)
   const [index, setIndex] = useState(0)
   const nextRef = useRef<HTMLButtonElement>(null)
+  const noteRef = useRef<HTMLElement>(null)
+  // Pinned where it covers the least: never the suitcase or the tool buttons if there is anywhere else, the tray last.
+  const [spot, setSpot] = useState<CSSProperties | undefined>(undefined)
   const page = pages[index]
   const last = index === pages.length - 1
   useEffect(() => nextRef.current?.focus(), [])
+  useLayoutEffect(() => {
+    const el = noteRef.current
+    if (!el) return
+    let frame = 0
+    const place = () => {
+      frame = 0
+      const rect = (e: Element, weight: number): Avoid | null => {
+        const r = e.getBoundingClientRect()
+        return r.width > 0 && r.height > 0 ? { box: { left: r.left, top: r.top, width: r.width, height: r.height }, weight } : null
+      }
+      const avoid = [
+        ...[...document.querySelectorAll('.masthead, .board')].map((e) => rect(e, 20)),
+        ...[...document.querySelectorAll('.objective')].map((e) => rect(e, 2)),
+        ...[...document.querySelectorAll('.toolbar')].map((e) => rect(e, 20)),
+        ...[...document.querySelectorAll('.piece.in-tray')].map((e) => rect(e, 1)),
+      ].filter((a): a is Avoid => a !== null)
+      const width = Math.min(330, window.innerWidth - (window.innerWidth <= 760 ? 16 : 24))
+      el.style.width = `${width}px`
+      const p = placeNote({ width: window.innerWidth, height: window.innerHeight }, { width, height: el.offsetHeight }, avoid, 8)
+      setSpot({ left: p.left, top: p.top, right: 'auto', bottom: 'auto', width })
+    }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(place)
+    }
+    place()
+    // the table can still be settling (fonts, the chosen arrangement): follow its size for as long as the note is open
+    const watched = [...document.querySelectorAll('.level, .board, .toolbar')]
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(schedule)
+    watched.forEach((e) => observer?.observe(e))
+    window.addEventListener('resize', schedule)
+    window.addEventListener('scroll', schedule, true)
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('resize', schedule)
+      window.removeEventListener('scroll', schedule, true)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [index])
   const go = (i: number) => setIndex(Math.max(0, Math.min(pages.length - 1, i)))
   return (
     <section
+      ref={noteRef}
       className="intro-note"
+      style={spot}
       role="region"
       aria-label={`How to play Level ${Number(level.id)}: ${LEVEL_TITLES[level.id]}`}
       onKeyDown={(e) => {
@@ -94,21 +131,25 @@ export default function IntroNote({ level, onClose }: Props) {
         <DoodleArt kind={page.doodle} />
       </div>
       <div className="note-foot">
-        <span className="note-dots" aria-label={`Page ${index + 1} of ${pages.length}`}>
-          {pages.map((_, i) => (
-            <i key={i} className={i === index ? 'on' : ''} aria-hidden="true" />
-          ))}
-        </span>
-        <button type="button" className="note-skip" onClick={onClose}>
-          Skip
-        </button>
+        {pages.length > 1 && (
+          <span className="note-dots" aria-label={`Page ${index + 1} of ${pages.length}`}>
+            {pages.map((_, i) => (
+              <i key={i} className={i === index ? 'on' : ''} aria-hidden="true" />
+            ))}
+          </span>
+        )}
+        {!last && (
+          <button type="button" className="note-skip" onClick={onClose}>
+            Skip
+          </button>
+        )}
         {index > 0 && (
           <button type="button" className="note-back" onClick={() => go(index - 1)}>
             Back
           </button>
         )}
         <button type="button" className="note-next" ref={nextRef} onClick={() => (last ? onClose() : go(index + 1))}>
-          {last ? 'Let’s pack' : 'Next'}
+          {last ? 'Got it' : 'Next'}
         </button>
       </div>
     </section>

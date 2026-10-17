@@ -72,6 +72,8 @@ interface Props {
   level: Level
   /** Called whenever the current pack is a win, with its Chaos and whether it is perfect. */
   onWin: (chaos: number, perfect: boolean) => void
+  /** Development only: a win reached through a dev fill counts as a session-only test completion (never saved). */
+  onTestWin?: () => void
   /** Offered on the completion card when there is a next playable level. */
   onNext?: () => void
   /** True when no level follows this one. */
@@ -85,10 +87,11 @@ interface Props {
   /** A dev fill is applied once; this tells the app to forget it so a remount can never apply it again. */
   onDevFillUsed?: () => void
   /** The how-to-play note: shown on a first visit (`open`), replayable from the objective. */
-  intro?: { open: boolean; onOpen: () => void; onClose: () => void }
+  /** `replay` is true when the player asked for the note again; a first-visit note steps aside when they start playing. */
+  intro?: { open: boolean; replay?: boolean; onOpen: () => void; onClose: () => void }
 }
 
-export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill, saved, onBoardChange, onDevFillUsed, intro }: Props) {
+export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLast, devFill, saved, onBoardChange, onDevFillUsed, intro }: Props) {
   const viewport = useViewport()
   const arrangement = useMemo(() => chooseArrangement(LEVEL, TRAY_LAYOUTS[LEVEL.id], viewport), [LEVEL, viewport])
   const layout = arrangement.layout
@@ -219,6 +222,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   }
 
   const rotateSelected = (id: string | null) => {
+    dismissNote()
     if (carryRef.current) return rotateCarry()
     if (!id) return setMessage('Select an item first, then rotate it.')
     if (placementOf(id)) apply(rotatePlaced(gameRef.current, id), `${name(id)} rotated.`)
@@ -281,13 +285,20 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     if (apply(undo(gameRef.current), 'Undone.')) setSelected(null)
   }
 
+  // A first-visit note steps aside as soon as the player starts playing (picks something up or turns it).
+  const dismissNote = () => {
+    if (intro?.open && !intro.replay) intro.onClose()
+  }
+
   const startPointer = (e: ReactPointerEvent, itemId: string, source: Source) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return
+    dismissNote()
     if (carryRef.current?.mode === 'keyboard') setCarry(null)
     pending.current = { itemId, source, sx: e.clientX, sy: e.clientY }
   }
 
   const pickUpWithKeyboard = (itemId: string, source: Source) => {
+    dismissNote()
     const o = orientationOf(itemId)
     const p = placementOf(itemId)
     const b = itemBounds(LEVEL, itemId, o)
@@ -467,13 +478,14 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   }
   useEffect(() => {
     if (!spark) return
-    const t = window.setTimeout(() => setSpark(false), 2800)
+    const t = window.setTimeout(() => setSpark(false), 1900)
     return () => window.clearTimeout(t)
   }, [spark])
   useEffect(() => {
     if (!won) return
     // Dev-tool fills must never write real progress.
-    if (!devTainted.current) onWin(chaos, perfectNow)
+    if (devTainted.current) onTestWin?.()
+    else onWin(chaos, perfectNow)
     // At most one normal and one perfect completion dialog per visit; a restored winning pack opens none.
     const kind = perfectNow ? 'perfect' : 'normal'
     const shown = perfectNow ? celebratedPerfect : celebrated
@@ -483,9 +495,9 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     if (perfectNow) celebratedPerfect.current = true
     returnFocus.current = document.activeElement as HTMLElement | null
     setDialogKind(kind)
-    // A perfect pack lets the gold meter and the stitched flourish play on the open table first (about a second),
-    // then the boarding pass is stamped. With reduced motion there is no wait.
-    const wait = perfectNow && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1100 : 0
+    // A perfect pack: the gold meter, its sheen, the gold ring and the sparkles all start at once; the boarding pass is
+    // stamped a beat later (just as the sheen finishes), not after a long pause. With reduced motion there is no wait.
+    const wait = perfectNow && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 420 : 0
     if (!wait) {
       setDialogOpen(true)
       return

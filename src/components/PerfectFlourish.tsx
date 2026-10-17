@@ -19,7 +19,7 @@ export default function PerfectFlourish() {
     <div className="flourish" aria-hidden="true">
       <span className="flourish-ring" />
       {SPARKLES.map((s, i) => (
-        <svg key={i} className="twinkle" viewBox="-12 -12 24 24" width={s.s} height={s.s} style={{ left: `${s.x}%`, top: `${s.y}%`, animationDelay: `${s.d}ms` }}>
+        <svg key={i} className="twinkle" viewBox="-12 -12 24 24" width={s.s} height={s.s} style={{ left: `${s.x}%`, top: `${s.y}%`, animationDelay: `${Math.round(s.d * 0.6)}ms` }}>
           <path d={STAR} />
         </svg>
       ))}

@@ -36,6 +36,7 @@ export function ChaosBadge({ item, orientation }: { item: Item; orientation: Ori
       ) : (
         <svg viewBox="0 0 44 44" focusable="false">
           {/* a paper dot stuck on the item, a worn rubber-stamp ring (gaps where the ink did not take) and the number, slightly bled */}
+          <path d={paperDot(item.chaos)} className="dot-shadow" transform="translate(0.7 1.3)" />
           <path d={paperDot(item.chaos)} className="dot-paper" />
           <circle cx={22} cy={22} r={16.2} className="dot-ring" strokeDasharray="38 3 22 3 30 3 4 2" />
           <circle cx={22} cy={22} r={13.4} className="dot-ring thin" />

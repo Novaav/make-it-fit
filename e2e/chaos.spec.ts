@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { packStep, piece } from './helpers'
+import { boardGeometry, packStep, piece } from './helpers'
 import { LEVEL1, LEVEL2_NORMAL, LEVEL2_PERFECT } from './solutions'
 
 const PROGRESS = 'make-it-fit:progress:v1'
@@ -159,5 +159,57 @@ test.describe('Level 3 items', () => {
     await piece(page, 'ceramic_foot').focus()
     await expect(piece(page, 'ceramic_foot').locator('.chaos-badge')).toHaveText('7')
     expect(trayStamp).toContain('data-chaos="7"')
+  })
+})
+
+test.describe('perfect-pack transition timing', () => {
+  async function dropLastPerfectItem(page: Page) {
+    await openLevel2(page)
+    for (const step of LEVEL2_PERFECT.slice(0, 5)) await packStep(page, step)
+    await page.evaluate(() => {
+      const w = window as unknown as { __m: { frames: number[]; goldAt: number | null; dialogAt: number | null; t0: number } }
+      w.__m = { frames: [], goldAt: null, dialogAt: null, t0: 0 }
+      let last = performance.now()
+      const tick = (t: number) => {
+        w.__m.frames.push(t - last)
+        last = t
+        if (w.__m.t0 && w.__m.goldAt === null && document.querySelector('.pill.chaos.max')) w.__m.goldAt = t - w.__m.t0
+        if (w.__m.t0 && w.__m.dialogAt === null && document.querySelector('.dialog')) w.__m.dialogAt = t - w.__m.t0
+        requestAnimationFrame(tick)
+      }
+      requestAnimationFrame(tick)
+    })
+    const last = LEVEL2_PERFECT[5]
+    const { box, cell } = await boardGeometry(page)
+    const p = (await piece(page, last.id).boundingBox())!
+    const from = { x: p.x + p.width / 2, y: p.y + p.height / 2 }
+    const to = { x: box.x + (last.col + p.width / cell / 2) * cell, y: box.y + (last.row + p.height / cell / 2) * cell }
+    await page.mouse.move(from.x, from.y)
+    await page.mouse.down()
+    await page.mouse.move(to.x, to.y, { steps: 10 })
+    await page.evaluate(() => ((window as unknown as { __m: { t0: number } }).__m.t0 = performance.now()))
+    await page.mouse.up()
+    await page.waitForTimeout(2300)
+    return page.evaluate(() => {
+      const m = (window as unknown as { __m: { frames: number[]; goldAt: number; dialogAt: number } }).__m
+      const sorted = m.frames.slice(1).sort((a, b) => a - b)
+      return { goldAt: m.goldAt, dialogAt: m.dialogAt, p95: sorted[Math.floor(sorted.length * 0.95)], max: sorted[sorted.length - 1] }
+    })
+  }
+
+  test('the gold meter answers at once, the boarding pass follows within about half a second, and frames stay smooth', async ({ page }) => {
+    const m = await dropLastPerfectItem(page)
+    expect(m.goldAt).toBeLessThan(250)
+    expect(m.dialogAt).toBeGreaterThan(250) // a beat after the meter, not simultaneous
+    expect(m.dialogAt).toBeLessThan(800) // and no long pause
+    expect(m.p95).toBeLessThan(40)
+    expect(m.max).toBeLessThan(250)
+  })
+
+  test('with reduced motion nothing waits: the meter and the boarding pass appear immediately', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const m = await dropLastPerfectItem(page)
+    expect(m.goldAt).toBeLessThan(250)
+    expect(m.dialogAt).toBeLessThan(250)
   })
 })
