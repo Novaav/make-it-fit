@@ -48,3 +48,8 @@ export interface ItemArtDef {
   draw: (uid: string) => ReactNode
   zone: LabelZone
 }
+
+/** A soft contact shadow: the same silhouette, offset towards the lower right, so every item rests on the lining. */
+export function Contact({ d, opacity = 0.2, dx = 0.03, dy = 0.045 }: { d: string; opacity?: number; dx?: number; dy?: number }) {
+  return <path d={d} fill={INK} opacity={opacity} transform={`translate(${dx} ${dy})`} />
+}

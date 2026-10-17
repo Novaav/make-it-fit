@@ -1,4 +1,4 @@
-import { INK, Inked, Lod1, Lod2, Stitch, line, type ItemArtDef } from './kit'
+import { INK, Contact, Inked, Lod1, Lod2, Stitch, line, type ItemArtDef } from './kit'
 
 /* ---------- T-shirt (T tetromino: sleeves + torso) ---------- */
 const CORAL = '#e8806b'
@@ -16,6 +16,7 @@ const shirt: ItemArtDef = {
           <path d="M0 .025H.05" stroke="#fff" strokeWidth={0.006} opacity={0.18} />
         </pattern>
       </defs>
+      <Contact d={TEE} />
       <Inked d={TEE} fill={CORAL} ink={CORAL_INK} />
       <path d={TEE} fill={`url(#${uid}-jersey)`} />
       <defs>
@@ -72,7 +73,7 @@ const shirt: ItemArtDef = {
 }
 
 /* ---------- Jeans (6x1): folded flat, waistband at the left, two legs stacked towards the hems ---------- */
-const DENIM = '#5e86b5'
+const DENIM = '#5a84bc'
 const DENIM_D = '#3f6591'
 const DENIM_L = '#8db0d8'
 const DENIM_INK = '#1f3552'
@@ -88,10 +89,16 @@ const jeans: ItemArtDef = {
   draw: (uid) => (
     <>
       <defs>
+        <linearGradient id={`${uid}-denim-lit`} x1={0} y1={0} x2={0.25} y2={1}>
+          <stop offset="0" stopColor="#fff" stopOpacity={0.2} />
+          <stop offset="0.45" stopColor="#fff" stopOpacity={0} />
+          <stop offset="1" stopColor="#14284a" stopOpacity={0.28} />
+        </linearGradient>
         <pattern id={`${uid}-twill`} width={0.07} height={0.07} patternUnits="userSpaceOnUse" patternTransform="rotate(32)">
           <path d="M0 .035H.07" stroke="#2f5381" strokeWidth={0.014} opacity={0.32} />
         </pattern>
       </defs>
+      <Contact d={BACK} />
       {/* back leg: darker, with its own hem peeking out beyond the front leg */}
       <Inked d={BACK} fill={DENIM_D} ink={DENIM_INK} />
       <path d={BACK} fill={`url(#${uid}-twill)`} />
@@ -119,6 +126,8 @@ const jeans: ItemArtDef = {
         <path d="M1.75 .09L1.97 .095L1.95 .22L1.78 .21Z" fill="#fbf1de" stroke="#b9a77d" strokeWidth={0.01} />
         <path d="M1.8 .13H1.93M1.8 .17H1.9" stroke="#c9b894" strokeWidth={0.01} {...line} />
       </Lod1>
+      {/* lit from the upper left like Level 2: a soft sheen over the front leg, and a shaded lower edge */}
+      <path d={FRONT} fill={`url(#${uid}-denim-lit)`} />
       {/* knee wear and fade whiskers */}
       <ellipse cx={3.7} cy={0.38} rx={0.5} ry={0.14} fill={DENIM_L} opacity={0.22} />
       <Lod1>
@@ -218,6 +227,7 @@ const toiletries: ItemArtDef = {
           <stop offset="1" stopColor="#ddd5ee" />
         </linearGradient>
       </defs>
+      <Contact d={POUCH} />
       <Inked d={POUCH} fill={`url(#${uid}-pvc)`} ink={LAV_INK} />
       {/* heat-sealed edges and the soft gusset fold */}
       <Stitch d="M.14 .45V1.78Q.14 1.86 .22 1.86H1.78Q1.86 1.86 1.86 1.78V.45" color="#b7a9d6" w={0.02} dash="0.07 0.04" />
@@ -276,16 +286,24 @@ const SOLE = '#fff6e6'
 const SHOE =
   'M.3 .02C.12 .02 .07 .28 .09 .6C.07 1 .02 1.25 .03 1.5C.03 1.86 .24 1.98 .5 1.98C.76 1.98 .97 1.86 .97 1.5C.98 1.25 .93 1 .91 .6C.93 .28 .88 .02 .7 .02Z'
 
+const CORAL_TRIM = '#e8806b'
+const UPPER = 'translate(.5 1) scale(.86) translate(-.5 -1)'
+
 function Sneaker({ uid }: { uid: string }) {
   return (
     <>
+      <Contact d={SHOE} />
       <Inked d={SHOE} fill={SOLE} ink={SHOE_INK} w={0.05} />
+      {/* vulcanised sole: a dark foxing stripe just inside the rim and a tread line at the heel and toe */}
+      <path d={SHOE} fill="none" stroke="#c9b48a" strokeWidth={0.02} transform="translate(.5 1) scale(.93) translate(-.5 -1)" />
       {/* upper */}
       <path d={SHOE} fill={MUSTARD} stroke={MUSTARD_D} strokeWidth={0.025} transform="translate(.5 1) scale(.86) translate(-.5 -1)" />
-      <path d={SHOE} fill={`url(#${uid}-canvas)`} transform="translate(.5 1) scale(.86) translate(-.5 -1)" />
+      <path d={SHOE} fill={`url(#${uid}-canvas)`} transform={UPPER} />
+      <path d={SHOE} fill={`url(#${uid}-lit)`} transform={UPPER} />
       {/* rubber toe cap with a stitched edge (the weight label) */}
       <path d="M.18 1.45C.2 1.2 .8 1.2 .82 1.45C.84 1.8 .66 1.9 .5 1.9C.34 1.9 .16 1.8 .18 1.45Z" fill="#fff1d2" stroke="#b98e2e" strokeWidth={0.03} />
-      <path d="M.2 1.34C.35 1.26 .65 1.26 .8 1.34" fill="none" stroke="#b98e2e" strokeWidth={0.025} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M.2 1.34C.35 1.26 .65 1.26 .8 1.34" fill="none" stroke={CORAL_TRIM} strokeWidth={0.04} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M.3 1.55C.34 1.46 .66 1.46 .7 1.55" fill="none" stroke="#fff" strokeWidth={0.03} opacity={0.7} strokeLinecap="round" />
       {/* tongue with a little tag, collar opening and heel counter */}
       <path d="M.36 .55C.4 .48 .6 .48 .64 .55L.66 1.1C.58 1.16 .42 1.16 .34 1.1Z" fill="#f2c96e" stroke={MUSTARD_D} strokeWidth={0.025} strokeLinejoin="round" />
       <rect x={0.44} y={0.58} width={0.12} height={0.07} rx={0.01} fill="#fff6e6" stroke={MUSTARD_D} strokeWidth={0.01} />
@@ -293,7 +311,7 @@ function Sneaker({ uid }: { uid: string }) {
       <path d="M.3 .3Q.5 .18 .7 .3" fill="none" stroke="#a37a52" strokeWidth={0.03} strokeLinecap="round" strokeLinejoin="round" />
       <path d="M.16 .56C.13 .34 .2 .16 .3 .1" fill="none" stroke={MUSTARD_D} strokeWidth={0.025} strokeLinecap="round" strokeLinejoin="round" />
       <path d="M.84 .56C.87 .34 .8 .16 .7 .1" fill="none" stroke={MUSTARD_D} strokeWidth={0.025} strokeLinecap="round" strokeLinejoin="round" />
-      <rect x={0.44} y={0.01} width={0.12} height={0.09} rx={0.02} fill="#fff6e6" stroke={SHOE_INK} strokeWidth={0.015} />
+      <rect x={0.42} y={0.01} width={0.16} height={0.1} rx={0.02} fill={CORAL_TRIM} stroke={SHOE_INK} strokeWidth={0.015} />
       {/* eyelets and criss-crossed laces */}
       {[0.76, 0.9, 1.04].map((y) => (
         <g key={y}>
@@ -314,6 +332,11 @@ const shoes: ItemArtDef = {
   draw: (uid) => (
     <>
       <defs>
+        <linearGradient id={`${uid}-lit`} x1={0} y1={0} x2={1} y2={1}>
+          <stop offset="0" stopColor="#fff" stopOpacity={0.3} />
+          <stop offset="0.5" stopColor="#fff" stopOpacity={0} />
+          <stop offset="1" stopColor="#5a3f12" stopOpacity={0.3} />
+        </linearGradient>
         <pattern id={`${uid}-canvas`} width={0.06} height={0.06} patternUnits="userSpaceOnUse">
           <path d="M0 0L.06 .06M.06 0L0 .06" stroke="#8a6419" strokeWidth={0.008} opacity={0.22} />
         </pattern>
