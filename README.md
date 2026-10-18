@@ -2,111 +2,111 @@
 
 **Bad decisions. Limited luggage.**
 
-A small browser puzzle game about packing an open suitcase. Drag, rotate and fit illustrated belongings into the case, stay within the packing allowance, and collect as much Chaos as the suitcase allows. Three hand-made levels, no timer, no sound, no account, no server.
+A small browser puzzle game about packing an open suitcase for a trip you should not be taking. Drag and rotate belongings onto a grid, stay under the weight allowance, and collect enough **Chaos** to win. The items are the joke: a marble foot, a garden gnome, a flamingo, a hotel painting that has to come along. There are three hand-made levels, no timer, no sound, no account and no server.
 
-**Built with:** React 19, TypeScript, Vite, Vitest, Playwright, a Python puzzle solver, GitHub Actions. All artwork is original, drawn as SVG in code.
+Built with React 19, TypeScript, Vite, a Python puzzle solver, Vitest, Playwright and GitHub Actions. All artwork is original SVG drawn in code.
 
-Status: feature-complete (three levels). <!-- Add the playable link and screenshots here once the game is published. -->
+<!--
+DEMO (add after deployment; use real files only):
+  - one 30-45 s video:  assets/demo/make-it-fit.mp4 (+ poster)
+  - exactly three screenshots: opening, a level in play, a perfect pack
+  - the verified live URL
+-->
 
-## Why the engineering is interesting
+## What makes it interesting
 
-- **The puzzles are proven, not guessed.** A separate exhaustive solver (Python) shows every level is solvable and finds its perfect score; CI fails if the committed puzzle data drifts from what it derives.
-- **The rules are a pure TypeScript engine** (grid shapes, rotation, collision, undo, win and weight rules) with no React in it, so they are tested headlessly.
-- **Dragging is tuned for Safari's engine.** Pointer input is applied once per frame and React re-renders only when the snapped target changes; browser tests measure it on Chrome and Playwright's WebKit.
-- **Saved data is treated as untrusted.** Progress and arrangements are versioned, validated and replayed through the engine, so a corrupt save can never put an invalid board on screen.
-- **Accessible by construction:** full keyboard play, screen-reader announcements, visible focus, reduced-motion support.
+- **Every puzzle is proven by an exhaustive solver.** `verify_levels.py` (Python, standard library only) tries every combination of items and shows each level is solvable. Level 3, for example, has 532 legal packs, 37 that win and exactly one perfect combination. The level data and solution fixtures are generated from it, and CI fails if they drift.
+- **The rules are a pure TypeScript engine** with no React or DOM in it: shapes, rotation, collision, undo, weight and win checks. It is tested headlessly, and the engine replays the solver's answers as a cross-check between two implementations.
+- **Dragging is tuned for WebKit.** Pointer input is applied once per animation frame and React re-renders only when the snapped target cell changes. Browser tests measure React commits and frame time during a drag on Chrome and Playwright's WebKit engine.
+- **Saved data is treated as untrusted.** Progress and arrangements are versioned, validated and replayed through the engine, so a corrupt or outdated save cannot put an invalid board on screen.
+- **Accessible by design:** the whole game plays from the keyboard, the score and weight are announced to screen readers, focus is always visible, and `prefers-reduced-motion` is respected.
 
-How it fits together: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+## How it works
 
-## How to play
+The suitcase is a grid and every item is a set of cells, so collision and rotation are exact. An item fits only if all its cells are on the board and none overlap another item. Rotate in 90° steps.
 
-- **Goal (Level 1):** pack every item; rotate where needed. Every item carries a stamped Chaos number and the total counts up as you pack, but nothing has to be reached.
-- **Goal (Levels 2-3):** reach the target **Chaos** (every item has a Chaos number, always visible) within the weight allowance (6.5 kg, then 20.5 kg); exactly the allowance is fine. Level 3 also has two **MUST** items that must come. A perfect pack beats the target by a few points; the game never reveals which combination does it, and reaching it earns a gold meter, a stitched-gold flourish and a PERFECT PACK seal on the boarding pass. Weights under 1 kg are shown in grams (900 g), the rest in kilograms (2.25 kg).
-- **Developer tools (dev server only):** the dev panel jumps between levels and fills verified layouts through TEST MODE, including a **Solution Explorer** with solver-verified normal wins and every perfect pack. Nothing there is saved or shipped in production.
-- **Feedback:** while placing, green means the item fits there and red means it overlaps something or sticks out. Each item shows its weight on levels with an allowance.
-- **Finish:** a normal win and a perfect win each show their own dialog once; **Next level** or **Keep packing** (you can keep chasing a perfect pack). Unlimited undo and reset. A short handwritten how-to note opens the first time you enter each level; **How to play** replays it.
-- **Progress:** completed levels and best Chaos are saved in your browser's `localStorage` only, and so is the arrangement you left in each level. A level completed earlier keeps its check mark, but the suitcase is only "Packed!" while its current arrangement is valid. Levels unlock in order.
+- **Weight** is shown on each item and as a running total (under 1 kg in grams). Going over the allowance is allowed while you pack and shown clearly; you win only when the total is within it, and exactly the allowance is fine.
+- **Chaos** is a number stamped on every item. The total counts up as you pack.
+- **Level 1** (5×6): pack all five items. There is no allowance and no target, and the solver shows it cannot be done without rotating.
+- **Level 2** (6×5, 6.5 kg): choose from ten items and reach 20 Chaos. A perfect pack reaches 25.
+- **Level 3** (7×6, 20.5 kg): two items (the painting and the laundry bag) must come, choose from ten more, and reach 24 Chaos. A perfect pack reaches 29.
 
-## Controls
+Each target is 80% of the level's perfect score, rounded up. The game never says which combination is perfect; reaching it earns a gold meter and a seal on the boarding pass. Undo and reset are unlimited.
 
 | Action | Mouse / touch | Keyboard |
 |---|---|---|
-| Move an item | Drag it onto the suitcase (snaps to the grid) | `Tab` to an item, `Enter` to pick up, arrow keys to move, `Enter` to place |
-| Rotate 90° | `Rotate` button, or `R`; right-click while dragging | `R` |
+| Move an item | Drag onto the suitcase (snaps to the grid) | `Tab` to an item, `Enter` to pick up, arrows to move, `Enter` to place |
+| Rotate 90° | `Rotate` button; right-click while dragging | `R` |
 | Cancel a move | Drop outside the suitcase | `Esc` |
-| Take an item out | Drag it back to the tray, or `Remove` | `Delete` / `Backspace` |
+| Remove an item | Drag back to the tray, or `Remove` | `Delete` / `Backspace` |
 | Undo | `Undo` button | `Ctrl`/`⌘` + `Z` |
 
-A new player's first visit of a browsing session opens with a branded start: the wordmark sits large on the empty table with its tagline and a Play button, and it waits, with no timer, until Play is pressed (no other tap or key starts the game); Play moves the wordmark into the masthead as the packing table fades up (about 0.85 s), and the how-to-play note follows once that has settled. Returning players, browser automation and a visit already started in the same session go straight in, reduced motion shows the start without movement, and `?intro` on the address replays it for review. Rotation and the layout of the "To pack" tray are designed so that rotating an item never changes the size of the panel. Reduced-motion preferences are respected.
+First-time visitors see a branded start screen that waits, with no timer, until **Play** is pressed. Returning players skip it, and `?intro` replays it. Progress and your arrangement in each level are saved in the browser's `localStorage` only.
 
-## Build and run (for the author and anyone the author has permitted)
+## Architecture
 
-The [licence](LICENSE) lets you read this code and play the hosted game; it does not grant permission to run, copy or modify the code, so please ask first (contact in the licence). These commands document how the project is built and verified.
-
-Requires Node.js 22 or newer (CI uses 24) and npm.
-
-```bash
-npm install
-npm run dev          # development server (includes dev-only test tools, see below)
-npm run build        # production build into dist/
-npx vite preview     # serve the production build locally
+```
+VERIFIED_LEVELS.json ──► src/engine (pure rules) ──► LevelPlay.tsx (drag, keyboard, dialogs) ──► App.tsx (levels, progress)
+        ▲                                                                                              │
+verify_levels.py (solver)                                                                  localStorage (validated)
 ```
 
-## Test it
+A static single-page app with no network requests after load. `App` owns the open level, saved progress and arrangements; `LevelPlay` owns the live state of one level; `src/ui` holds pointer and layout maths; `src/status.ts` holds every sentence the game announces. Tradeoffs, including why `LevelPlay.tsx` is large on purpose and why the linter is Oxlint rather than ESLint, are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-The browser tests need Chrome and the Playwright browsers once: `npx playwright install chrome webkit firefox`.
+## Verification
+
+Run locally on the current branch:
+
+- **Type check and lint:** `tsc -b` and Oxlint (`--deny-warnings`), both clean.
+- **Unit tests:** 203 Vitest tests in 20 files covering the engine, solver fixtures, persistence, layout and drag maths, announcements and the licence.
+- **Solver:** `verify_levels.py` reproduces the committed puzzle data and fixtures exactly.
+- **Browser tests:** Playwright drives real drags, rotation, keyboard play, progression, persistence and the opening at phone, tablet and desktop sizes, on Chrome, Playwright's WebKit and a Firefox subset, against both the dev server and the production build.
+- **Production build:** `npm run check:prod-clean` fails if dev tools or solution data reach `dist`, and a test runs the game under the shipped Content-Security-Policy with no violations.
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs all of the above on every pull request. The latest commits have not run on GitHub yet, so the results above are local.
+
+## Run it locally
+
+Node.js 24 (what CI uses) and Python 3.
 
 ```bash
-npx tsc -b                     # type check
-npm run lint                   # static analysis (Oxlint)
-npm test                       # unit tests (Vitest): engine, UI helpers, progress, markup
-python3 verify_levels.py       # re-verifies the puzzle data with the reference solver
-npm run check:prod-clean       # production build must contain no dev tools or solution data
-npm run test:e2e               # browser tests (Playwright): Chrome, WebKit and the production build
-PW_FIREFOX=1 npm run test:e2e  # also a Firefox smoke test (npx playwright install firefox first)
+npm ci
+npm run dev            # dev server; includes a dev-only panel for jumping between levels
+npm run build          # production build into dist/
 ```
 
-- The browser tests use your locally installed **Google Chrome** (plus Playwright's WebKit engine, which is not Safari itself) (`channel: 'chrome'` in `playwright.config.ts`), start their own dev and preview servers on ports 5180 and 5181, and play real drags, rotations, keyboard flows, progression and persistence at desktop and phone sizes.
-- `TEST_SOLUTIONS.md` lists engine-verified layouts for every level (coordinates, rotations and grids). A test fails if the file drifts from the engine; regenerate with `npx vitest run -u src/dev/solutionsDoc.test.ts`.
+To run the checks:
 
-### Dev-only test tools
+```bash
+npx tsc -b
+npm run lint
+npm test                      # Vitest
+python3 verify_levels.py      # solver; then `git diff --exit-code` on the generated files
+npm run check:prod-clean
+npx playwright install chrome webkit firefox   # once
+PW_FIREFOX=1 npm run test:e2e
+```
 
-On `npm run dev` a small **Dev tools** panel (bottom-left) offers *Test win & continue*, level jump, filling a verified layout, and clearing saved progress. These never write to saved progress; test unlocks live in memory and disappear on reload, and a yellow **TEST MODE** strip marks the session. The panel and the solution data are compiled out of production builds (`npm run check:prod-clean`).
-
-## Quality notes
-
-- **Puzzle data is proven, not guessed.** `verify_levels.py` is a separate exhaustive solver, written in Python: it shows each level is solvable, finds the perfect Chaos, and CI fails if the committed puzzle data and solution fixtures drift from its output. The game engine is pure TypeScript with no React dependency and is unit-tested headlessly.
-- **Accessibility.** Everything can be played from the keyboard, the running score, weight left and the win are announced to screen readers, focus is visible, dialogs manage focus, and `prefers-reduced-motion` removes the opening movement and other animation.
-- **Browsers.** Automated tests run on Chrome, Playwright's WebKit engine (which is not Safari itself) and a Firefox smoke subset, at phone, tablet and desktop sizes, against both the development server and the production build. Checking real Safari and a physical iPhone is a manual step.
-- **Production build.** Static files only, no third-party requests; a strict Content-Security-Policy and caching headers are in `public/_headers` and are covered by a test. The build is checked to contain no developer tools or solution data (`npm run check:prod-clean`).
-- **Third-party material.** React (MIT) and three fonts (SIL OFL 1.1) are used; their notices ship with the game in `public/third-party-notices.txt`.
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the engine, the solver, state and persistence fit together.
+The browser tests use your installed Google Chrome plus Playwright's WebKit and Firefox builds, and start their own servers on ports 5180 and 5181.
 
 ## Limitations
 
-- Three levels, one device: progress and saved arrangements live in the browser's `localStorage`; there are no accounts or sync.
-- Real Safari and physical-phone behaviour have only been checked informally, not by an automated or documented device test; the automated suite uses Playwright's WebKit engine, which is not Safari.
-- The browser test suite expects Google Chrome (`channel: 'chrome'`) plus Playwright's WebKit and Firefox builds (`npx playwright install chrome webkit firefox`).
-- Rotation and layouts are tuned for the three shipped levels; adding a level means regenerating the puzzle data with the solver.
+- Real Safari and physical phones have not been tested in a documented way. The WebKit tests use Playwright's engine, which is not Safari itself.
+- Three levels. Progress lives in one browser: there are no accounts or sync.
+- Adding a level means running the solver and regenerating its data. Item shapes and layouts are tuned for the shipped levels.
+- Chaos values and difficulty are design choices, not measurements, and have had no formal playtesting.
+- Not deployed yet.
 
-## Project layout
+## Where to look in the code
 
-```
-src/engine/       pure TypeScript rules: shapes, rotation, placement, undo, win/weight checks (no React)
-src/ui/           pointer/grid maths and the fixed per-level tray layouts
-src/art/          original SVG item artwork per level, plus STYLE.md (the art style guide)
-src/components/   item art renderer, Chaos stamps, perfect-pack seal and flourish, the how-to-play note
-src/LevelPlay.tsx the playable level screen
-src/App.tsx       level tabs, progression and the dev-only test session
-src/progress.ts   validated localStorage persistence
-src/dev/          development-only tools and the generator for TEST_SOLUTIONS.md
-e2e/              Playwright browser tests
-VERIFIED_LEVELS.json, verify_levels.py, LEVEL_DESIGN.md   puzzle data, its verifier and its specification
-```
-
-The suitcase is a hidden cell grid and every item is a set of cells, so geometry, overlap and rotation are deterministic and unit-tested headlessly. Level data (including the verified perfect Chaos per level) comes from `VERIFIED_LEVELS.json`.
+- Rules: `src/engine/` (`shape.ts`, `game.ts`); cross-checks in `engine.test.ts` and `enumerate.test.ts`.
+- Solver: `verify_levels.py`, specification in `LEVEL_DESIGN.md`.
+- Drag and keyboard interaction: `src/LevelPlay.tsx`, `src/ui/`; measured by `e2e/drag-performance.spec.ts`.
+- Persistence: `src/progress.ts`, `src/boards.ts`.
+- Opening: `src/useOpening.ts`, `e2e/opening.spec.ts`.
+- Production checks: `e2e/prod.spec.ts`, `public/_headers`.
+- Architecture notes: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Licence
 
-Source-available, not open source. Copyright (c) 2026 Nova Zandkarimi, all rights reserved: the code is public to read and the game is free to play, and no other permission is granted to use, copy, modify, redistribute or commercially exploit it. See [`LICENSE`](LICENSE). Nothing there limits rights the law or GitHub's terms of service give you (for example viewing and forking on GitHub). Third-party components (React under MIT, three fonts under the SIL Open Font License) keep their own licences; see [`public/third-party-notices.txt`](public/third-party-notices.txt).
+Source-available, not open source. Copyright (c) 2026 Nova Zandkarimi, all rights reserved. You may read the code, play the game, and clone and run a private copy to evaluate it; no permission is given to redistribute, host or modify and distribute it, or to use it commercially. See [`LICENSE`](LICENSE) for the exact terms, which preserve your rights under applicable law and GitHub's terms (including forking on GitHub). Third-party components keep their own licences: React (MIT) and three fonts (SIL OFL 1.1), listed in [`public/third-party-notices.txt`](public/third-party-notices.txt).

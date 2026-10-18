@@ -3,13 +3,21 @@ Make It Fit
 Copyright (c) 2026 Nova Zandkarimi. All rights reserved.
 
 This repository is publicly viewable so that others can inspect and evaluate
-the work. Except as stated below, no licence or permission is granted to use,
-copy, modify, redistribute, sublicense, host or commercially exploit the
-copyrighted material in this repository (source code, artwork, level designs,
-puzzle data and documentation).
+the work. It is source-available, not open source.
 
-The author permits you to read the source code in this repository and to play
-the game in a web browser at the address the author publishes for it. To ask
+You may:
+
+- read the source code in this repository;
+- play the game at the address the author publishes for it;
+- download or clone the repository; and
+- build and run a private local copy, including its tests, solely to evaluate
+  the project, together with the local copies and build outputs that doing so
+  technically requires.
+
+Except as stated above, no licence or permission is granted to redistribute or
+republish the original work, publish or host a copy of it, distribute modified
+or derivative versions, sublicense it, or exploit it commercially. This covers
+the source code, artwork, level designs, puzzle data and documentation. To ask
 for any other permission, contact the author: https://github.com/Novaav
 
 Nothing in this notice limits any right that applicable law gives you without
