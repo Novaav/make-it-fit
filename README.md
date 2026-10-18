@@ -42,7 +42,7 @@ Each target is 80% of the level's perfect score, rounded up. The game never says
 | Remove an item | Drag back to the tray, or `Remove` | `Delete` / `Backspace` |
 | Undo | `Undo` button | `Ctrl`/`⌘` + `Z` |
 
-First-time visitors see a branded start screen that waits, with no timer, until **Play** is pressed. Returning players skip it, and `?intro` replays it. Progress and your arrangement in each level are saved in the browser's `localStorage` only.
+After a win, **Next level →** appears in the action row beside Rotate, Remove, Undo and Reset (also after *Keep packing*), and the suitcase does not move. First-time visitors see a branded start screen that waits, with no timer, until **Play** is pressed. Returning players skip it, and `?intro` replays it. Progress and your arrangement in each level are saved in the browser's `localStorage` only.
 
 ## Architecture
 
@@ -61,10 +61,10 @@ Run locally on the current branch:
 - **Type check and lint:** `tsc -b` and Oxlint (`--deny-warnings`), both clean.
 - **Unit tests:** 239 Vitest tests in 22 files covering the engine, solver fixtures, persistence, layout and drag maths, announcements, the sound system (against a mocked audio context) and the licence.
 - **Solver:** `verify_levels.py` reproduces the committed puzzle data and fixtures exactly.
-- **Browser tests:** Playwright drives real drags, rotation, keyboard play, progression, persistence and the opening at phone, tablet and desktop sizes, on Chrome, Playwright's WebKit and a Firefox subset, against both the dev server and the production build.
+- **Browser tests:** Playwright drives real drags, rotation, keyboard play, progression, persistence and the opening at phone, tablet and desktop sizes, on Chrome, Playwright's WebKit and a Firefox subset, against both the dev server and the production build. The responsive checks cover phone, tablet and desktop widths from 320 to 1280 px on all three levels, including the suitcase staying still when a level is solved and text enlarged to 200% (simulated by scaling the root font size).
 - **Production build:** `npm run check:prod-clean` fails if dev tools or solution data reach `dist`, and a test runs the game under the shipped Content-Security-Policy with no violations.
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs all of the above on every pull request. The latest commits have not run on GitHub yet, so the results above are local.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs all of the above on every pull request as six parallel jobs: the static checks, then Chrome (two shards), WebKit (two shards) and Firefox. The timing-sensitive checks run alone on one worker so a busy runner cannot distort them.
 
 ## Run it locally
 
@@ -92,7 +92,7 @@ The browser tests use your installed Google Chrome plus Playwright's WebKit and 
 
 ## Limitations
 
-- Real Safari and physical phones have not been tested in a documented way. The WebKit tests use Playwright's engine, which is not Safari itself.
+- The author has played the game on a real iPhone, but there is no recorded device test, and desktop Safari, Safari's text-size setting and VoiceOver have not been tested. The WebKit tests use Playwright's engine, which is not Safari itself.
 - Three levels. Progress lives in one browser: there are no accounts or sync.
 - Adding a level means running the solver and regenerating its data. Item shapes and layouts are tuned for the shipped levels.
 - Chaos values and difficulty are design choices, not measurements, and have had no formal playtesting.

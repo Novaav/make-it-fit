@@ -83,6 +83,13 @@ All storage is the visitor's own browser; every key is versioned and every read 
 - The `AudioContext` is created lazily, from a player action, and never while muted. A suspended context is resumed, and a sound that would arrive late is dropped rather than played delayed. Each sound has a minimum gap, so a held key or fast tap cannot stack it. Missing Web Audio, a context that fails to start and a voice that throws are all swallowed: audio never blocks or breaks play.
 - Tests replace `AudioContext` with a recorder (`sound.test.ts`, `e2e/sound.spec.ts`); they check which tones start, not what is audible. How it sounds is judged by listening.
 
+## Responsive layout
+
+- **Cell size.** `ui/fit.ts` chooses the tray layout and cell size per viewport. On phones the tray width, not the board, usually sets the cell: Levels 2 and 3 both use an 8-column tray, so Level 2's 6-column suitcase looks smaller than Level 1's. A taller tray would allow bigger cells at the cost of a much longer page.
+- **Nothing above the suitcase moves.** The hint row under the objective is always reserved, the goal line reserves the height of its longest sentences (invisible copies from `data-text` attributes), number pills have a fixed line height, and the level tabs stay on one line. After a win, **Next level →** takes a column in the existing toolbar row instead of adding a row.
+- **Touch targets.** Small controls (tabs, sound, How to play) keep their look and get an invisible 44 px hit area; the toolbar is 44 px tall on tablets and touch screens.
+- **Enlarged text.** Container queries in `em` (the masthead, the pills row, the toolbar) switch to stacked pills and wrapping tabs only once text is about 110% or larger on a phone, and the toolbar's label size is capped by its width (`cqw`). Normal-size layouts are unchanged. At 200% the layout holds without sideways scrolling or clipped labels in the tests, but it has not been tried with real system text settings.
+
 ## Test layers
 
 | Layer | Where | Proves |
@@ -94,7 +101,9 @@ All storage is the visitor's own browser; every key is versioned and every read 
 | Production build | `e2e/prod.spec.ts`, `npm run check:prod-clean` | no developer tools or solution data in `dist`, relative asset paths, the shipped Content-Security-Policy runs the game with no violations |
 | Static analysis | `npm run lint` (Oxlint), `tsc -b` | hook rules, no `any` or stray `console`, strict types |
 
-What is not covered: real Safari and physical-device behaviour are manual checks.
+What is not covered: real Safari and physical-device behaviour are manual checks (the author has played on an iPhone; there is no recorded device test, and desktop Safari, Safari's text-size setting and VoiceOver are untested). Text enlargement is simulated by scaling the root font size.
+
+CI runs the static checks in one job and the browser suite as five parallel jobs (Chrome and WebKit in two shards each, Firefox). The `@perf` specs (frame-time and response-time checks) are excluded from those runs and executed alone on one worker per engine, because two workers on a two-CPU runner starve each other of frames.
 
 ## Tradeoffs worth knowing
 
