@@ -5,9 +5,9 @@
  * missing or suspended audio system silently does nothing; nothing in the game waits for sound.
  */
 
-export type SoundEvent = 'pickup' | 'remove' | 'place' | 'rotate' | 'invalid' | 'complete' | 'perfect'
+export type SoundEvent = 'pickup' | 'remove' | 'place' | 'rotate' | 'invalid' | 'complete' | 'perfect' | 'click' | 'paper'
 
-/** The pitch (Hz) of the first tone of each sound; it identifies the sound in tests. */
+/** The pitch (Hz) of the first tone of each sound (for the tone-less paper sound, its filter's centre); it identifies the sound in tests. */
 export const LEAD_HZ: Readonly<Record<SoundEvent, number>> = {
   pickup: 330,
   remove: 987.77,
@@ -16,6 +16,8 @@ export const LEAD_HZ: Readonly<Record<SoundEvent, number>> = {
   invalid: 440,
   complete: 523.25,
   perfect: 587.33,
+  click: 880,
+  paper: 2500,
 }
 
 /** Shortest gap (ms) between two sounds of the same kind: a held key or a fast tap never stacks them. */
@@ -27,10 +29,12 @@ const MIN_GAP_MS: Readonly<Record<SoundEvent, number>> = {
   invalid: 150,
   complete: 600,
   perfect: 600,
+  click: 60,
+  paper: 120,
 }
 /** A sound that had to wait for the context to resume is dropped if it would now be late. */
 /** The sounds that go through the high-pass and low-pass; the others (cloth, reward melodies) go straight out. */
-const SHAPED: ReadonlySet<SoundEvent> = new Set(['remove', 'rotate', 'invalid'])
+const SHAPED: ReadonlySet<SoundEvent> = new Set(['remove', 'rotate', 'invalid', 'click', 'paper'])
 const RESUME_GRACE_MS = 250
 const noop = () => {}
 
@@ -62,6 +66,7 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
   let shaped: GainNode | null = null
   let out: GainNode | null = null // where the voice being started sends its sound
   let noise: AudioBuffer | null = null
+  let zipper: AudioBuffer | null = null
   let unsupported = false
   const lastPlayed: Partial<Record<SoundEvent, number>> = {}
 
@@ -145,6 +150,49 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
   }
 
   /**
+   * A suitcase zipper closing, from noise only: a run of tiny, slightly uneven tooth clicks that speed up as the slider
+   * does, rendered once into a buffer, then band-passed with a rising centre and faded in and out. No tone, so it sits
+   * under the reward melody as texture rather than a note.
+   */
+  function zip(c: AudioContext, at: number) {
+    const seconds = 0.5
+    if (!zipper) {
+      const rate = c.sampleRate
+      zipper = c.createBuffer(1, Math.ceil(rate * (seconds + 0.05)), rate)
+      const data = zipper.getChannelData(0)
+      let seed = 7 // fixed seed: the same zipper every time
+      const random = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296
+      const burst = Math.max(2, Math.floor(rate * 0.0018))
+      for (let t = 0; t < seconds; ) {
+        const start = Math.floor(t * rate)
+        const strength = 0.55 + 0.45 * random()
+        for (let k = 0; k < burst && start + k < data.length; k++) data[start + k] += (random() * 2 - 1) * Math.exp(-k / (burst * 0.35)) * strength
+        t += (0.0125 - 0.005 * (t / seconds)) * (0.85 + 0.3 * random()) // about 80 teeth a second, speeding up to about 130
+      }
+    }
+    const src = c.createBufferSource()
+    const filter = c.createBiquadFilter()
+    const gain = c.createGain()
+    src.buffer = zipper
+    filter.type = 'bandpass'
+    filter.frequency.setValueAtTime(2200, at)
+    filter.frequency.exponentialRampToValueAtTime(4200, at + seconds)
+    filter.Q.value = 1.2
+    gain.gain.setValueAtTime(0.0001, at)
+    gain.gain.linearRampToValueAtTime(0.16, at + 0.05)
+    gain.gain.setValueAtTime(0.16, at + seconds - 0.12)
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + seconds)
+    src.connect(filter).connect(gain).connect(out!)
+    src.onended = () => {
+      src.disconnect()
+      filter.disconnect()
+      gain.disconnect()
+    }
+    src.start(at)
+    src.stop(at + seconds + 0.03)
+  }
+
+  /**
    * The voices, quiet and short. Pickup and place are soft cloth contact and a low, warm settling tone; rotate, invalid
    * and remove are small ticks and falling notes; the two rewards are short melodies. The first tone of each is its
    * LEAD_HZ.
@@ -171,12 +219,23 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
       puff(c, t, 'bandpass', 2800, 5, 0.05, 0.014)
       puff(c, t + 0.03, 'bandpass', 3500, 5, 0.037, 0.012)
     },
+    // one small, round button click: a short tap of cloth and a soft body tone, shared by every ordinary button
+    click(c, t) {
+      tone(c, t, LEAD_HZ.click, 0.012, 0.03)
+      puff(c, t, 'bandpass', 1800, 1.5, 0.05, 0.016)
+    },
+    // paper handled gently: a soft slide, and a faint crinkle of fibres at its end
+    paper(c, t) {
+      puff(c, t, 'bandpass', LEAD_HZ.paper, 0.8, 0.045, 0.1, 1400)
+      puff(c, t + 0.05, 'highpass', 4500, 0.7, 0.012, 0.05)
+    },
     // two soft falling notes, "hm-mm": clearly not a success, gentle, no buzz
     invalid(c, t) {
       tone(c, t, LEAD_HZ.invalid, 0.04, 0.11, 'sine')
       tone(c, t + 0.085, 370, 0.036, 0.14, 'sine')
     },
     complete(c, t) {
+      zip(c, t + 0.04) // the case is zipped shut, under the melody
       const s = t + 0.16 // after the last piece has landed
       tone(c, s, LEAD_HZ.complete, 0.07, 0.5, 'triangle')
       tone(c, s + 0.1, 659.25, 0.06, 0.5, 'triangle')
@@ -184,6 +243,7 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
       tone(c, s + 0.31, 1046.5, 0.05, 0.7, 'sine')
     },
     perfect(c, t) {
+      zip(c, t + 0.04)
       const s = t + 0.16
       tone(c, s, LEAD_HZ.perfect, 0.07, 0.5, 'triangle')
       tone(c, s + 0.09, 783.99, 0.06, 0.5, 'triangle')
@@ -242,6 +302,7 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
       ctx = null
       plain = shaped = out = null
       noise = null
+      zipper = null
       if (c) void Promise.resolve(c.close()).catch(noop)
     },
   }

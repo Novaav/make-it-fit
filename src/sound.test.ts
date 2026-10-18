@@ -4,7 +4,7 @@ import { createSound, LEAD_HZ, type SoundEvent } from './sound'
 /** A recording stand-in for the Web Audio API: it never makes a sound, it notes which tones start. */
 function fakeContext(state: 'running' | 'suspended' = 'running') {
   const leads: number[] = []
-  let noiseStarts = 0
+  const noises: number[] = [] // the starting centre (Hz) of each noise source's filter
   const param = () => ({ value: 0, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() })
   const node = () => ({ connect: (n: unknown) => n, disconnect: vi.fn() })
   const ctx = {
@@ -19,8 +19,23 @@ function fakeContext(state: 'running' | 'suspended' = 'running') {
     close: vi.fn(() => Promise.resolve()),
     createGain: () => ({ ...node(), gain: param() }),
     createBuffer: (_c: number, length: number) => ({ getChannelData: () => new Float32Array(length) }),
-    createBiquadFilter: () => ({ ...node(), frequency: param(), Q: param(), type: '' }),
-    createBufferSource: () => ({ ...node(), buffer: null, start: () => noiseStarts++, stop: vi.fn(), onended: null }),
+    createBiquadFilter: () => {
+      const frequency = param()
+      let first = 0
+      frequency.setValueAtTime = vi.fn((hz: number) => void (first ||= hz))
+      return { ...node(), frequency, Q: param(), type: '', first: () => first }
+    },
+    createBufferSource: () => {
+      let filter: { first: () => number } | undefined
+      return {
+        buffer: null,
+        connect: (n: { first: () => number }) => ((filter = n), n),
+        disconnect: vi.fn(),
+        start: () => noises.push(filter?.first() ?? 0),
+        stop: vi.fn(),
+        onended: null,
+      }
+    },
     createOscillator: () => {
       const frequency = param()
       let first: number | undefined
@@ -28,7 +43,7 @@ function fakeContext(state: 'running' | 'suspended' = 'running') {
       return { ...node(), frequency, type: '', start: () => leads.push(first!), stop: vi.fn(), onended: null }
     },
   }
-  return { ctx, leads, noise: () => noiseStarts }
+  return { ctx, leads, noises }
 }
 
 function setup(state: 'running' | 'suspended' = 'running', muted = false) {
@@ -44,10 +59,10 @@ const EVENTS = Object.keys(LEAD_HZ) as SoundEvent[]
 describe('sound voices', () => {
   it('every event starts its own lead tone, and the leads are all different', () => {
     expect(new Set(Object.values(LEAD_HZ)).size).toBe(EVENTS.length)
-    for (const e of EVENTS) {
+    for (const e of EVENTS.filter((x) => x !== 'paper')) {
       const t = setup()
       t.sound.play(e)
-      expect(t.leads[0], e).toBe(LEAD_HZ[e])
+      expect(t.leads[0], e).toBe(LEAD_HZ[e]) // (the paper sound has no tone; its lead is its filter's centre)
     }
   })
   it('ordinary actions are a single small tick or breath, never a melody', () => {
@@ -68,6 +83,56 @@ describe('sound voices', () => {
   })
   it('keeps every sound above the drum range', () => {
     expect(Math.min(...Object.values(LEAD_HZ))).toBeGreaterThanOrEqual(250)
+  })
+})
+
+describe('buttons, paper and the completion zipper', () => {
+  it('a button click is one soft tap; a page turn is paper only, with no tone', () => {
+    const click = setup()
+    click.sound.play('click')
+    expect(click.leads).toEqual([LEAD_HZ.click])
+    expect(click.noises).toEqual([1800])
+    const paper = setup()
+    paper.sound.play('paper')
+    expect(paper.leads).toEqual([])
+    expect(paper.noises).toEqual([LEAD_HZ.paper, 4500])
+  })
+  it('a win zips the case shut under the unchanged melody: one zipper, then the original notes', () => {
+    const complete = setup()
+    complete.sound.play('complete')
+    expect(complete.noises).toEqual([2200])
+    expect(complete.leads).toEqual([523.25, 659.25, 783.99, 1046.5])
+    const perfect = setup()
+    perfect.sound.play('perfect')
+    expect(perfect.noises).toEqual([2200])
+    expect(perfect.leads).toEqual([587.33, 783.99, 987.77, 1174.66, 1567.98])
+  })
+  it('only the two wins carry a zipper', () => {
+    for (const e of EVENTS.filter((x) => x !== 'complete' && x !== 'perfect')) {
+      const t = setup()
+      t.sound.play(e)
+      expect(t.noises, e).not.toContain(2200)
+    }
+  })
+  it('the zipper is made once and reused', () => {
+    const t = setup()
+    const spy = vi.spyOn(t.ctx, 'createBuffer')
+    t.sound.play('complete')
+    t.advance(1000)
+    t.sound.play('perfect')
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+  it('click and paper respect their rate limits and mute', () => {
+    const t = setup()
+    t.sound.play('click')
+    t.sound.play('click')
+    t.advance(20)
+    t.sound.play('click')
+    expect(t.leads.filter((hz) => hz === LEAD_HZ.click)).toHaveLength(1)
+    t.sound.setMuted(true)
+    t.advance(500)
+    t.sound.play('paper')
+    expect(t.noises.filter((hz) => hz === LEAD_HZ.paper)).toHaveLength(0)
   })
 })
 

@@ -59,7 +59,7 @@ A static single-page app with no network requests after load. `App` owns the ope
 Run locally on the current branch:
 
 - **Type check and lint:** `tsc -b` and Oxlint (`--deny-warnings`), both clean.
-- **Unit tests:** 232 Vitest tests in 22 files covering the engine, solver fixtures, persistence, layout and drag maths, announcements, the sound system (against a mocked audio context) and the licence.
+- **Unit tests:** 237 Vitest tests in 22 files covering the engine, solver fixtures, persistence, layout and drag maths, announcements, the sound system (against a mocked audio context) and the licence.
 - **Solver:** `verify_levels.py` reproduces the committed puzzle data and fixtures exactly.
 - **Browser tests:** Playwright drives real drags, rotation, keyboard play, progression, persistence and the opening at phone, tablet and desktop sizes, on Chrome, Playwright's WebKit and a Firefox subset, against both the dev server and the production build.
 - **Production build:** `npm run check:prod-clean` fails if dev tools or solution data reach `dist`, and a test runs the game under the shipped Content-Security-Policy with no violations.

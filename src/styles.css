@@ -348,6 +348,9 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .dialog-actions button { min-height: 48px; padding: 0 20px; border: 2px solid var(--ink); border-radius: 8px; background: var(--paper); font-weight: 700; cursor: pointer; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.25); }
 .dialog-actions .primary { background: var(--ok); border-color: var(--ok); color: #fff; }
 .dialog-actions button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* the same press as Rotate and Reset: the button sinks onto the table, its shadow gone, and springs back */
+.dialog-actions button, .pill-action, .note-foot button:not(.note-skip) { transition: transform 90ms ease-out, box-shadow 90ms ease-out; }
+.dialog-actions button:active, .pill-action:active, .note-foot button:not(.note-skip):active { transform: translate(2px, 3px); box-shadow: none; }
 @keyframes pop { from { transform: scale(0.94); opacity: 0; } }
 @keyframes fade { from { opacity: 0; } }
 
@@ -419,7 +422,7 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   .toolbar button { min-height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .carried.snapped, .level-tab, .toolbar button { transition: none; }
+  .carried.snapped, .level-tab, .toolbar button, .dialog-actions button, .pill-action, .note-foot button:not(.note-skip) { transition: none; }
   .backdrop, .dialog { animation: none; }
 }
 @media (forced-colors: active) {

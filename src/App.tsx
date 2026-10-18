@@ -156,6 +156,7 @@ export default function App() {
                 title={unlocked ? undefined : `Locked: win Level ${Number(IDS[IDS.indexOf(l.id) - 1])} to unlock`}
                 onClick={() => {
                   if (unlocked) {
+                    if (l.id !== levelId) sound.play('click')
                     setLockNote(null)
                     setLevelId(l.id)
                   } else {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Level } from '../engine'
 import { LEVEL_TITLES } from '../levelMeta'
+import { sound } from '../sound'
 
 export interface IntroPage {
   title: string
@@ -51,7 +52,17 @@ export default function IntroNote({ level, onClose }: Props) {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
-  const go = (i: number) => setIndex(Math.max(0, Math.min(pages.length - 1, i)))
+  // a page turn sounds only when the page really changes (Next, Back or an arrow key)
+  const go = (i: number) => {
+    const target = Math.max(0, Math.min(pages.length - 1, i))
+    if (target === index) return
+    sound.play('paper')
+    setIndex(target)
+  }
+  const finish = () => {
+    sound.play('click')
+    onClose()
+  }
   return (
     <section
       className="intro-note"
@@ -85,7 +96,7 @@ export default function IntroNote({ level, onClose }: Props) {
           </span>
         )}
         {!last && (
-          <button type="button" className="note-skip" onClick={onClose}>
+          <button type="button" className="note-skip" onClick={finish}>
             Skip
           </button>
         )}
@@ -94,7 +105,7 @@ export default function IntroNote({ level, onClose }: Props) {
             Back
           </button>
         )}
-        <button type="button" className="note-next" ref={nextRef} onClick={() => (last ? onClose() : go(index + 1))}>
+        <button type="button" className="note-next" ref={nextRef} onClick={() => (last ? finish() : go(index + 1))}>
           {last ? 'Got it' : 'Next'}
         </button>
       </div>

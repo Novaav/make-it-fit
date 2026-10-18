@@ -7,8 +7,9 @@ import { LEAD_HZ } from '../src/sound'
 // The real sound system runs unchanged on top of it.
 async function fakeAudio(page: Page) {
   await page.addInitScript(() => {
-    const w = window as unknown as { __tones: number[]; __contexts: number }
+    const w = window as unknown as { __tones: number[]; __noises: number[]; __contexts: number }
     w.__tones = []
+    w.__noises = [] // the starting centre (Hz) of each noise source's filter
     w.__contexts = 0
     const param = () => ({ value: 0, setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} })
     const node = () => ({ connect: (n: unknown) => n, disconnect() {} })
@@ -24,8 +25,16 @@ async function fakeAudio(page: Page) {
       close = () => Promise.resolve()
       createGain = () => ({ ...node(), gain: param() })
       createBuffer = (_c: number, n: number) => ({ getChannelData: () => new Float32Array(n) })
-      createBiquadFilter = () => ({ ...node(), frequency: param(), Q: param() })
-      createBufferSource = () => ({ ...node(), start() {}, stop() {} })
+      createBiquadFilter = () => {
+        const frequency = param()
+        let first = 0
+        frequency.setValueAtTime = (hz: number) => void (first ||= hz)
+        return { ...node(), frequency, Q: param(), first: () => first }
+      }
+      createBufferSource = () => {
+        let filter: { first: () => number } | undefined
+        return { connect: (n: { first: () => number }) => ((filter = n), n), disconnect() {}, start: () => w.__noises.push(filter?.first() ?? 0), stop() {} }
+      }
       createOscillator = () => {
         const frequency = param()
         let first = 0
@@ -41,8 +50,14 @@ const tones = (page: Page) => page.evaluate(() => (window as unknown as { __tone
 // waits past the sounds' minimum gaps first, so a script that acts faster than any player does not hit the rate limit
 const clearTones = async (page: Page) => {
   await page.waitForTimeout(700)
-  await page.evaluate(() => void ((window as unknown as { __tones: number[] }).__tones.length = 0))
+  await page.evaluate(() => {
+    const w = window as unknown as { __tones: number[]; __noises: number[] }
+    w.__tones.length = 0
+    w.__noises.length = 0
+  })
 }
+const noises = (page: Page) => page.evaluate(() => (window as unknown as { __noises: number[] }).__noises.map((hz) => Math.round(hz)))
+const count = (list: number[], hz: number) => list.filter((x) => x === hz).length
 const contexts = (page: Page) => page.evaluate(() => (window as unknown as { __contexts: number }).__contexts)
 const toggle = (page: Page) => page.getByRole('button', { name: 'Sound effects' })
 
@@ -128,6 +143,7 @@ test.describe('sound effects', () => {
     await packStep(page, LEVEL1[LEVEL1.length - 1])
     await expect(page.getByRole('dialog')).toBeVisible()
     expect(await tones(page)).toEqual([LEAD_HZ.pickup, ...PLACE, ...COMPLETE])
+    expect(count(await noises(page), 2200)).toBe(1) // the zipper, once
   })
 
   test('mute: accessible pressed state, silences every sound, persists across reloads, and can be undone from the keyboard', async ({ page }) => {
@@ -214,3 +230,138 @@ test('the sound button is unreachable while the opening waits, and reachable aft
   expect(await page.evaluate(() => document.querySelector('.masthead-tools')?.hasAttribute('inert'))).toBe(false)
   expect(await contexts(page)).toBe(1) // started by the Play press (this player has sound on)
 })
+
+test.describe('button clicks and page turns', () => {
+  const CLICK = LEAD_HZ.click
+  const PAPER = [LEAD_HZ.paper, 4500]
+
+  test('Undo and Reset click once each by mouse and by keyboard; disabled buttons and the Rotate and Remove buttons add no click', async ({ page }) => {
+    await start(page)
+    await page.getByRole('button', { name: 'Undo' }).click({ force: true }) // disabled: nothing to undo
+    await page.getByRole('button', { name: 'Reset' }).click({ force: true })
+    expect(await tones(page)).toEqual([])
+    await dragItem(page, 'charger', 0, 0)
+    await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /packed/)
+    await clearTones(page)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    expect(count(await tones(page), CLICK)).toBe(1)
+    await dragItem(page, 'charger', 0, 0)
+    await clearTones(page)
+    await page.getByRole('button', { name: 'Reset' }).focus()
+    await page.keyboard.press('Enter')
+    expect(count(await tones(page), CLICK)).toBe(1)
+    await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /not packed/)
+    await piece(page, 'shoes').click()
+    await clearTones(page)
+    await page.getByRole('button', { name: 'Rotate', exact: true }).click()
+    expect(await tones(page)).toEqual([LEAD_HZ.rotate]) // Rotate keeps its own sound, with no extra click
+  })
+
+  test('level tabs click only when the level really changes', async ({ page }) => {
+    await start(page, { ...ON, 'make-it-fit:progress:v1': '{"version":2,"completed":{"01":{}}}' })
+    await expect(page.getByRole('button', { name: /^Level 2/ })).toHaveAttribute('aria-current', 'page') // opens on the next unfinished level
+    await page.getByRole('button', { name: /^Level 2/ }).click() // already here
+    await page.getByRole('button', { name: /^Level 3/ }).click({ force: true }) // locked
+    expect(await tones(page)).toEqual([])
+    await page.getByRole('button', { name: /^Level 1/ }).click()
+    expect(await tones(page)).toEqual([CLICK])
+  })
+
+  test('the win dialog: Keep packing clicks once', async ({ page }) => {
+    await start(page)
+    for (const step of LEVEL1) await packStep(page, step)
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await clearTones(page)
+    await dialog.getByRole('button', { name: 'Keep packing' }).click()
+    expect(await tones(page)).toEqual([CLICK])
+    await expect(dialog).toHaveCount(0)
+  })
+
+  test('Next level in the dialog is one click and one level change (the dialog opens after the win cue)', async ({ page }) => {
+    await start(page)
+    for (const step of LEVEL1) await packStep(page, step)
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await clearTones(page)
+    await dialog.getByRole('button', { name: 'Next level' }).click()
+    expect(await tones(page)).toEqual([CLICK])
+    await expect(page.getByRole('button', { name: /^Level 2/ })).toHaveAttribute('aria-current', 'page')
+  })
+
+  test('the how-to-play note turns pages with paper, only when the page changes, and closes with a click', async ({ page }) => {
+    await start(page, { ...ON, 'make-it-fit:intro:v1': '{"version":1,"seen":{}}' })
+    const note = page.getByRole('region', { name: /How to play Level 1/ })
+    await expect(note).toBeVisible()
+    expect(await tones(page)).toEqual([]) // appearing makes no sound
+    await clearTones(page)
+    await note.getByRole('button', { name: 'Next' }).click()
+    expect(await noises(page)).toEqual(PAPER)
+    expect(await tones(page)).toEqual([])
+    await clearTones(page)
+    await note.getByRole('button', { name: 'Back' }).click()
+    expect(await noises(page)).toEqual(PAPER)
+    await clearTones(page)
+    await note.getByRole('button', { name: 'Next' }).focus()
+    await page.keyboard.press('ArrowLeft') // already on the first page: nothing turns
+    expect(await noises(page)).toEqual([])
+    await page.keyboard.press('ArrowRight')
+    expect(await noises(page)).toEqual(PAPER)
+    await clearTones(page)
+    await page.keyboard.press('ArrowRight') // last page: nothing turns
+    expect(await noises(page)).toEqual([])
+    await note.getByRole('button', { name: 'Got it' }).click()
+    expect(await tones(page)).toEqual([CLICK])
+    await expect(note).toHaveCount(0)
+  })
+
+  test('muted, none of these buttons make a sound', async ({ page }) => {
+    await start(page, { 'make-it-fit:sound:v1': '{"version":1,"muted":true}', 'make-it-fit:intro:v1': '{"version":1,"seen":{}}' })
+    const note = page.getByRole('region', { name: /How to play Level 1/ })
+    await note.getByRole('button', { name: 'Next' }).click()
+    await note.getByRole('button', { name: 'Got it' }).click()
+    await dragItem(page, 'charger', 0, 0)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    expect(await tones(page)).toEqual([])
+    expect(await noises(page)).toEqual([])
+    expect(await contexts(page)).toBe(0)
+  })
+})
+
+test.describe('touch', () => {
+  test.use({ hasTouch: true })
+  test('a tap on Undo clicks once, not once for the touch and again for the click', async ({ page }) => {
+    await start(page)
+    await dragItem(page, 'charger', 0, 0)
+    await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /packed/)
+    await clearTones(page)
+    await page.getByRole('button', { name: 'Undo' }).tap()
+    expect(count(await tones(page), LEAD_HZ.click)).toBe(1)
+  })
+})
+
+for (const reduced of [false, true]) {
+  test(`the win dialog buttons sink when pressed, like Rotate and Reset, ${reduced ? 'instantly with reduced motion' : 'with a short spring'}`, async ({ page }) => {
+    if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' })
+    await start(page, {})
+    for (const step of LEVEL1) await packStep(page, step)
+    const next = page.getByRole('dialog').getByRole('button', { name: 'Next level' })
+    await expect(next).toBeVisible()
+    const probe = () => next.evaluate((e) => ({ transform: getComputedStyle(e).transform, duration: getComputedStyle(e).transitionDuration, shadow: getComputedStyle(e).boxShadow }))
+    const before = await probe()
+    expect(before.transform).toBe('none')
+    expect(before.duration.split(', ').every((d) => d === (reduced ? '0s' : '0.09s'))).toBe(true)
+    const b = (await next.boundingBox())!
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2)
+    await page.mouse.down()
+    await page.waitForTimeout(200)
+    const pressed = await probe()
+    expect(pressed.transform).toBe('matrix(1, 0, 0, 1, 2, 3)')
+    expect(pressed.shadow).toBe('none')
+    await page.mouse.move(b.x - 40, b.y - 40) // slide off to cancel the press
+    await page.mouse.up()
+    await expect(next).toBeVisible()
+    await page.waitForTimeout(200)
+    expect((await probe()).transform).toBe('none')
+  })
+}

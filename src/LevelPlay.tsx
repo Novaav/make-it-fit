@@ -643,7 +643,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
             <p className="level-title">
               Level {Number(LEVEL.id)} · {LEVEL_TITLES[LEVEL.id]}
               {intro && (
-                <button type="button" className="note-replay" ref={replayRef} onClick={intro.onOpen} aria-label="How to play (replay the instructions)">
+                <button type="button" className="note-replay" ref={replayRef} onClick={() => { sound.play('click'); intro.onOpen() }} aria-label="How to play (replay the instructions)">
                   <span className="note-replay-long">How to play</span>
                   <span className="note-replay-short" aria-hidden="true">?</span>
                 </button>
@@ -712,7 +712,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
                 </span>
               )}
               {solved && (
-                <button type="button" className="pill-action" onClick={onNext ?? doReset}>
+                <button type="button" className="pill-action" onClick={() => { sound.play('click'); (onNext ?? doReset)() }}>
                   {onNext ? 'Next level →' : 'Play again'}
                 </button>
               )}
@@ -866,8 +866,8 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
           <div className="toolbar">
             <button type="button" onClick={() => rotateSelected(selected)}>Rotate</button>
             <button type="button" onClick={() => selected && dropRemove(selected)} disabled={!selectedPlaced}>Remove</button>
-            <button type="button" onClick={doUndo} disabled={game.history.length === 0}>Undo</button>
-            <button type="button" onClick={doReset} disabled={game.placements.length === 0}>
+            <button type="button" onClick={() => { sound.play('click'); doUndo() }} disabled={game.history.length === 0}>Undo</button>
+            <button type="button" onClick={() => { sound.play('click'); doReset() }} disabled={game.placements.length === 0}>
               Reset
             </button>
           </div>
@@ -932,10 +932,10 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
             {isLast && <p className="sub">That&apos;s every level. Suitcase closed, dignity optional.</p>}
             <div className="barcode" aria-hidden="true" />
             <div className="dialog-actions">
-              <button type="button" ref={primaryRef} className="primary" onClick={onNext ? onNext : () => { closeDialog(); doReset() }}>
+              <button type="button" ref={primaryRef} className="primary" onClick={() => { sound.play('click'); if (onNext) onNext(); else { closeDialog(); doReset() } }}>
                 {onNext ? 'Next level' : 'Play again'}
               </button>
-              <button type="button" onClick={closeDialog}>Keep packing</button>
+              <button type="button" onClick={() => { sound.play('click'); closeDialog() }}>Keep packing</button>
             </div>
             </div>
           </div>
