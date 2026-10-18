@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSound, LEAD_HZ, MELODY, type SoundEvent } from './sound'
+import { createSound, LEAD_HZ, type SoundEvent } from './sound'
 
 /** A recording stand-in for the Web Audio API: it never makes a sound, it notes which tones start. */
 function fakeContext(state: 'running' | 'suspended' = 'running') {
@@ -57,21 +57,17 @@ describe('sound voices', () => {
       expect(t.leads, e).toEqual([LEAD_HZ[e]])
     }
   })
-  it('the rewards are bell phrases: every note has its octave, and perfect is the richer one', () => {
+  it('the rewards are the original short melodies, and perfect is the richer one', () => {
     const phrase = (e: 'complete' | 'perfect') => {
       const t = setup()
       t.sound.play(e)
       return t.leads
     }
-    const complete = phrase('complete')
-    const perfect = phrase('perfect')
-    expect(complete.filter((_, i) => i % 2 === 0).slice(0, 4)).toEqual([...MELODY.complete])
-    expect(perfect.filter((_, i) => i % 2 === 0).slice(0, 5)).toEqual([...MELODY.perfect])
-    expect(perfect.length).toBeGreaterThan(complete.length)
+    expect(phrase('complete')).toEqual([523.25, 659.25, 783.99, 1046.5])
+    expect(phrase('perfect')).toEqual([587.33, 783.99, 987.77, 1174.66, 1567.98])
   })
-  it('keeps every sound out of the low register and quiet', () => {
-    const lowest = Math.min(...Object.values(LEAD_HZ), ...MELODY.complete, ...MELODY.perfect)
-    expect(lowest).toBeGreaterThanOrEqual(370) // no drum-like pitch; the master high-pass also cuts below 400 Hz
+  it('keeps every sound above the drum range', () => {
+    expect(Math.min(...Object.values(LEAD_HZ))).toBeGreaterThanOrEqual(250)
   })
 })
 

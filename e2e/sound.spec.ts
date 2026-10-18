@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { dragItem, packStep, pageHasNoHorizontalScroll, piece } from './helpers'
 import { LEVEL1 } from './solutions'
-import { LEAD_HZ, MELODY } from '../src/sound'
+import { LEAD_HZ } from '../src/sound'
 
 // A stand-in for the browser's audio: nothing is played, every tone that would start is written down.
 // The real sound system runs unchanged on top of it.
@@ -47,9 +47,8 @@ const contexts = (page: Page) => page.evaluate(() => (window as unknown as { __c
 const toggle = (page: Page) => page.getByRole('button', { name: 'Sound effects' })
 
 const ON = { 'make-it-fit:sound:v1': '{"version":1,"muted":false}' } // a player who has turned sound on earlier
-const bells = (notes: readonly number[]) => notes.flatMap((hz) => [hz, Math.round(hz * 2 * 100) / 100]) // every bell has its octave
 const PLACE = [LEAD_HZ.place]
-const COMPLETE = bells([...MELODY.complete, MELODY.complete[2]]) // the phrase, then its last note joined by the one before it
+const COMPLETE = [523.25, 659.25, 783.99, 1046.5]
 
 async function start(page: Page, storage: Record<string, string> = ON) {
   await fakeAudio(page)
