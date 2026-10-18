@@ -127,6 +127,12 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .masthead { position: relative; }
 .lock-note { position: absolute; right: 0; top: 100%; z-index: 30; max-width: min(360px, 94vw); margin: 6px 0 0; padding: 8px 12px; border: 2px solid var(--ink); border-radius: 8px; background: var(--paper); font: 600 0.88rem var(--ui); box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.3); transform: rotate(-0.8deg); }
 .level-tab:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+/* Touch targets: the small controls keep their look and get an invisible hit area of at least 44 x 44 CSS px */
+.level-tab::after, .sound-toggle::after, .note-replay::after { content: ''; position: absolute; inset: -4px 0; } /* (the 2 px border is outside the padding box this is measured from) */
+.sound-toggle::after { inset: -4px; }
+.sound-toggle, .note-replay { position: relative; }
+.note-replay::after { inset: -11px -7px; }
+.help summary { min-height: 44px; display: flex; align-items: center; }
 
 /* ---- stage: suitcase on the left, tabletop with the items on the right (stacked on narrow screens) ---- */
 .stage { display: flex; gap: 20px 44px; align-items: flex-start; justify-content: center; }
@@ -302,12 +308,20 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .item-info.idle { border-style: dashed; border-color: rgba(43, 36, 51, 0.3); background: rgba(255, 248, 233, 0.45); color: var(--muted); font-style: italic; box-shadow: none; }
 
 /* ---- stamped tool tabs ---- */
-.toolbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 8px; }
+.toolbar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 14px 0 8px; }
 .toolbar button { min-height: 42px; border: 2px solid var(--ink); border-radius: 6px; background: var(--paper); cursor: pointer; font-family: var(--ui); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.82rem; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.24); transition: transform 90ms ease-out, box-shadow 90ms ease-out; }
 .toolbar button:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
 .toolbar button:active:not(:disabled) { transform: translate(2px, 3px); box-shadow: none; }
 .toolbar button:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
 .toolbar button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Labels never clip: the row is a container, and the font size is capped by the row's width as well as by the text size
+   (so enlarged text, a narrow aside or the fifth button after a win shrink the labels a little instead of cutting them off).
+   Unchanged wherever the row is wide enough, which includes the desktop layout. */
+.toolbar { container-type: inline-size; }
+.toolbar button { font-size: min(0.82rem, 4cqw); }
+.toolbar.has-next button { font-size: min(0.7rem, 3.3cqw); letter-spacing: 0.01em; padding-inline: 2px; }
+/* tablets and touch screens: the actions are at least 44 px tall (desktop keeps 42) */
+@media (pointer: coarse), (max-width: 1100px) { .toolbar button { min-height: 44px; } }
 /* Next level joins the row after a win: the other four give up a little width, nothing moves vertically */
 .toolbar.has-next { grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.7fr); }
 .toolbar button.next { background: var(--ok); border-color: var(--ok); color: #fff; }
@@ -423,8 +437,17 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   .levels { gap: 6px; }
   .level-tab { min-height: 40px; padding: 0 8px 0 22px; white-space: nowrap; }
   .level-tab::before { left: 7px; }
-  .toolbar.has-next button { font-size: 0.7rem; letter-spacing: 0.02em; padding-inline: 2px; }
   .toolbar button { min-height: 44px; }
+}
+/* Enlarged text: the masthead is a container, and in em terms a 340 px phone is narrow once the text is about 125 % or more,
+   so only then may the tabs wrap onto a second line instead of running off the screen. */
+.masthead { container-type: inline-size; }
+@container (max-width: 18em) { .levels { flex-wrap: wrap; justify-content: center; } }
+@media (max-width: 340px) {
+  /* the narrowest phones: three one-line tabs (with a check mark or lock) must still fit */
+  .levels { gap: 4px; }
+  .level-tab { padding: 0 5px 0 18px; font-size: 0.82rem; }
+  .level-tab::before { left: 5px; width: 9px; height: 9px; margin-top: -4.5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .carried.snapped, .level-tab, .toolbar button, .dialog-actions button, .note-foot button:not(.note-skip) { transition: none; }

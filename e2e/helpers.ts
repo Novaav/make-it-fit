@@ -36,3 +36,43 @@ export async function packStep(page: Page, step: Step) {
 export async function pageHasNoHorizontalScroll(page: Page) {
   return page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)
 }
+
+// ---- progression and layout helpers (next-level.spec.ts, responsive.spec.ts) ----
+export const INTRO = JSON.stringify({ version: 1, seen: { '01': true, '02': true, '03': true } })
+export const next = (page: Page) => page.locator('.toolbar').getByRole('button', { name: 'Next level →' })
+export const toolbarButtons = (page: Page) => page.locator('.toolbar button')
+
+export async function load(page: Page, completed: Record<string, object>, board?: { id: string; kind: 'normal' | 'perfect' }) {
+  await page.goto('/')
+  // the saved arrangement is built with the game's own modules, served by the dev server
+  const boards = board
+    ? await page.evaluate(async ({ id, kind }) => {
+        const { loadLevels } = await import(/* @vite-ignore */ '/src/engine/index.ts')
+        const { snapshot } = await import(/* @vite-ignore */ '/src/boards.ts')
+        const { referenceSolution } = await import(/* @vite-ignore */ '/src/dev/solutions.ts')
+        const level = loadLevels().find((l: { id: string }) => l.id === id)!
+        return JSON.stringify({ version: 1, boards: { [id]: snapshot(level, referenceSolution(level, kind)) } })
+      }, board)
+    : null
+  await page.evaluate(
+    ([i, c, b]) => {
+      localStorage.clear()
+      localStorage.setItem('make-it-fit:intro:v1', i!)
+      localStorage.setItem('make-it-fit:progress:v1', c!)
+      if (b) localStorage.setItem('make-it-fit:boards:v1', b)
+    },
+    [INTRO, JSON.stringify({ version: 2, completed }), boards],
+  )
+  await page.reload()
+  if (board) await page.getByRole('button', { name: new RegExp(`^Level ${Number(board.id)}`) }).click() // the app opens on the next unfinished level
+}
+
+/** Where the layout sits, in page coordinates, so a scroll cannot hide a jump. */
+export const geometry = (page: Page) =>
+  page.evaluate(() => {
+    window.scrollTo(0, 0) // sticky parts move with the scroll; measure from the top of the page
+    const top = (sel: string) => Math.round(document.querySelector(sel)!.getBoundingClientRect().top + scrollY)
+    const h = (sel: string) => Math.round(document.querySelector(sel)!.getBoundingClientRect().height)
+    return { masthead: h('.masthead'), objectiveTop: top('.objective'), objective: h('.objective'), board: top('[aria-label^="Packing area"]'), tray: top('.tray'), toolbar: top('.toolbar') }
+  })
+
