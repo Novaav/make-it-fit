@@ -204,7 +204,7 @@ test.describe('perfect-pack transition timing', () => {
 
   test('the gold meter answers at once, the boarding pass follows within about half a second, and frames stay smooth', async ({ page }) => {
     const m = await dropLastPerfectItem(page)
-    expect(m.goldAt).toBeLessThan(250)
+    expect(m.goldAt, `metrics ${JSON.stringify(m)}`).toBeLessThan(250)
     expect(m.dialogAt).toBeGreaterThan(250) // a beat after the meter, not simultaneous
     expect(m.dialogAt).toBeLessThan(800) // and no long pause
     expect(m.p95).toBeLessThan(Math.max(40, m.idle * 1.8))
@@ -214,7 +214,7 @@ test.describe('perfect-pack transition timing', () => {
   test('with reduced motion nothing waits: the meter and the boarding pass appear immediately', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     const m = await dropLastPerfectItem(page)
-    expect(m.goldAt).toBeLessThan(250)
+    expect(m.goldAt, `metrics ${JSON.stringify(m)}`).toBeLessThan(250)
     expect(m.dialogAt).toBeLessThan(250)
   })
 })

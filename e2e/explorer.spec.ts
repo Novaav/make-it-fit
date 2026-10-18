@@ -61,15 +61,20 @@ test('works at phone width: the select is operable and fits the screen', async (
   const box = (await select.boundingBox())!
   expect(box.x).toBeGreaterThanOrEqual(0)
   expect(box.x + box.width).toBeLessThanOrEqual(390)
-  // name what sticks out, so a failure says where
-  const sticking = await page.evaluate(() => {
-    const limit = document.documentElement.clientWidth
-    return [...document.querySelectorAll('body *')]
-      .map((e) => ({ e, r: e.getBoundingClientRect() }))
-      .filter(({ r }) => r.width > 0 && r.right > limit + 0.5)
-      .slice(0, 6)
-      .map(({ e, r }) => `${e.tagName.toLowerCase()}.${String(e.className)} right=${Math.round(r.right)} limit=${limit}`)
-  })
-  expect(sticking).toEqual([])
+  // the layout follows the resize a moment later; wait for it, and name what still sticks out if it never fits
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const limit = document.documentElement.clientWidth
+          return [...document.querySelectorAll('body *')]
+            .map((e) => ({ e, r: e.getBoundingClientRect() }))
+            .filter(({ r }) => r.width > 0 && r.right > limit + 0.5)
+            .slice(0, 6)
+            .map(({ e, r }) => `${e.tagName.toLowerCase()}.${String(e.className)} right=${Math.round(r.right)} limit=${limit}`)
+        }),
+      { timeout: 5000 },
+    )
+    .toEqual([])
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
 })

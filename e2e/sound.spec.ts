@@ -207,7 +207,7 @@ test('the sound button is unreachable while the opening waits, and reachable aft
   await page.addInitScript(() => localStorage.setItem('make-it-fit:sound:v1', '{"version":1,"muted":false}'))
   await page.goto('/?intro')
   await expect(page.locator('.opening-play')).toBeVisible()
-  expect(await page.evaluate(() => !!document.querySelector('.masthead-tools')?.hasAttribute('inert'))).toBe(true)
+  await expect(page.locator('.masthead-tools')).toHaveAttribute('inert', '') // set just after the first paint
   await page.locator('.opening-play').click()
   await expect(page.locator('.app.opening')).toHaveCount(0)
   await expect(toggle(page)).toBeVisible()
