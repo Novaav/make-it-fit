@@ -18,6 +18,7 @@ function fakeContext(state: 'running' | 'suspended' = 'running') {
     }),
     close: vi.fn(() => Promise.resolve()),
     createGain: () => ({ ...node(), gain: param() }),
+    createWaveShaper: () => ({ ...node(), curve: null, oversample: 'none' }),
     createBuffer: (_c: number, length: number) => ({ getChannelData: () => new Float32Array(length) }),
     createBiquadFilter: () => {
       const frequency = param()
@@ -97,7 +98,7 @@ describe('putting an item back', () => {
   })
 })
 
-describe('buttons, paper and the completion zipper', () => {
+describe('buttons and paper', () => {
   it('a button click is one soft tap; a page turn is paper only, with no tone', () => {
     const click = setup()
     click.sound.play('click')
@@ -108,30 +109,15 @@ describe('buttons, paper and the completion zipper', () => {
     expect(paper.leads).toEqual([])
     expect(paper.noises).toEqual([LEAD_HZ.paper, 4500])
   })
-  it('a win zips the case shut under the unchanged melody: one zipper, then the original notes', () => {
+  it('a win is the two approved melodies alone: no noise layer (a synthesised zipper was tried and dropped)', () => {
     const complete = setup()
     complete.sound.play('complete')
-    expect(complete.noises).toEqual([2200])
+    expect(complete.noises).toEqual([])
     expect(complete.leads).toEqual([523.25, 659.25, 783.99, 1046.5])
     const perfect = setup()
     perfect.sound.play('perfect')
-    expect(perfect.noises).toEqual([2200])
+    expect(perfect.noises).toEqual([])
     expect(perfect.leads).toEqual([587.33, 783.99, 987.77, 1174.66, 1567.98])
-  })
-  it('only the two wins carry a zipper', () => {
-    for (const e of EVENTS.filter((x) => x !== 'complete' && x !== 'perfect')) {
-      const t = setup()
-      t.sound.play(e)
-      expect(t.noises, e).not.toContain(2200)
-    }
-  })
-  it('the zipper is made once and reused', () => {
-    const t = setup()
-    const spy = vi.spyOn(t.ctx, 'createBuffer')
-    t.sound.play('complete')
-    t.advance(1000)
-    t.sound.play('perfect')
-    expect(spy).toHaveBeenCalledTimes(1)
   })
   it('click and paper respect their rate limits and mute', () => {
     const t = setup()
@@ -167,6 +153,19 @@ describe('mute', () => {
     t.sound.setMuted(false)
     t.sound.play('place')
     expect(t.leads.length).toBeGreaterThan(before)
+  })
+})
+
+describe('mix', () => {
+  it('ends in one master gain and a soft limiter before the speakers, and a browser without a WaveShaper still plays', () => {
+    const t = setup()
+    const limiter = vi.spyOn(t.ctx, 'createWaveShaper')
+    t.sound.play('place')
+    expect(limiter).toHaveBeenCalledTimes(1)
+    const bare = setup()
+    delete (bare.ctx as { createWaveShaper?: unknown }).createWaveShaper
+    bare.sound.play('place')
+    expect(bare.leads).toEqual([LEAD_HZ.place])
   })
 })
 

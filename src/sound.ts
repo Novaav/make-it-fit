@@ -35,10 +35,34 @@ const MIN_GAP_MS: Readonly<Record<SoundEvent, number>> = {
 /** A sound that had to wait for the context to resume is dropped if it would now be late. */
 /** The sounds that go through the high-pass and low-pass; the others (cloth, reward melodies) go straight out. */
 const SHAPED: ReadonlySet<SoundEvent> = new Set(['rotate', 'invalid', 'click', 'paper'])
+/**
+ * The overall level. The voices were designed relative to each other at much lower peaks (about -27 dBFS for the
+ * rewards), which is too quiet on laptop speakers; this raises the whole mix by 16 dB without changing its balance.
+ */
+const MASTER_GAIN = 6.3
 const RESUME_GRACE_MS = 250
 const noop = () => {}
 
 type ContextFactory = () => AudioContext | null
+
+/**
+ * A soft limiter ahead of the speakers: exactly linear up to half scale (-6 dBFS), then a tanh shoulder that rounds off
+ * the rare overlap that would otherwise clip, with no pumping or hidden make-up gain (a browser without WaveShaper goes direct).
+ */
+function limiter(c: AudioContext): AudioNode {
+  if (typeof c.createWaveShaper !== 'function') return c.destination
+  const shaper = c.createWaveShaper()
+  const curve = new Float32Array(2049)
+  for (let i = 0; i < curve.length; i++) {
+    const x = Math.abs(i / 1024 - 1)
+    const y = x <= 0.5 ? x : 0.5 + 0.5 * Math.tanh((x - 0.5) / 0.5) // untouched up to -6 dBFS, then rounded off below full scale
+    curve[i] = i < 1024 ? -y : y
+  }
+  shaper.curve = curve
+  shaper.oversample = '2x'
+  shaper.connect(c.destination)
+  return shaper
+}
 
 function browserContext(): AudioContext | null {
   const w = globalThis as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }
@@ -66,7 +90,6 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
   let shaped: GainNode | null = null
   let out: GainNode | null = null // where the voice being started sends its sound
   let noise: AudioBuffer | null = null
-  let zipper: AudioBuffer | null = null
   let unsupported = false
   const lastPlayed: Partial<Record<SoundEvent, number>> = {}
 
@@ -79,9 +102,13 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
         unsupported = true
         return null
       }
+      // everything ends in one master gain (the single volume control for the whole mix) and a soft limiter
+      const master = made.createGain()
+      master.gain.value = MASTER_GAIN
+      master.connect(limiter(made))
       plain = made.createGain()
       plain.gain.value = 0.5
-      plain.connect(made.destination)
+      plain.connect(master)
       // the ticks and clicks (rotate, invalid, click, paper) keep clear of low-frequency thump and of the harshest highs
       shaped = made.createGain()
       shaped.gain.value = 2.8
@@ -150,49 +177,6 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
   }
 
   /**
-   * A suitcase zipper closing, from noise only: a run of tiny, slightly uneven tooth clicks that speed up as the slider
-   * does, rendered once into a buffer, then band-passed with a rising centre and faded in and out. No tone, so it sits
-   * under the reward melody as texture rather than a note.
-   */
-  function zip(c: AudioContext, at: number) {
-    const seconds = 0.5
-    if (!zipper) {
-      const rate = c.sampleRate
-      zipper = c.createBuffer(1, Math.ceil(rate * (seconds + 0.05)), rate)
-      const data = zipper.getChannelData(0)
-      let seed = 7 // fixed seed: the same zipper every time
-      const random = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296
-      const burst = Math.max(2, Math.floor(rate * 0.0018))
-      for (let t = 0; t < seconds; ) {
-        const start = Math.floor(t * rate)
-        const strength = 0.55 + 0.45 * random()
-        for (let k = 0; k < burst && start + k < data.length; k++) data[start + k] += (random() * 2 - 1) * Math.exp(-k / (burst * 0.35)) * strength
-        t += (0.0125 - 0.005 * (t / seconds)) * (0.85 + 0.3 * random()) // about 80 teeth a second, speeding up to about 130
-      }
-    }
-    const src = c.createBufferSource()
-    const filter = c.createBiquadFilter()
-    const gain = c.createGain()
-    src.buffer = zipper
-    filter.type = 'bandpass'
-    filter.frequency.setValueAtTime(2200, at)
-    filter.frequency.exponentialRampToValueAtTime(4200, at + seconds)
-    filter.Q.value = 1.2
-    gain.gain.setValueAtTime(0.0001, at)
-    gain.gain.linearRampToValueAtTime(0.16, at + 0.05)
-    gain.gain.setValueAtTime(0.16, at + seconds - 0.12)
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + seconds)
-    src.connect(filter).connect(gain).connect(out!)
-    src.onended = () => {
-      src.disconnect()
-      filter.disconnect()
-      gain.disconnect()
-    }
-    src.start(at)
-    src.stop(at + seconds + 0.03)
-  }
-
-  /**
    * The voices, quiet and short. Pickup and place are soft cloth contact and a low, warm settling tone; rotate, invalid
    * and the button click are small ticks and falling notes; the two rewards are short melodies. The first tone of each is its
    * LEAD_HZ.
@@ -232,11 +216,10 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
     },
     // two soft falling notes, "hm-mm": clearly not a success, gentle, no buzz
     invalid(c, t) {
-      tone(c, t, LEAD_HZ.invalid, 0.04, 0.11, 'sine')
-      tone(c, t + 0.085, 370, 0.036, 0.14, 'sine')
+      tone(c, t, LEAD_HZ.invalid, 0.028, 0.11, 'sine') // 3 dB under its old level: at the new master level it was the loudest of the small sounds
+      tone(c, t + 0.085, 370, 0.025, 0.14, 'sine')
     },
     complete(c, t) {
-      zip(c, t + 0.04) // the case is zipped shut, under the melody
       const s = t + 0.16 // after the last piece has landed
       tone(c, s, LEAD_HZ.complete, 0.07, 0.5, 'triangle')
       tone(c, s + 0.1, 659.25, 0.06, 0.5, 'triangle')
@@ -244,7 +227,6 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
       tone(c, s + 0.31, 1046.5, 0.05, 0.7, 'sine')
     },
     perfect(c, t) {
-      zip(c, t + 0.04)
       const s = t + 0.16
       tone(c, s, LEAD_HZ.perfect, 0.07, 0.5, 'triangle')
       tone(c, s + 0.09, 783.99, 0.06, 0.5, 'triangle')
@@ -303,7 +285,6 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
       ctx = null
       plain = shaped = out = null
       noise = null
-      zipper = null
       if (c) void Promise.resolve(c.close()).catch(noop)
     },
   }

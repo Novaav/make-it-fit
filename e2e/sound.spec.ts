@@ -24,6 +24,7 @@ async function fakeAudio(page: Page) {
       resume = () => Promise.resolve()
       close = () => Promise.resolve()
       createGain = () => ({ ...node(), gain: param() })
+      createWaveShaper = () => ({ ...node(), curve: null, oversample: 'none' })
       createBuffer = (_c: number, n: number) => ({ getChannelData: () => new Float32Array(n) })
       createBiquadFilter = () => {
         const frequency = param()
@@ -143,7 +144,7 @@ test.describe('sound effects', () => {
     await packStep(page, LEVEL1[LEVEL1.length - 1])
     await expect(page.getByRole('dialog')).toBeVisible()
     expect(await tones(page)).toEqual([LEAD_HZ.pickup, ...PLACE, ...COMPLETE])
-    expect(count(await noises(page), 2200)).toBe(1) // the zipper, once
+    expect(count(await noises(page), 2200)).toBe(0) // no zipper: the win is the melody alone
   })
 
   test('mute: accessible pressed state, silences every sound, persists across reloads, and can be undone from the keyboard', async ({ page }) => {
