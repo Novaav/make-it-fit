@@ -209,10 +209,21 @@ test('rotating or resizing while it waits re-centres the wordmark', async ({ pag
   await page.goto('/?intro')
   await expect(page.locator('.app')).toHaveClass(/go/)
   await page.setViewportSize({ width: 844, height: 390 })
-  await expect(page.locator('.app')).toHaveClass(/go/)
-  await page.waitForTimeout(600)
-  const c = await page.evaluate(() => { const r = (document.querySelector('.brand-lockup') as HTMLElement).getBoundingClientRect(); return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, vw: innerWidth, vh: innerHeight, w: r.width } })
-  expect(Math.abs(c.cx - c.vw / 2)).toBeLessThan(4)
+  const measure = () =>
+    page.evaluate(() => {
+      const r = (document.querySelector('.brand-lockup') as HTMLElement).getBoundingClientRect()
+      return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, vw: innerWidth, vh: innerHeight, w: r.width }
+    })
+  // The page re-measures a moment after the resize (a short debounce, then the fonts check, then a frame), so wait for the
+  // wordmark to arrive instead of sleeping a fixed time: a busy CI browser can take longer than any fixed guess. The 4 px
+  // tolerance is unchanged, and a wordmark that never re-centres still fails after the timeout.
+  await expect
+    .poll(async () => {
+      const c = await measure()
+      return Math.abs(c.cx - c.vw / 2)
+    }, { message: 'the wordmark re-centres after the resize', timeout: 10_000 })
+    .toBeLessThan(4)
+  const c = await measure()
   expect(c.cy).toBeLessThan(c.vh * 0.6)
   expect(c.w).toBeLessThan(c.vw)
   await expect(playButton(page)).toBeVisible()
