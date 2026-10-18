@@ -63,11 +63,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: chrome 1/2, browser: chrome, args: "--project=dev --project=prod --shard=1/2" }
+          - { name: chrome 1/2, browser: chrome, args: "--project=dev --project=prod --shard=1/2", perf: "--project=dev" }
           - { name: chrome 2/2, browser: chrome, args: "--project=dev --project=prod --shard=2/2" }
-          - { name: webkit 1/2, browser: webkit, args: "--project=webkit --shard=1/2" }
+          - { name: webkit 1/2, browser: webkit, args: "--project=webkit --shard=1/2", perf: "--project=webkit" }
           - { name: webkit 2/2, browser: webkit, args: "--project=webkit --shard=2/2" }
-          - { name: firefox, browser: firefox, args: "--project=firefox", firefox: "1" }
+          - { name: firefox, browser: firefox, args: "--project=firefox", firefox: "1", perf: "--project=firefox" }
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -87,7 +87,15 @@ jobs:
         run: npx playwright install --with-deps ${{ matrix.browser }}
 
       - name: Browser tests
-        run: npx playwright test ${{ matrix.args }}
+        run: npx playwright test ${{ matrix.args }} --grep-invert @perf
+        env:
+          PW_FIREFOX: ${{ matrix.firefox }}
+
+      # Timing and frame-rate checks (tagged @perf) run alone on one worker: with two workers on a two-CPU runner they
+      # compete for frames and a smooth page measures as a slow one. One job per engine runs them.
+      - name: Timing tests, alone
+        if: ${{ matrix.perf != '' }}
+        run: npx playwright test ${{ matrix.perf }} --grep @perf --workers=1
         env:
           PW_FIREFOX: ${{ matrix.firefox }}
 

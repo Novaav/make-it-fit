@@ -163,7 +163,9 @@ test.describe('Level 3 items', () => {
   })
 })
 
-test.describe('perfect-pack transition timing', () => {
+// @perf: timing and frame-rate checks. CI runs them alone, on one worker, after the rest of the suite, because two workers
+// on a two-CPU runner steal each other's frames and make a 60 Hz page measure like a 20 Hz one (see .github/workflows/ci.yml).
+test.describe('perfect-pack transition timing @perf', () => {
   async function dropLastPerfectItem(page: Page) {
     await openLevel2(page)
     for (const step of LEVEL2_PERFECT.slice(0, 5)) await packStep(page, step)
