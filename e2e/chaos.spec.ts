@@ -187,7 +187,10 @@ test.describe('perfect-pack transition timing', () => {
     await page.mouse.move(from.x, from.y)
     await page.mouse.down()
     await page.mouse.move(to.x, to.y, { steps: 10 })
-    await page.evaluate(() => ((window as unknown as { __m: { t0: number } }).__m.t0 = performance.now()))
+    // the clock starts at the browser's own pointerup timestamp, so the harness's round trip to the browser is not counted
+    await page.evaluate(() =>
+      window.addEventListener('pointerup', (e) => ((window as unknown as { __m: { t0: number } }).__m.t0 = e.timeStamp), { once: true, capture: true }),
+    )
     await page.mouse.up()
     await page.waitForTimeout(2300)
     return page.evaluate(() => {

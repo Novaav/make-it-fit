@@ -170,14 +170,15 @@ test.describe('sound effects', () => {
       ;(window as unknown as { AudioContext: unknown }).AudioContext = undefined
       ;(window as unknown as { webkitAudioContext: unknown }).webkitAudioContext = undefined
     })
-    const errors: string[] = []
-    page.on('pageerror', (e) => errors.push(e.message))
     await page.goto('/')
     await page.evaluate(() => {
       localStorage.setItem('make-it-fit:intro:v1', JSON.stringify({ version: 1, seen: { '01': true } }))
       localStorage.setItem('make-it-fit:sound:v1', '{"version":1,"muted":false}')
     })
     await page.reload()
+    // listen only now: the first load was cut short by the reload above, and a cancelled module fetch is not a game error
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(e.message))
     await dragItem(page, 'charger', 0, 0)
     await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /packed at column 1, row 1/)
     await toggle(page).click()
