@@ -22,6 +22,11 @@ describe('App initial render (Level 1)', () => {
     expect(html.match(/<button[^>]*disabled/g)).toHaveLength(5) // remove, undo, reset, locked Level 2 and 3 tabs
   })
 
+  it('has one sound button in the masthead: labelled, pressed while sound is on, and not disabled', () => {
+    expect(html.match(/class="sound-toggle"/g)).toHaveLength(1)
+    expect(html).toMatch(/<button[^>]*aria-pressed="true"[^>]*aria-label="Sound effects"[^>]*>|<button[^>]*aria-label="Sound effects"[^>]*aria-pressed="true"[^>]*>/)
+  })
+
   it('renders a 5x6 hidden cell grid and the level title', () => {
     expect(html.match(/class="cell /g)).toHaveLength(30)
     expect(html).toContain('Level 1 · Pack Like a Grown-Up')

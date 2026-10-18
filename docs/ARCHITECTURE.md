@@ -61,6 +61,7 @@ All storage is the visitor's own browser; every key is versioned and every read 
 | `make-it-fit:progress:v1` | localStorage | completed levels, best Chaos, perfect flag (payload `version: 2`; version 1 saves migrate) — `progress.ts` |
 | `make-it-fit:boards:v1` | localStorage | the arrangement left in each level, with a signature of the level it was made for — `boards.ts` |
 | `make-it-fit:intro:v1` | localStorage | which how-to-play notes were seen — `intro.ts` |
+| `make-it-fit:sound:v1` | localStorage | whether sound is muted (`{version: 1, muted}`; anything else reads as the default, sound on) — `soundPref.ts` |
 | `make-it-fit:opening:v1` | sessionStorage | the opening's Play was pressed in this browsing session — `useOpening.ts` |
 
 - **A saved board is a starting point, not truth.** `restoreGame` replays the saved placements through the engine; if the level's signature changed (`levelSignature` covers board size, allowance, targets, items, shapes, weights, Chaos and required flags) or any placement is now illegal, the level starts empty. A corrupt or outdated save cannot put an invalid layout on screen.
@@ -71,6 +72,15 @@ All storage is the visitor's own browser; every key is versioned and every read 
 ## The opening
 
 `useOpening.ts` decides whether to show it (`shouldPlayOpening`: new player, once per session, not under automation, `?intro` forces it), measures where the wordmark starts (`openingLayout`), and sequences Play. The wordmark is drawn at its large size with CSS `zoom` and shrunk into place by a transform, so text stays sharp; a fixed-size slot keeps the masthead's layout from shifting. While it is up the game underneath is `inert`. Reduced motion shows it without movement and Play enters immediately. All motion is CSS in `styles.css` (transform and opacity).
+
+## Sound
+
+`sound.ts` synthesises seven short effects (pick up, put back, place, rotate, invalid, complete, perfect) with the Web Audio API: a few oscillators and filtered noise bursts per effect, no audio files, no music, no requests. It is a single module-level object outside React; `LevelPlay` calls `sound.play(event)` where the action's outcome is known (a drag begins, `commitCarry` succeeds or fails, a rotation happens, the win is first celebrated), so a sound is never played for a pointer event that did nothing. A placement is one voice (a soft landing plus two warm notes), not two sounds.
+
+- The `AudioContext` is created lazily, from a player action (the Play button, a pointer press on an item, the mute button), and never while muted. A suspended context is resumed, and a sound that would arrive late is dropped rather than played delayed.
+- Each sound has a minimum gap, so a held key or a fast tap cannot stack it. Missing Web Audio, a context that fails to start and a voice that throws are all swallowed: audio never blocks or breaks play.
+- Sound defaults to on. Browsers allow no audio before the first click or key press anyway, and the effects only answer the player's own actions. The masthead button (`aria-pressed`, label "Sound effects") mutes it, and the choice is saved separately from progress.
+- Tests replace `AudioContext` with a recorder (`sound.test.ts`, `e2e/sound.spec.ts`); they check which tones start, not what is audible.
 
 ## Test layers
 

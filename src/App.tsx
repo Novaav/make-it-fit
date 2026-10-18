@@ -5,6 +5,8 @@ import { loadBoards, saveBoards, type Boards, type SavedBoard } from './boards'
 import { PLAYABLE_LEVEL_IDS } from './levelMeta'
 import { loadIntroSeen, saveIntroSeen, type IntroSeen } from './intro'
 import { useOpening } from './useOpening'
+import { sound } from './sound'
+import { loadMuted, saveMuted } from './soundPref'
 import {
   browserStorage,
   isUnlocked,
@@ -42,6 +44,22 @@ export default function App() {
   const [replayIntro, setReplayIntro] = useState<string | null>(null)
   const returning = Object.keys(progress.completed).length + Object.keys(boards).length + Object.keys(introSeen).length > 0
   const { opening, go, leaving, appRef, lockupRef, playRef, play } = useOpening(returning)
+  // Sound on/off: the choice is saved on its own, and the sound system itself starts only from a player action.
+  const [muted, setMuted] = useState(() => {
+    const m = loadMuted(browserStorage())
+    sound.setMuted(m)
+    return m
+  })
+  const toggleSound = () => {
+    const next = !muted
+    setMuted(next)
+    sound.setMuted(next)
+    saveMuted(browserStorage(), next)
+    if (!next) {
+      sound.unlock()
+      sound.play('pickup') // a small tick, so turning sound on is confirmed by ear as well
+    }
+  }
   // Why a locked level is locked, shown briefly when its tab is pressed (a disabled button would stay silent, especially on touch).
   const [lockNote, setLockNote] = useState<string | null>(null)
   useEffect(() => {
@@ -122,6 +140,7 @@ export default function App() {
           </div>
           <p className="tagline">Bad decisions. Limited luggage.</p>
         </div>
+        <div className="masthead-tools">
         <nav className="levels" aria-label="Levels">
           {LEVELS.map((l) => {
             const unlocked = isUnlocked(effective, IDS, l.id)
@@ -156,6 +175,17 @@ export default function App() {
             )
           })}
         </nav>
+        <button type="button" className="sound-toggle" aria-pressed={!muted} aria-label="Sound effects" title={muted ? 'Sound is off' : 'Sound is on'} onClick={toggleSound}>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+            <path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            {muted ? (
+              <path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            ) : (
+              <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            )}
+          </svg>
+        </button>
+        </div>
         {lockNote && (
           <p className="lock-note" role="status">
             {lockNote}
@@ -166,7 +196,7 @@ export default function App() {
         <div className="opening-layer">
           <div className="opening-stack">
             <p className="opening-tag" aria-hidden="true">Bad decisions. Limited luggage.</p>
-            <button type="button" className="opening-play" ref={playRef} onClick={play} onTouchStart={() => {}}>
+            <button type="button" className="opening-play" ref={playRef} onClick={() => { sound.unlock(); play() }} onTouchStart={() => {}}>
               Play
             </button>
           </div>

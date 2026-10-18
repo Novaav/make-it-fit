@@ -2,7 +2,7 @@
 
 **Bad decisions. Limited luggage.**
 
-A small browser puzzle game about packing an open suitcase for a trip you should not be taking. Drag and rotate belongings onto a grid, stay under the weight allowance, and collect enough **Chaos** to win. The items are the joke: a marble foot, a garden gnome, a flamingo, a hotel painting that has to come along. There are three hand-made levels, no timer, no sound, no account and no server.
+A small browser puzzle game about packing an open suitcase for a trip you should not be taking. Drag and rotate belongings onto a grid, stay under the weight allowance, and collect enough **Chaos** to win. The items are the joke: a marble foot, a garden gnome, a flamingo, a hotel painting that has to come along. There are three hand-made levels, soft synthesised sound effects (with a mute button), no timer, no account and no server.
 
 Built with React 19, TypeScript, Vite, a Python puzzle solver, Vitest, Playwright and GitHub Actions. All artwork is original SVG drawn in code.
 
@@ -20,6 +20,7 @@ DEMO (add after deployment; use real files only):
 - **Dragging is tuned for WebKit.** Pointer input is applied once per animation frame and React re-renders only when the snapped target cell changes. Browser tests measure React commits and frame time during a drag on Chrome and Playwright's WebKit engine.
 - **Saved data is treated as untrusted.** Progress and arrangements are versioned, validated and replayed through the engine, so a corrupt or outdated save cannot put an invalid board on screen.
 - **Accessible by design:** the whole game plays from the keyboard, the score and weight are announced to screen readers, focus is always visible, and `prefers-reduced-motion` is respected.
+- **Sound without assets.** The effects are synthesised with the Web Audio API, so there are no audio files or requests. The audio context starts only after a player action, a muted player never creates one, and nothing in the game depends on hearing it.
 
 ## How it works
 
@@ -58,7 +59,7 @@ A static single-page app with no network requests after load. `App` owns the ope
 Run locally on the current branch:
 
 - **Type check and lint:** `tsc -b` and Oxlint (`--deny-warnings`), both clean.
-- **Unit tests:** 203 Vitest tests in 20 files covering the engine, solver fixtures, persistence, layout and drag maths, announcements and the licence.
+- **Unit tests:** 229 Vitest tests in 22 files covering the engine, solver fixtures, persistence, layout and drag maths, announcements, the sound system (against a mocked audio context) and the licence.
 - **Solver:** `verify_levels.py` reproduces the committed puzzle data and fixtures exactly.
 - **Browser tests:** Playwright drives real drags, rotation, keyboard play, progression, persistence and the opening at phone, tablet and desktop sizes, on Chrome, Playwright's WebKit and a Firefox subset, against both the dev server and the production build.
 - **Production build:** `npm run check:prod-clean` fails if dev tools or solution data reach `dist`, and a test runs the game under the shipped Content-Security-Policy with no violations.

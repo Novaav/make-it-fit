@@ -102,7 +102,7 @@ export function useOpening(returning: boolean) {
   // the game underneath cannot be reached (by keyboard, touch or a screen reader) while the opening is up
   useEffect(() => {
     if (!opening) return
-    const under = Array.from(appRef.current?.querySelectorAll<HTMLElement>(':scope > :not(.masthead):not(.opening-layer), .levels') ?? [])
+    const under = Array.from(appRef.current?.querySelectorAll<HTMLElement>(':scope > :not(.masthead):not(.opening-layer), .masthead-tools') ?? [])
     under.forEach((e) => e.setAttribute('inert', ''))
     return () => {
       under.forEach((e) => e.removeAttribute('inert'))

@@ -25,6 +25,7 @@ import { ItemArt } from './components/ItemArt'
 import { WeightLabel, hasLabelZone } from './art/WeightLabel'
 import { dragTarget, sameTarget, type DragGeometry } from './ui/drag'
 import { TRAY_LAYOUTS } from './ui/trayLayout'
+import { sound } from './sound'
 import { chooseArrangement } from './ui/fit'
 import { useViewport } from './ui/useViewport'
 import TableProps from './components/TableProps'
@@ -199,7 +200,10 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
 
   const dropRemove = (id: string) => {
     const o = orientationOf(id)
-    if (apply(remove(gameRef.current, id), `${name(id)} taken out.`)) setTrayTurns((t) => ({ ...t, [id]: o }))
+    if (apply(remove(gameRef.current, id), `${name(id)} taken out.`)) {
+      sound.play('remove')
+      setTrayTurns((t) => ({ ...t, [id]: o }))
+    }
     setSelected(null)
   }
 
@@ -207,6 +211,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
     const c = carryRef.current!
     const orientation = ((c.orientation + 1) % 4) as Orientation
     const turned = { ...c, orientation }
+    sound.play('rotate')
     if (c.mode === 'pointer') setCarry(retarget(turned, pointerPos.current.x, pointerPos.current.y))
     else setCarry({ ...turned, ...clampOrigin(LEVEL, c.itemId, orientation, c.x, c.y) })
   }
@@ -215,8 +220,9 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
     dismissNote()
     if (carryRef.current) return rotateCarry()
     if (!id) return setMessage('Select an item first, then rotate it.')
-    if (placementOf(id)) apply(rotatePlaced(gameRef.current, id), `${name(id)} rotated.`)
+    if (placementOf(id)) sound.play(apply(rotatePlaced(gameRef.current, id), `${name(id)} rotated.`) ? 'rotate' : 'invalid')
     else {
+      sound.play('rotate')
       setTrayTurns((t) => ({ ...t, [id]: (((t[id] ?? 0) + 1) % 4) as Orientation }))
       setMessage(`${name(id)} rotated.`)
     }
@@ -226,9 +232,11 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
     const pv = previewPlacement(gameRef.current, c.itemId, c.orientation, c.x, c.y)
     if (pv.error) {
       setMessage(`${name(c.itemId)} doesn't fit there: ${reasonText(pv.error)}.`)
+      sound.play('invalid')
       return false
     }
     apply(commitPlacement(gameRef.current, pv.placement), `${name(c.itemId)} packed.`)
+    sound.play('place')
     return true
   }
 
@@ -283,12 +291,15 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
   const startPointer = (e: ReactPointerEvent, itemId: string, source: Source) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return
     dismissNote()
+    sound.unlock()
     if (carryRef.current?.mode === 'keyboard') setCarry(null)
     pending.current = { itemId, source, sx: e.clientX, sy: e.clientY }
   }
 
   const pickUpWithKeyboard = (itemId: string, source: Source) => {
     dismissNote()
+    sound.unlock()
+    sound.play('pickup')
     const o = orientationOf(itemId)
     const p = placementOf(itemId)
     const b = itemBounds(LEVEL, itemId, o)
@@ -309,6 +320,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
         const p = pending.current
         if (!p || Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 6) return
         setSelected(p.itemId)
+        sound.play('pickup')
         setCarry(
           retarget(
             { itemId: p.itemId, orientation: orientationOf(p.itemId), x: 0, y: 0, source: p.source, mode: 'pointer', snapped: false, overTray: false },
@@ -481,6 +493,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
     const shown = perfectNow ? celebratedPerfect : celebrated
     if (shown.current) return
     shown.current = true
+    sound.play(perfectNow ? 'perfect' : 'complete')
     celebrated.current = true
     if (perfectNow) celebratedPerfect.current = true
     returnFocus.current = document.activeElement as HTMLElement | null
