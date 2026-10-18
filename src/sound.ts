@@ -10,7 +10,7 @@ export type SoundEvent = 'pickup' | 'remove' | 'place' | 'rotate' | 'invalid' | 
 /** The pitch (Hz) of the first tone of each sound (for the tone-less paper sound, its filter's centre); it identifies the sound in tests. */
 export const LEAD_HZ: Readonly<Record<SoundEvent, number>> = {
   pickup: 330,
-  remove: 987.77,
+  remove: 294,
   place: 262,
   rotate: 2093,
   invalid: 440,
@@ -34,7 +34,7 @@ const MIN_GAP_MS: Readonly<Record<SoundEvent, number>> = {
 }
 /** A sound that had to wait for the context to resume is dropped if it would now be late. */
 /** The sounds that go through the high-pass and low-pass; the others (cloth, reward melodies) go straight out. */
-const SHAPED: ReadonlySet<SoundEvent> = new Set(['remove', 'rotate', 'invalid', 'click', 'paper'])
+const SHAPED: ReadonlySet<SoundEvent> = new Set(['rotate', 'invalid', 'click', 'paper'])
 const RESUME_GRACE_MS = 250
 const noop = () => {}
 
@@ -82,7 +82,7 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
       plain = made.createGain()
       plain.gain.value = 0.5
       plain.connect(made.destination)
-      // the ticks and clicks (rotate, invalid, remove) keep clear of low-frequency thump and of the harshest highs
+      // the ticks and clicks (rotate, invalid, click, paper) keep clear of low-frequency thump and of the harshest highs
       shaped = made.createGain()
       shaped.gain.value = 2.8
       const high = made.createBiquadFilter()
@@ -103,26 +103,26 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
   }
 
   /** A short decaying tone. */
-  function tone(c: AudioContext, at: number, hz: number, peak: number, decay: number, type: OscillatorType = 'sine', toHz?: number) {
+  function tone(c: AudioContext, at: number, hz: number, peak: number, decay: number, type: OscillatorType = 'sine', toHz?: number, attack = 0.004) {
     const osc = c.createOscillator()
     const gain = c.createGain()
     osc.type = type
     osc.frequency.setValueAtTime(hz, at)
     if (toHz) osc.frequency.exponentialRampToValueAtTime(toHz, at + decay)
     gain.gain.setValueAtTime(0.0001, at)
-    gain.gain.linearRampToValueAtTime(peak, at + 0.004)
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.004 + decay)
+    gain.gain.linearRampToValueAtTime(peak, at + attack)
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + attack + decay)
     osc.connect(gain).connect(out!)
     osc.onended = () => {
       osc.disconnect()
       gain.disconnect()
     }
     osc.start(at)
-    osc.stop(at + decay + 0.03)
+    osc.stop(at + attack + decay + 0.03)
   }
 
   /** A short filtered puff of noise: the fabric and the click. */
-  function puff(c: AudioContext, at: number, type: BiquadFilterType, hz: number, q: number, peak: number, decay: number, toHz?: number) {
+  function puff(c: AudioContext, at: number, type: BiquadFilterType, hz: number, q: number, peak: number, decay: number, toHz?: number, attack = 0.006) {
     if (!noise) {
       noise = c.createBuffer(1, Math.ceil(c.sampleRate * 0.3), c.sampleRate)
       const data = noise.getChannelData(0)
@@ -137,8 +137,8 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
     if (toHz) filter.frequency.exponentialRampToValueAtTime(toHz, at + decay)
     filter.Q.value = q
     gain.gain.setValueAtTime(0.0001, at)
-    gain.gain.linearRampToValueAtTime(peak, at + 0.006)
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.006 + decay)
+    gain.gain.linearRampToValueAtTime(peak, at + attack)
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + attack + decay)
     src.connect(filter).connect(gain).connect(out!)
     src.onended = () => {
       src.disconnect()
@@ -146,7 +146,7 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
       gain.disconnect()
     }
     src.start(at)
-    src.stop(at + decay + 0.03)
+    src.stop(at + attack + decay + 0.03)
   }
 
   /**
@@ -194,7 +194,7 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
 
   /**
    * The voices, quiet and short. Pickup and place are soft cloth contact and a low, warm settling tone; rotate, invalid
-   * and remove are small ticks and falling notes; the two rewards are short melodies. The first tone of each is its
+   * and the button click are small ticks and falling notes; the two rewards are short melodies. The first tone of each is its
    * LEAD_HZ.
    */
   const voices: Record<SoundEvent, (c: AudioContext, t: number) => void> = {
@@ -203,10 +203,11 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
       tone(c, t, LEAD_HZ.pickup, 0.03, 0.05)
       puff(c, t, 'lowpass', 1100, 0.5, 0.14, 0.045)
     },
-    // the same breath, falling away: settling back
+    // setting it back down: the pickup's dull touch, slower to start (no edge, so nothing percussive) and settling
+    // lower; a soft low tone and a muffled breath of cloth
     remove(c, t) {
-      tone(c, t, LEAD_HZ.remove, 0.01, 0.08, 'sine', 784)
-      puff(c, t, 'bandpass', 2600, 0.8, 0.04, 0.09, 1400)
+      tone(c, t, LEAD_HZ.remove, 0.022, 0.1, 'sine', 247, 0.02)
+      puff(c, t, 'lowpass', 900, 0.5, 0.1, 0.09, 550, 0.02)
     },
     // an object settling into a lined case: a soft, dull landing and one warm low tone that does not fall
     place(c, t) {

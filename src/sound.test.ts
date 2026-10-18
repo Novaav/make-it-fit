@@ -86,6 +86,17 @@ describe('sound voices', () => {
   })
 })
 
+describe('putting an item back', () => {
+  it('is one low tone and one muffled breath: nothing bright, nothing percussive', () => {
+    const t = setup()
+    t.sound.play('remove')
+    expect(t.leads).toEqual([294])
+    expect(t.noises).toHaveLength(1)
+    expect(t.noises[0]).toBeLessThanOrEqual(1000) // the breath is low-passed, not a bright burst
+    expect(LEAD_HZ.remove).toBeLessThan(LEAD_HZ.pickup) // settles lower than the pickup it answers
+  })
+})
+
 describe('buttons, paper and the completion zipper', () => {
   it('a button click is one soft tap; a page turn is paper only, with no tone', () => {
     const click = setup()
