@@ -8,7 +8,8 @@ const play = (id: string) =>
   renderToString(<LevelPlay level={loadLevels().find((l) => l.id === id)!} onWin={() => {}} />).replace(/<!-- -->/g, '')
 
 describe('App initial render (Level 1)', () => {
-  const html = renderToString(<App />).replace(/<!-- -->/g, '')
+  // (the goal line carries invisible sizing copies in data-text attributes; they are not page text)
+  const html = renderToString(<App />).replace(/<!-- -->/g, '').replace(/ data-text="[^"]*"/g, '')
 
   it('shows all five Level 1 items in the tray as focusable buttons', () => {
     for (const id of ['shirt', 'jeans', 'charger', 'toiletries', 'shoes']) expect(html).toContain(`data-item="${id}"`)

@@ -153,6 +153,10 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .objective::after { content: ''; position: absolute; left: 20px; top: 28px; width: 3px; height: 14px; background: repeating-linear-gradient(180deg, var(--stitch) 0 3px, transparent 3px 5px); opacity: 0.7; }
 .level-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 3px; font-family: var(--display); color: var(--ink); font-size: 1.12rem; font-weight: 700; letter-spacing: 0.005em; line-height: 1.2; }
 .goal-line { margin: 0 0 6px; min-height: 2.6em; font-size: 0.95rem; line-height: 1.3; color: var(--muted); }
+.goal-line { display: grid; }
+.goal-line > * { grid-area: 1 / 1; }
+.goal-size { visibility: hidden; }
+.goal-size::after { content: attr(data-text); }
 .objective.solved .goal-line b { color: var(--ok); }
 .pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 36px; }
 .pill {
@@ -171,6 +175,15 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .pill.ok { border-color: var(--ok); }
 .pill.ok b, .pill.ok > span:last-child { color: var(--ok); }
 .pill.weight { align-items: center; }
+/* With enlarged text the pills sit in a fixed arrangement (one pill per row, its note on a line of its own), so a different
+   number ("0" or "6.25") can never change how many lines they take and move the suitcase. The pill row is a container and
+   the query is in em, so it only applies once the text has grown (at normal size it is a phone's width in px, as before). */
+@container (max-width: 14em) {
+  .pill { max-width: 100%; flex-wrap: wrap; row-gap: 2px; }
+  .pills > .pill { flex: 1 1 100%; }
+  .pill .pill-label, .pill .of, .pill .chaos-bar { flex-basis: 100%; }
+  .pill b { white-space: nowrap; }
+}
 .pill.weight.over { border-color: var(--warn); background: #fdecea; }
 .pill.weight.over b { color: var(--warn); }
 .mini-bar { position: relative; width: 28px; height: 9px; border-radius: 2px; background: repeating-linear-gradient(90deg, rgba(43, 36, 51, 0.18) 0 1px, transparent 1px 5px), rgba(43, 36, 51, 0.1); overflow: hidden; align-self: center; box-shadow: inset 0 1px 2px rgba(43, 36, 51, 0.35); }
@@ -439,10 +452,10 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   .level-tab::before { left: 7px; }
   .toolbar button { min-height: 44px; }
 }
-/* Enlarged text: the masthead is a container, and in em terms a 340 px phone is narrow once the text is about 125 % or more,
+/* Enlarged text: the masthead is a container, and in em terms a 340 px phone (21 em) is narrow once the text is about 110 % or more,
    so only then may the tabs wrap onto a second line instead of running off the screen. */
 .masthead { container-type: inline-size; }
-@container (max-width: 18em) { .levels { flex-wrap: wrap; justify-content: center; } }
+@container (max-width: 19.5em) { .levels { flex-wrap: wrap; justify-content: center; } }
 @media (max-width: 340px) {
   /* the narrowest phones: three one-line tabs (with a check mark or lock) must still fit */
   .levels { gap: 4px; }

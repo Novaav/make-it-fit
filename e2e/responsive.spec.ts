@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { geometry, load, pageHasNoHorizontalScroll, toolbarButtons } from './helpers'
+import { geometry, load, pageHasNoHorizontalScroll } from './helpers'
 
 // One responsive and accessibility pass over every level at phone, tablet and desktop sizes. Measured, not eyeballed:
 // no sideways scroll, no overlap or clipping of controls, a still suitcase when a level is solved, 44 px touch targets,
@@ -90,16 +90,35 @@ test.describe('keyboard and names', () => {
   })
 })
 
-for (const [scale, label] of [[20, '125 %'], [24, '150 %']] as const) {
-  test(`text enlarged to ${label}: no sideways scroll and no clipped button labels at 390×844`, async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 })
-    await solved(page, '02', { '01': {} })
-    await page.evaluate((px) => (document.documentElement.style.fontSize = `${px}px`), scale)
-    await page.waitForTimeout(150)
-    expect(await pageHasNoHorizontalScroll(page)).toBe(true)
-    const clipped = await toolbarButtons(page).evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => e.textContent))
-    expect(clipped).toEqual([])
-    const tabs = await page.locator('.level-tab').evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length)
-    expect(tabs).toBe(0)
-  })
+// Enlarged text (browser or system text size), simulated by scaling the root font: 100 %, 125 %, 150 % and 200 %.
+for (const [w, h] of [[390, 844], [360, 740], [768, 1024], [1280, 900]] as const) {
+  for (const [px, label] of [[16, '100 %'], [20, '125 %'], [24, '150 %'], [32, '200 %']] as const) {
+    for (const [id, done] of LEVELS) {
+      test(`${w}×${h} text ${label} Level ${Number(id)}: no sideways scroll, no clipped or overlapping controls, a solved suitcase does not move`, async ({ page }) => {
+        await page.setViewportSize({ width: w, height: h })
+        await solved(page, id, done)
+        await page.evaluate((size) => (document.documentElement.style.fontSize = `${size}px`), px)
+        await page.waitForTimeout(150)
+        expect(await pageHasNoHorizontalScroll(page), 'sideways scroll').toBe(true)
+        const report = await page.evaluate(() => {
+          const visible = (sel: string) => [...document.querySelectorAll<HTMLElement>(sel)].filter((e) => e.getBoundingClientRect().width > 0)
+          const right = Math.max(...visible('.objective *, .toolbar button, .level-tab, .sound-toggle').map((e) => e.getBoundingClientRect().right))
+          return {
+            clipped: visible('.toolbar button, .level-tab, .pill, .pill *').filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => (e.textContent || '').trim().slice(0, 14)),
+            right,
+            vw: document.documentElement.clientWidth,
+            rects: [visible('.toolbar button'), visible('.level-tab')].map((g) => g.map((e) => e.getBoundingClientRect().toJSON() as DOMRect)),
+          }
+        })
+        expect(report.clipped, 'clipped text').toEqual([])
+        expect(report.right, 'something runs past the right edge').toBeLessThanOrEqual(report.vw + 0.5)
+        for (const g of report.rects) for (let i = 0; i < g.length; i++) for (let j = i + 1; j < g.length; j++) expect(overlaps(g[i], g[j]), 'controls overlap').toBe(false)
+        const still = await geometry(page)
+        await page.locator('[data-item]:not(.in-tray)').first().focus()
+        await page.keyboard.press('Delete')
+        const open = await geometry(page)
+        for (const key of Object.keys(still) as (keyof typeof still)[]) expect(Math.abs(still[key] - open[key]), key).toBeLessThanOrEqual(1)
+      })
+    }
+  }
 }

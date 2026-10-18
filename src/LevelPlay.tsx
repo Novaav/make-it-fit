@@ -650,13 +650,18 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
               )}
             </p>
             <p className="goal-line" aria-live="off">
-              {solved ? (
-                <>
-                  <b>✓ Packed!</b> {hasChaos ? (perfectNow ? `Maximum Chaos: ${chaos}!` : `${chaos} Chaos. Perfect is ${perfectScore}.`) : ''}
-                </>
-              ) : (
-                liveHint ?? goalText
-              )}
+              <span>
+                {solved ? (
+                  <>
+                    <b>✓ Packed!</b> {hasChaos ? (perfectNow ? `Maximum Chaos: ${chaos}!` : `${chaos} Chaos. Perfect is ${perfectScore}.`) : ''}
+                  </>
+                ) : (
+                  liveHint ?? goalText
+                )}
+              </span>
+              {/* invisible copies of the longest things this line can say, so its height (and everything below it) never changes with the state, whatever the text size; the text is generated from an attribute so it is not part of the page's text) */}
+              <span className="goal-size" aria-hidden="true" data-text={goalText} />
+              <span className="goal-size" aria-hidden="true" data-text={`✓ Packed! ${hasChaos ? `${perfectScore} Chaos. Perfect is ${perfectScore}.` : ''}`} />
             </p>
             <div className="pills">
               {hasChaos && (
