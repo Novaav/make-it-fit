@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { dragItem, packStep, pageHasNoHorizontalScroll, piece } from './helpers'
 import { LEVEL1 } from './solutions'
-import { LEAD_HZ } from '../src/sound'
+import { LEAD_HZ, MELODY } from '../src/sound'
 
 // A stand-in for the browser's audio: nothing is played, every tone that would start is written down.
 // The real sound system runs unchanged on top of it.
@@ -46,10 +46,12 @@ const clearTones = async (page: Page) => {
 const contexts = (page: Page) => page.evaluate(() => (window as unknown as { __contexts: number }).__contexts)
 const toggle = (page: Page) => page.getByRole('button', { name: 'Sound effects' })
 
-const PLACE = [LEAD_HZ.place, 523.25, 659.25]
-const COMPLETE = [523.25, 659.25, 783.99, 1046.5]
+const ON = { 'make-it-fit:sound:v1': '{"version":1,"muted":false}' } // a player who has turned sound on earlier
+const bells = (notes: readonly number[]) => notes.flatMap((hz) => [hz, Math.round(hz * 2 * 100) / 100]) // every bell has its octave
+const PLACE = [LEAD_HZ.place]
+const COMPLETE = bells([...MELODY.complete, MELODY.complete[2]]) // the phrase, then its last note joined by the one before it
 
-async function start(page: Page, storage: Record<string, string> = {}) {
+async function start(page: Page, storage: Record<string, string> = ON) {
   await fakeAudio(page)
   await page.goto('/')
   await page.evaluate((extra) => {
@@ -61,6 +63,25 @@ async function start(page: Page, storage: Record<string, string> = {}) {
 }
 
 test.describe('sound effects', () => {
+  test('a new player hears nothing: sound is off, no audio exists, and the game plays; turning it on is explicit and saved', async ({ page }) => {
+    await start(page, {})
+    await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false')
+    await dragItem(page, 'charger', 0, 0)
+    await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /packed at column 1, row 1/)
+    await piece(page, 'shoes').click()
+    await page.keyboard.press('r')
+    expect(await contexts(page)).toBe(0)
+    expect(await tones(page)).toEqual([])
+    expect(await page.evaluate(() => localStorage.getItem('make-it-fit:sound:v1'))).toBeNull()
+    await toggle(page).click()
+    await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true')
+    expect(await contexts(page)).toBe(1)
+    expect(await page.evaluate(() => localStorage.getItem('make-it-fit:sound:v1'))).toBe('{"version":1,"muted":false}')
+    await page.reload()
+    await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true') // remembered
+    expect(await contexts(page)).toBe(0) // but nothing starts until the player acts
+  })
+
   test('nothing starts before the player acts; a drag, a drop and a bad drop each make their own sound', async ({ page }) => {
     await start(page)
     expect(await contexts(page)).toBe(0)
@@ -71,7 +92,7 @@ test.describe('sound effects', () => {
     await clearTones(page)
     await dragItem(page, 'toiletries', 0, 0) // on top of the charger
     await expect(piece(page, 'toiletries')).toHaveAttribute('aria-label', /not packed/)
-    expect(await tones(page)).toEqual([LEAD_HZ.pickup, LEAD_HZ.invalid])
+    expect(await tones(page)).toEqual([LEAD_HZ.pickup, LEAD_HZ.invalid, 370]) // a soft two-note step down
   })
 
   test('rotating makes one click, even from a held key; taking an item out has its own sound', async ({ page }) => {
@@ -111,7 +132,7 @@ test.describe('sound effects', () => {
   })
 
   test('mute: accessible pressed state, silences every sound, persists across reloads, and can be undone from the keyboard', async ({ page }) => {
-    await start(page)
+    await start(page, ON)
     await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true')
     await toggle(page).click()
     await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false')
@@ -138,9 +159,11 @@ test.describe('sound effects', () => {
     expect(await contexts(page)).toBe(0)
   })
 
-  test('a damaged saved preference is ignored', async ({ page }) => {
-    await start(page, { 'make-it-fit:sound:v1': '{"version":1,"muted":"yes"}' })
-    await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true')
+  test('a damaged saved preference is ignored: sound stays off', async ({ page }) => {
+    await start(page, { 'make-it-fit:sound:v1': '{"version":1,"muted":"no"}' })
+    await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false')
+    await dragItem(page, 'charger', 0, 0)
+    expect(await contexts(page)).toBe(0)
   })
 
   test('the game works with no Web Audio at all', async ({ page }) => {
@@ -151,10 +174,14 @@ test.describe('sound effects', () => {
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
     await page.goto('/')
-    await page.evaluate(() => localStorage.setItem('make-it-fit:intro:v1', JSON.stringify({ version: 1, seen: { '01': true } })))
+    await page.evaluate(() => {
+      localStorage.setItem('make-it-fit:intro:v1', JSON.stringify({ version: 1, seen: { '01': true } }))
+      localStorage.setItem('make-it-fit:sound:v1', '{"version":1,"muted":false}')
+    })
     await page.reload()
     await dragItem(page, 'charger', 0, 0)
     await expect(piece(page, 'charger')).toHaveAttribute('aria-label', /packed at column 1, row 1/)
+    await toggle(page).click()
     await toggle(page).click()
     expect(errors).toEqual([])
   })
@@ -177,6 +204,7 @@ for (const [w, h] of [[360, 740], [390, 844], [768, 1024], [1280, 900]] as const
 
 test('the sound button is unreachable while the opening waits, and reachable after Play', async ({ page }) => {
   await fakeAudio(page)
+  await page.addInitScript(() => localStorage.setItem('make-it-fit:sound:v1', '{"version":1,"muted":false}'))
   await page.goto('/?intro')
   await expect(page.locator('.opening-play')).toBeVisible()
   expect(await page.evaluate(() => !!document.querySelector('.masthead-tools')?.hasAttribute('inert'))).toBe(true)
@@ -184,5 +212,5 @@ test('the sound button is unreachable while the opening waits, and reachable aft
   await expect(page.locator('.app.opening')).toHaveCount(0)
   await expect(toggle(page)).toBeVisible()
   expect(await page.evaluate(() => document.querySelector('.masthead-tools')?.hasAttribute('inert'))).toBe(false)
-  expect(await contexts(page)).toBe(1) // started by the Play press
+  expect(await contexts(page)).toBe(1) // started by the Play press (this player has sound on)
 })

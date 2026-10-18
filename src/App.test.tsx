@@ -22,9 +22,9 @@ describe('App initial render (Level 1)', () => {
     expect(html.match(/<button[^>]*disabled/g)).toHaveLength(5) // remove, undo, reset, locked Level 2 and 3 tabs
   })
 
-  it('has one sound button in the masthead: labelled, pressed while sound is on, and not disabled', () => {
+  it('has one sound button in the masthead: labelled, not pressed (sound is off by default), and not disabled', () => {
     expect(html.match(/class="sound-toggle"/g)).toHaveLength(1)
-    expect(html).toMatch(/<button[^>]*aria-pressed="true"[^>]*aria-label="Sound effects"[^>]*>|<button[^>]*aria-label="Sound effects"[^>]*aria-pressed="true"[^>]*>/)
+    expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*aria-label="Sound effects"[^>]*>|<button[^>]*aria-label="Sound effects"[^>]*aria-pressed="false"[^>]*>/)
   })
 
   it('renders a 5x6 hidden cell grid and the level title', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSound, LEAD_HZ, type SoundEvent } from './sound'
+import { createSound, LEAD_HZ, MELODY, type SoundEvent } from './sound'
 
 /** A recording stand-in for the Web Audio API: it never makes a sound, it notes which tones start. */
 function fakeContext(state: 'running' | 'suspended' = 'running') {
@@ -50,11 +50,28 @@ describe('sound voices', () => {
       expect(t.leads[0], e).toBe(LEAD_HZ[e])
     }
   })
-  it('a placement is one voice: the landing and its confirmation start together, once', () => {
-    const t = setup()
-    t.sound.play('place')
-    expect(t.leads.filter((hz) => hz === LEAD_HZ.place)).toHaveLength(1)
-    expect(t.leads).toHaveLength(3)
+  it('ordinary actions are a single small tick or breath, never a melody', () => {
+    for (const e of ['pickup', 'remove', 'place', 'rotate'] as const) {
+      const t = setup()
+      t.sound.play(e)
+      expect(t.leads, e).toEqual([LEAD_HZ[e]])
+    }
+  })
+  it('the rewards are bell phrases: every note has its octave, and perfect is the richer one', () => {
+    const phrase = (e: 'complete' | 'perfect') => {
+      const t = setup()
+      t.sound.play(e)
+      return t.leads
+    }
+    const complete = phrase('complete')
+    const perfect = phrase('perfect')
+    expect(complete.filter((_, i) => i % 2 === 0).slice(0, 4)).toEqual([...MELODY.complete])
+    expect(perfect.filter((_, i) => i % 2 === 0).slice(0, 5)).toEqual([...MELODY.perfect])
+    expect(perfect.length).toBeGreaterThan(complete.length)
+  })
+  it('keeps every sound out of the low register and quiet', () => {
+    const lowest = Math.min(...Object.values(LEAD_HZ), ...MELODY.complete, ...MELODY.perfect)
+    expect(lowest).toBeGreaterThanOrEqual(370) // no drum-like pitch; the master high-pass also cuts below 400 Hz
   })
 })
 
@@ -81,6 +98,21 @@ describe('mute', () => {
   })
 })
 
+describe('default', () => {
+  it('a new sound system is silent and creates nothing until told to be on', () => {
+    const fake = fakeContext()
+    const make = vi.fn(() => fake.ctx as unknown as AudioContext)
+    const sound = createSound({ createContext: make })
+    expect(sound.isMuted()).toBe(true)
+    sound.play('place')
+    sound.unlock()
+    expect(make).not.toHaveBeenCalled()
+    sound.setMuted(false)
+    sound.play('place')
+    expect(make).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('lazy start and unsupported audio', () => {
   it('creates the context on first use only, and keeps one', () => {
     const t = setup()
@@ -92,7 +124,7 @@ describe('lazy start and unsupported audio', () => {
     expect(t.make).toHaveBeenCalledTimes(1)
   })
   it('does nothing, without throwing, when the browser has no Web Audio', () => {
-    const sound = createSound({ createContext: () => null })
+    const sound = createSound({ createContext: () => null, muted: false })
     expect(() => {
       sound.unlock()
       for (const e of EVENTS) sound.play(e)
@@ -102,7 +134,7 @@ describe('lazy start and unsupported audio', () => {
     const make = vi.fn(() => {
       throw new Error('blocked')
     })
-    const sound = createSound({ createContext: make })
+    const sound = createSound({ createContext: make, muted: false })
     expect(() => {
       sound.play('place')
       sound.play('rotate')

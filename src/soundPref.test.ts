@@ -8,18 +8,19 @@ const memory = (): StorageLike & { data: Record<string, string> } => {
 }
 
 describe('sound preference', () => {
-  it('defaults to sound on when nothing is saved', () => {
-    expect(DEFAULT_MUTED).toBe(false)
-    expect(parseMuted(null)).toBe(false)
-    expect(loadMuted(memory())).toBe(false)
-    expect(loadMuted(null)).toBe(false)
+  it('defaults to muted when nothing is saved', () => {
+    expect(DEFAULT_MUTED).toBe(true)
+    expect(parseMuted(null)).toBe(true)
+    expect(loadMuted(memory())).toBe(true)
+    expect(loadMuted(null)).toBe(true)
   })
   it('round-trips both choices', () => {
     const s = memory()
+    saveMuted(s, false)
+    expect(loadMuted(s)).toBe(false) // an explicit choice to hear sound is respected
     saveMuted(s, true)
     expect(loadMuted(s)).toBe(true)
     saveMuted(s, false)
-    expect(loadMuted(s)).toBe(false)
     expect(JSON.parse(s.data[SOUND_KEY])).toEqual({ version: 1, muted: false })
   })
   it.each([

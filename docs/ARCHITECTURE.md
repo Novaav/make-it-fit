@@ -61,7 +61,7 @@ All storage is the visitor's own browser; every key is versioned and every read 
 | `make-it-fit:progress:v1` | localStorage | completed levels, best Chaos, perfect flag (payload `version: 2`; version 1 saves migrate) — `progress.ts` |
 | `make-it-fit:boards:v1` | localStorage | the arrangement left in each level, with a signature of the level it was made for — `boards.ts` |
 | `make-it-fit:intro:v1` | localStorage | which how-to-play notes were seen — `intro.ts` |
-| `make-it-fit:sound:v1` | localStorage | whether sound is muted (`{version: 1, muted}`; anything else reads as the default, sound on) — `soundPref.ts` |
+| `make-it-fit:sound:v1` | localStorage | whether sound is muted (`{version: 1, muted}`; anything else reads as the default, muted) — `soundPref.ts` |
 | `make-it-fit:opening:v1` | sessionStorage | the opening's Play was pressed in this browsing session — `useOpening.ts` |
 
 - **A saved board is a starting point, not truth.** `restoreGame` replays the saved placements through the engine; if the level's signature changed (`levelSignature` covers board size, allowance, targets, items, shapes, weights, Chaos and required flags) or any placement is now illegal, the level starts empty. A corrupt or outdated save cannot put an invalid layout on screen.
@@ -75,12 +75,12 @@ All storage is the visitor's own browser; every key is versioned and every read 
 
 ## Sound
 
-`sound.ts` synthesises seven short effects (pick up, put back, place, rotate, invalid, complete, perfect) with the Web Audio API: a few oscillators and filtered noise bursts per effect, no audio files, no music, no requests. It is a single module-level object outside React; `LevelPlay` calls `sound.play(event)` where the action's outcome is known (a drag begins, `commitCarry` succeeds or fails, a rotation happens, the win is first celebrated), so a sound is never played for a pointer event that did nothing. A placement is one voice (a soft landing plus two warm notes), not two sounds.
+`sound.ts` synthesises seven short effects (pick up, put back, place, rotate, invalid, complete, perfect) with the Web Audio API: no audio files, no music, no requests. It is a single module-level object outside React; `LevelPlay` calls `sound.play(event)` where the action's outcome is known (a drag begins, `commitCarry` succeeds or fails, a rotation happens, the win is first celebrated), so a sound is never played for a pointer event that did nothing.
 
-- The `AudioContext` is created lazily, from a player action (the Play button, a pointer press on an item, the mute button), and never while muted. A suspended context is resumed, and a sound that would arrive late is dropped rather than played delayed.
-- Each sound has a minimum gap, so a held key or a fast tap cannot stack it. Missing Web Audio, a context that fails to start and a voice that throws are all swallowed: audio never blocks or breaks play.
-- Sound defaults to on. Browsers allow no audio before the first click or key press anyway, and the effects only answer the player's own actions. The masthead button (`aria-pressed`, label "Sound effects") mutes it, and the choice is saved separately from progress.
-- Tests replace `AudioContext` with a recorder (`sound.test.ts`, `e2e/sound.spec.ts`); they check which tones start, not what is audible.
+- **One palette.** Ordinary actions are soft filtered-noise "cloth" breaths and tiny sine ticks (pickup rises, putting back falls, placing is one light contact and a settling tick, rotation is two small ticks, invalid is two soft falling notes). Only the two rewards are melodic: short phrases of soft bells (a tone plus a quiet octave) in C major pentatonic, the perfect pack climbing further with a faint shimmer. Everything passes a 400 Hz high-pass, so there is no low-frequency thump, and a gentle low-pass at 8 kHz. (The first version put a falling 147 Hz sine and low-passed noise under every placement; that was the drum-like sound.)
+- **Off by default.** `DEFAULT_MUTED` is true: no audio context exists until the player presses the masthead speaker button once (`aria-pressed`, label "Sound effects"). The choice is saved separately from progress and respected on later visits; a damaged saved value reads as muted.
+- The `AudioContext` is created lazily, from a player action, and never while muted. A suspended context is resumed, and a sound that would arrive late is dropped rather than played delayed. Each sound has a minimum gap, so a held key or fast tap cannot stack it. Missing Web Audio, a context that fails to start and a voice that throws are all swallowed: audio never blocks or breaks play.
+- Tests replace `AudioContext` with a recorder (`sound.test.ts`, `e2e/sound.spec.ts`); they check which tones start, not what is audible. How it sounds is judged by listening.
 
 ## Test layers
 

@@ -4,11 +4,10 @@ import type { StorageLike } from './progress'
 export const SOUND_KEY = 'make-it-fit:sound:v1'
 
 /**
- * Sound is on until the player mutes it. It is safe by itself: browsers allow no audio before the player's first
- * click or key press, the effects are quiet and only ever answer the player's own actions, and the mute button is
- * always in the masthead. Muting by default would hide the sound design from nearly everyone.
+ * Sound is OFF until the player turns it on. Nothing is audible, and no audio context exists, until the speaker button
+ * is pressed once; the choice is then saved and respected on later visits.
  */
-export const DEFAULT_MUTED = false
+export const DEFAULT_MUTED = true
 
 export function parseMuted(raw: string | null): boolean {
   if (!raw) return DEFAULT_MUTED

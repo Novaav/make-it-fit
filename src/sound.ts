@@ -9,14 +9,20 @@ export type SoundEvent = 'pickup' | 'remove' | 'place' | 'rotate' | 'invalid' | 
 
 /** The pitch (Hz) of the first tone of each sound; it identifies the sound in tests. */
 export const LEAD_HZ: Readonly<Record<SoundEvent, number>> = {
-  pickup: 392,
-  remove: 330,
-  place: 147,
+  pickup: 1174.66,
+  remove: 987.77,
+  place: 1567.98,
   rotate: 2093,
-  invalid: 196,
-  complete: 523.25,
-  perfect: 587.33,
+  invalid: 440,
+  complete: 659.25,
+  perfect: 783.99,
 }
+
+/** The two reward melodies (Hz), a C-major pentatonic phrase; the last entry is struck with the one before it. */
+export const MELODY = {
+  complete: [659.25, 783.99, 1046.5, 1318.51],
+  perfect: [783.99, 1046.5, 1318.51, 1567.98, 2093],
+} as const
 
 /** Shortest gap (ms) between two sounds of the same kind: a held key or a fast tap never stacks them. */
 const MIN_GAP_MS: Readonly<Record<SoundEvent, number>> = {
@@ -28,7 +34,7 @@ const MIN_GAP_MS: Readonly<Record<SoundEvent, number>> = {
   complete: 600,
   perfect: 600,
 }
-const MASTER_GAIN = 0.5
+const MASTER_GAIN = 1.4
 /** A sound that had to wait for the context to resume is dropped if it would now be late. */
 const RESUME_GRACE_MS = 250
 const noop = () => {}
@@ -54,7 +60,7 @@ export interface Sound {
 export function createSound(options: { createContext?: ContextFactory; now?: () => number; muted?: boolean } = {}): Sound {
   const makeContext = options.createContext ?? browserContext
   const now = options.now ?? (() => performance.now())
-  let muted = options.muted ?? false
+  let muted = options.muted ?? true // silent until told otherwise
   let ctx: AudioContext | null = null
   let master: GainNode | null = null
   let noise: AudioBuffer | null = null
@@ -70,9 +76,19 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
         unsupported = true
         return null
       }
+      // gain, then a high-pass that keeps every sound free of low-frequency thump (and off tiny speakers' weak spot),
+      // then a gentle low-pass that takes the edge off the highest clicks
       master = made.createGain()
       master.gain.value = MASTER_GAIN
-      master.connect(made.destination)
+      const high = made.createBiquadFilter()
+      high.type = 'highpass'
+      high.frequency.value = 400
+      const low = made.createBiquadFilter()
+      low.type = 'lowpass'
+      low.frequency.value = 8000
+      master.connect(high)
+      high.connect(low)
+      low.connect(made.destination)
       ctx = made
     } catch {
       unsupported = true
@@ -101,7 +117,7 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
   }
 
   /** A short filtered puff of noise: the fabric and the click. */
-  function puff(c: AudioContext, at: number, type: BiquadFilterType, hz: number, q: number, peak: number, decay: number) {
+  function puff(c: AudioContext, at: number, type: BiquadFilterType, hz: number, q: number, peak: number, decay: number, toHz?: number) {
     if (!noise) {
       noise = c.createBuffer(1, Math.ceil(c.sampleRate * 0.3), c.sampleRate)
       const data = noise.getChannelData(0)
@@ -112,10 +128,12 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
     const gain = c.createGain()
     src.buffer = noise
     filter.type = type
-    filter.frequency.value = hz
+    filter.frequency.setValueAtTime(hz, at)
+    if (toHz) filter.frequency.exponentialRampToValueAtTime(toHz, at + decay)
     filter.Q.value = q
-    gain.gain.setValueAtTime(peak, at)
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + decay)
+    gain.gain.setValueAtTime(0.0001, at)
+    gain.gain.linearRampToValueAtTime(peak, at + 0.006)
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.006 + decay)
     src.connect(filter).connect(gain).connect(master!)
     src.onended = () => {
       src.disconnect()
@@ -126,49 +144,65 @@ export function createSound(options: { createContext?: ContextFactory; now?: () 
     src.stop(at + decay + 0.03)
   }
 
-  /** The voices. Each is a few quiet layers, well under a second, and the first tone is the sound's LEAD_HZ. */
+  /** A soft bell: a pure tone with a quiet octave above it and a slow decay (music-box, not alarm). */
+  function bell(c: AudioContext, at: number, hz: number, peak: number, decay: number) {
+    tone(c, at, hz, peak, decay)
+    tone(c, at, hz * 2, peak * 0.3, decay * 0.5)
+  }
+
+  /**
+   * The voices. One identity: soft cloth (filtered noise), tiny tick-like tones, warm bells for rewards. Nothing is
+   * below 400 Hz (see the high-pass in context()), nothing is a drum, and ordinary actions carry no melody.
+   * The first tone of each is its LEAD_HZ.
+   */
   const voices: Record<SoundEvent, (c: AudioContext, t: number) => void> = {
-    // a soft lift off the table
+    // an airy lift: a breath of cloth rising, with a faint high shimmer
     pickup(c, t) {
-      tone(c, t, LEAD_HZ.pickup, 0.035, 0.09, 'sine', 470)
-      puff(c, t, 'bandpass', 1800, 0.7, 0.05, 0.08)
+      tone(c, t, LEAD_HZ.pickup, 0.012, 0.07, 'sine', 1397)
+      puff(c, t, 'bandpass', 1500, 0.8, 0.05, 0.09, 2800)
     },
+    // the same breath, falling away: settling back
     remove(c, t) {
-      tone(c, t, LEAD_HZ.remove, 0.03, 0.1, 'sine', 247)
-      puff(c, t, 'bandpass', 1200, 0.7, 0.04, 0.09)
+      tone(c, t, LEAD_HZ.remove, 0.01, 0.08, 'sine', 784)
+      puff(c, t, 'bandpass', 2600, 0.8, 0.04, 0.09, 1400)
     },
-    // a cloth landing, then two warm notes that say it fits
+    // light contact with the lining, then a tiny settling tick; a single small event, not a note
     place(c, t) {
-      tone(c, t, LEAD_HZ.place, 0.14, 0.13, 'sine', 90)
-      puff(c, t, 'lowpass', 520, 0.7, 0.16, 0.12)
-      tone(c, t + 0.05, 523.25, 0.045, 0.22, 'triangle')
-      tone(c, t + 0.09, 659.25, 0.035, 0.26, 'triangle')
+      tone(c, t + 0.008, LEAD_HZ.place, 0.04, 0.05, 'sine', 1397)
+      puff(c, t, 'bandpass', 2000, 0.9, 0.07, 0.05)
     },
-    // a delicate two-step ratchet
+    // two small mechanical ticks, the second a little higher: a notch moving past
     rotate(c, t) {
-      tone(c, t, LEAD_HZ.rotate, 0.018, 0.03, 'sine', 1500)
-      puff(c, t, 'bandpass', 3200, 4, 0.05, 0.02)
-      puff(c, t + 0.032, 'bandpass', 3800, 4, 0.035, 0.016)
+      tone(c, t, LEAD_HZ.rotate, 0.01, 0.025, 'sine', 1760)
+      puff(c, t, 'bandpass', 2800, 5, 0.05, 0.014)
+      puff(c, t + 0.03, 'bandpass', 3500, 5, 0.037, 0.012)
     },
-    // a low, soft step down; it never buzzes
+    // two soft falling notes, "hm-mm": clearly not a success, gentle, no buzz
     invalid(c, t) {
-      tone(c, t, LEAD_HZ.invalid, 0.06, 0.16, 'sine', 165)
-      puff(c, t, 'lowpass', 400, 0.7, 0.04, 0.08)
+      tone(c, t, LEAD_HZ.invalid, 0.04, 0.11, 'sine')
+      tone(c, t + 0.085, 370, 0.036, 0.14, 'sine')
     },
+    // a short rising phrase of soft bells, ending on two notes together
     complete(c, t) {
-      const s = t + 0.16 // after the last piece has landed
-      tone(c, s, LEAD_HZ.complete, 0.07, 0.5, 'triangle')
-      tone(c, s + 0.1, 659.25, 0.06, 0.5, 'triangle')
-      tone(c, s + 0.2, 783.99, 0.06, 0.55, 'triangle')
-      tone(c, s + 0.31, 1046.5, 0.05, 0.7, 'sine')
+      const s = t + 0.14 // after the last piece has settled
+      const m = MELODY.complete
+      bell(c, s, m[0], 0.05, 0.42)
+      bell(c, s + 0.11, m[1], 0.05, 0.42)
+      bell(c, s + 0.22, m[2], 0.052, 0.5)
+      bell(c, s + 0.36, m[3], 0.05, 0.9)
+      bell(c, s + 0.36, m[2], 0.034, 0.9)
     },
+    // the same phrase, climbing further, with a faint shimmer on top
     perfect(c, t) {
-      const s = t + 0.16
-      tone(c, s, LEAD_HZ.perfect, 0.07, 0.5, 'triangle')
-      tone(c, s + 0.09, 783.99, 0.06, 0.5, 'triangle')
-      tone(c, s + 0.18, 987.77, 0.06, 0.55, 'triangle')
-      tone(c, s + 0.28, 1174.66, 0.05, 0.6, 'sine')
-      tone(c, s + 0.4, 1567.98, 0.04, 0.9, 'sine')
+      const s = t + 0.14
+      const m = MELODY.perfect
+      bell(c, s, m[0], 0.05, 0.42)
+      bell(c, s + 0.1, m[1], 0.05, 0.42)
+      bell(c, s + 0.2, m[2], 0.052, 0.45)
+      bell(c, s + 0.31, m[3], 0.05, 0.6)
+      bell(c, s + 0.44, m[4], 0.04, 1.1)
+      bell(c, s + 0.44, m[2], 0.03, 1.1)
+      puff(c, s + 0.44, 'highpass', 5000, 0.7, 0.012, 0.35)
     },
   }
 
