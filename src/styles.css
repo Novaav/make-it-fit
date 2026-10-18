@@ -10,6 +10,13 @@
   font-display: swap;
 }
 @font-face {
+  font-family: 'Caveat';
+  src: url('./assets/fonts/caveat-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
   font-family: 'Atkinson Hyperlegible';
   src: url('./assets/fonts/atkinson-400.woff2') format('woff2');
   font-weight: 400;
@@ -48,6 +55,9 @@
   --case-hi: #5aa6ad;
   --lining: #f3e3c3;
   --lining-line: rgba(120, 90, 50, 0.2);
+  --chaos: #6a2aa8;
+  --chaos-ink: #4a1d78;
+  --hand: 'Caveat', 'Bradley Hand', 'Segoe Print', cursive;
   --display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
   --ui: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: light;
@@ -89,6 +99,11 @@ h1, h2 { font-family: var(--display); }
 h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spacing: 0.01em; text-shadow: 1px 2px 0 rgba(255, 248, 233, 0.9), 2px 3px 0 rgba(43, 36, 51, 0.16); }
 .wm-it { display: inline-block; padding: 0 0.12em; margin: 0 0.04em; color: var(--paper); background: var(--ink); border-radius: 0.14em; text-shadow: none; transform: rotate(-3deg); }
 .tagline { margin: 0; color: var(--muted); font-family: var(--display); font-style: italic; font-weight: 500; font-size: 0.95rem; }
+.masthead-tools { display: flex; align-items: center; gap: 10px; }
+.sound-toggle { flex: none; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 2px solid var(--ink); border-radius: 10px; background: var(--paper); color: var(--ink); cursor: pointer; box-shadow: 1px 2px 0 rgba(43, 36, 51, 0.3); }
+.sound-toggle[aria-pressed='false'] { color: var(--muted); }
+.sound-toggle:hover { transform: translateY(-1px); }
+.sound-toggle:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .levels { display: flex; gap: 10px; }
 .level-tab {
   position: relative;
@@ -105,11 +120,19 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
   transition: transform 120ms ease-out;
 }
 .level-tab::before { content: ''; position: absolute; left: 9px; top: 50%; width: 11px; height: 11px; margin-top: -5.5px; border-radius: 50%; background: var(--table); border: 2px solid var(--ink); box-shadow: inset 1px 1px 0 rgba(43, 36, 51, 0.35); }
-.level-tab:hover:not(:disabled):not(.current) { transform: translateY(-2px) rotate(-1deg); }
+.level-tab:hover:not([aria-disabled='true']):not(.current) { transform: translateY(-2px) rotate(-1deg); }
 .level-tab.current { background: var(--ink); color: var(--paper); }
 .level-tab.current::before { background: var(--table-shade); border-color: var(--paper); }
-.level-tab:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.level-tab[aria-disabled='true'] { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.masthead { position: relative; }
+.lock-note { position: absolute; right: 0; top: 100%; z-index: 30; max-width: min(360px, 94vw); margin: 6px 0 0; padding: 8px 12px; border: 2px solid var(--ink); border-radius: 8px; background: var(--paper); font: 600 0.88rem var(--ui); box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.3); transform: rotate(-0.8deg); }
 .level-tab:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+/* Touch targets: the small controls keep their look and get an invisible hit area of at least 44 x 44 CSS px */
+.level-tab::after, .sound-toggle::after, .note-replay::after { content: ''; position: absolute; inset: -4px 0; } /* (the 2 px border is outside the padding box this is measured from) */
+.sound-toggle::after { inset: -4px; }
+.sound-toggle, .note-replay { position: relative; }
+.note-replay::after { inset: -11px -7px; }
+.help summary { min-height: 44px; display: flex; align-items: center; }
 
 /* ---- stage: suitcase on the left, tabletop with the items on the right (stacked on narrow screens) ---- */
 .stage { display: flex; gap: 20px 44px; align-items: flex-start; justify-content: center; }
@@ -128,8 +151,12 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 }
 .objective::before { content: ''; position: absolute; left: 14px; top: 16px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink); background: var(--table); box-shadow: inset 2px 2px 0 rgba(43, 36, 51, 0.3); }
 .objective::after { content: ''; position: absolute; left: 20px; top: 28px; width: 3px; height: 14px; background: repeating-linear-gradient(180deg, var(--stitch) 0 3px, transparent 3px 5px); opacity: 0.7; }
-.level-title { margin: 0 0 3px; font-family: var(--display); color: var(--ink); font-size: 1.12rem; font-weight: 700; letter-spacing: 0.005em; line-height: 1.2; }
+.level-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 3px; font-family: var(--display); color: var(--ink); font-size: 1.12rem; font-weight: 700; letter-spacing: 0.005em; line-height: 1.2; }
 .goal-line { margin: 0 0 6px; min-height: 2.6em; font-size: 0.95rem; line-height: 1.3; color: var(--muted); }
+.goal-line { display: grid; }
+.goal-line > * { grid-area: 1 / 1; }
+.goal-size { visibility: hidden; }
+.goal-size::after { content: attr(data-text); }
 .objective.solved .goal-line b { color: var(--ok); }
 .pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 36px; }
 .pill {
@@ -143,25 +170,28 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
   font-size: 0.9rem;
   white-space: nowrap;
 }
-.pill b { font-family: var(--display); font-size: 1.05rem; font-weight: 700; }
+.pill b { font-family: var(--display); font-size: 1.05rem; font-weight: 700; line-height: 1.2; } /* fixed, so a digit missing from the font (the 0 in WebKit) cannot change the pill's height when a number changes */
 .pill-label { color: var(--muted); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
 .pill.ok { border-color: var(--ok); }
 .pill.ok b, .pill.ok > span:last-child { color: var(--ok); }
 .pill.weight { align-items: center; }
+/* With enlarged text the pills sit in a fixed arrangement (one pill per row, its note on a line of its own), so a different
+   number ("0" or "6.25") can never change how many lines they take and move the suitcase. The pill row is a container and
+   the query is in em, so it only applies once the text has grown (at normal size it is a phone's width in px, as before). */
+@container (max-width: 14em) {
+  .pill { max-width: 100%; flex-wrap: wrap; row-gap: 2px; }
+  .pills > .pill { flex: 1 1 100%; }
+  .pill .pill-label, .pill .of, .pill .chaos-bar { flex-basis: 100%; }
+  .pill b { white-space: nowrap; }
+}
 .pill.weight.over { border-color: var(--warn); background: #fdecea; }
 .pill.weight.over b { color: var(--warn); }
-.mini-bar { position: relative; width: 40px; height: 9px; border-radius: 2px; background: repeating-linear-gradient(90deg, rgba(43, 36, 51, 0.18) 0 1px, transparent 1px 5px), rgba(43, 36, 51, 0.1); overflow: hidden; align-self: center; box-shadow: inset 0 1px 2px rgba(43, 36, 51, 0.35); }
+.mini-bar { position: relative; width: 28px; height: 9px; border-radius: 2px; background: repeating-linear-gradient(90deg, rgba(43, 36, 51, 0.18) 0 1px, transparent 1px 5px), rgba(43, 36, 51, 0.1); overflow: hidden; align-self: center; box-shadow: inset 0 1px 2px rgba(43, 36, 51, 0.35); }
 .mini-bar > span { display: block; height: 100%; background: var(--ok); }
 .pill.over .mini-bar > span { background: var(--warn); }
-.pill.bonus { border-color: #6a3fb5; color: var(--bonus); }
-.pill.bonus .pill-label { color: var(--bonus); }
-.pill.bonus.max { border-color: var(--ok); background: #eaf6ec; color: var(--ok); }
-.pill.bonus.max .pill-label { color: var(--ok); }
-.max-tag { margin-left: 6px; font-weight: 700; color: var(--ok); font-size: 0.9rem; }
 .sub { color: var(--muted); font-size: 0.85em; }
-.pill-action { min-height: 36px; padding: 0 16px; border: 2px solid var(--ok); border-radius: 8px; background: var(--ok); color: #fff; font-weight: 700; cursor: pointer; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.25); }
-.pill-action:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.over-note { margin: 4px 0 0; min-height: 1.2em; color: var(--warn); font-weight: 700; font-size: 0.9rem; }
+.over-note { margin: 4px 0 0; height: 1.3em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--warn); font-weight: 700; font-size: 0.9rem; }
+.over-note.missing { color: var(--muted); font-weight: 400; font-style: italic; }
 
 /* ---- the suitcase: hard shell, rolled rim, brass corners and latches, a leather handle, stitched lining ---- */
 .suitcase {
@@ -278,15 +308,37 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .piece.on-board { position: absolute; }
 /* The weight chip hangs at the item's lower right. --chip-room is the space to its left (to the tray or board edge), so it can never be clipped. */
 .chip-w { position: absolute; left: max(calc(var(--cell) * var(--chip-x) - 3px), calc(80px - var(--chip-room, 80px))); top: calc(var(--cell) * var(--chip-y) - 3px); transform: translate(-100%, -100%); min-width: 24px; padding: 0 5px; border-radius: 999px; background: var(--ink); color: var(--paper); font: 700 max(11px, min(0.9rem, calc(var(--cell) * 0.26))) / 20px var(--ui); white-space: nowrap; text-align: center; pointer-events: none; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
-.chip-w.bonus { background: #7a4cc0; }
+
+/* ---- the info tag under the suitcase: what the hovered, focused, tapped or carried item is (fixed height, never shifts the layout) ---- */
+.item-info { display: flex; align-items: center; justify-content: center; gap: 10px; width: min(100%, 440px); height: 34px; margin: 14px auto 0; padding: 0 14px; overflow: hidden; white-space: nowrap; border: 2px solid var(--ink); border-radius: 6px 14px 14px 6px; background: var(--paper); font-size: 0.92rem; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.2); }
+.item-info b { font-family: var(--display); font-size: 1rem; overflow: hidden; text-overflow: ellipsis; }
+.item-info .req, .item-info .opt { padding: 1px 8px; border-radius: 999px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.item-info .req { background: var(--ink); color: var(--paper); }
+.item-info .opt { background: #e7dcf7; color: var(--bonus); }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .item-info { gap: 6px; margin-top: 10px; padding: 0 9px; font-size: 0.82rem; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .item-info b { font-size: 0.88rem; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .item-info .req, .level:is([data-arrange='stack'], [data-arrange='wing']) .item-info .opt { padding: 1px 6px; font-size: 0.62rem; letter-spacing: 0.03em; }
+.item-info.idle { border-style: dashed; border-color: rgba(43, 36, 51, 0.3); background: rgba(255, 248, 233, 0.45); color: var(--muted); font-style: italic; box-shadow: none; }
 
 /* ---- stamped tool tabs ---- */
-.toolbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 8px; }
+.toolbar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 14px 0 8px; }
 .toolbar button { min-height: 42px; border: 2px solid var(--ink); border-radius: 6px; background: var(--paper); cursor: pointer; font-family: var(--ui); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.82rem; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.24); transition: transform 90ms ease-out, box-shadow 90ms ease-out; }
 .toolbar button:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
 .toolbar button:active:not(:disabled) { transform: translate(2px, 3px); box-shadow: none; }
 .toolbar button:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
 .toolbar button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Labels never clip: the row is a container, and the font size is capped by the row's width as well as by the text size
+   (so enlarged text, a narrow aside or the fifth button after a win shrink the labels a little instead of cutting them off).
+   Unchanged wherever the row is wide enough, which includes the desktop layout. */
+.toolbar { container-type: inline-size; }
+.toolbar button { font-size: min(0.82rem, 4cqw); }
+.toolbar.has-next button { font-size: min(0.7rem, 3.3cqw); letter-spacing: 0.01em; padding-inline: 2px; }
+/* tablets and touch screens: the actions are at least 44 px tall (desktop keeps 42) */
+@media (pointer: coarse), (max-width: 1100px) { .toolbar button { min-height: 44px; } }
+/* Next level joins the row after a win: the other four give up a little width, nothing moves vertically */
+.toolbar.has-next { grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.7fr); }
+.toolbar button.next { background: var(--ok); border-color: var(--ok); color: #fff; }
+.toolbar button.next:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); }
 .status { min-height: 1.4em; margin: 0 0 4px; font-family: var(--display); font-style: italic; font-size: 0.92rem; }
 .help { font-size: 0.88rem; color: var(--muted); }
 .help summary { cursor: pointer; width: max-content; padding: 2px 0; }
@@ -306,7 +358,7 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 
 /* ---- completion: a boarding pass ---- */
 .backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(43, 36, 51, 0.5); animation: fade 200ms ease-out; }
-.dialog { position: relative; width: min(440px, 100%); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); display: flex; border-radius: 16px; background: var(--paper); border: 3px solid var(--ink); box-shadow: 6px 8px 0 rgba(43, 36, 51, 0.35), 0 30px 60px -12px rgba(30, 20, 10, 0.5); text-align: center; animation: pop 260ms ease-out; user-select: text; }
+.dialog { position: relative; width: min(440px, 100%); min-width: 0; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); display: flex; border-radius: 16px; background: var(--paper); border: 3px solid var(--ink); box-shadow: 6px 8px 0 rgba(43, 36, 51, 0.35), 0 30px 60px -12px rgba(30, 20, 10, 0.5); text-align: center; animation: pop 260ms ease-out; user-select: text; }
 /* Only this inner box scrolls (vertically, on short screens). The ticket notches below sit outside it on purpose, so they can never create a horizontal scrollbar. */
 .dialog-scroll { flex: 1; min-width: 0; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 24px 30px 22px; border-radius: 13px; }
 .dialog::before, .dialog::after { content: ''; position: absolute; top: 56%; width: 22px; height: 22px; border-radius: 50%; background: rgba(43, 36, 51, 0.5); box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.35); }
@@ -315,7 +367,7 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .dialog-band { display: flex; justify-content: space-between; margin: -24px -30px 16px; padding: 7px 30px; border-radius: 13px 13px 0 0; background: var(--case-rim); color: var(--paper); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; }
 .barcode { height: 24px; width: 62%; margin: 6px auto 0; opacity: 0.75; background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 4px, var(--ink) 4px 5px, transparent 5px 8px, var(--ink) 8px 11px, transparent 11px 13px); }
 .dialog-kicker { margin: 0; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.78rem; font-weight: 700; }
-.dialog h2 { display: inline-block; margin: 8px 0 14px; padding: 2px 16px; border: 4px double var(--ok); border-radius: 8px; font-size: 2.2rem; font-weight: 800; color: var(--ok); transform: rotate(-3deg); }
+.dialog h2 { display: inline-block; margin: 8px 0 14px; padding: 2px 16px; border: 4px double var(--ok); border-radius: 8px; font-size: clamp(1.6rem, 8vw, 2.2rem); max-width: 100%; box-sizing: border-box; font-weight: 800; color: var(--ok); transform: rotate(-3deg); }
 .results { margin: 0 0 14px; padding: 0 0 14px; list-style: none; display: grid; gap: 8px; font-size: 1.05rem; text-align: left; width: max-content; max-width: 100%; margin-inline: auto; border-bottom: 2px dashed rgba(43, 36, 51, 0.28); }
 .results .ok { color: var(--ok); font-weight: 700; }
 .bonus-result { color: var(--bonus); }
@@ -325,6 +377,9 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .dialog-actions button { min-height: 48px; padding: 0 20px; border: 2px solid var(--ink); border-radius: 8px; background: var(--paper); font-weight: 700; cursor: pointer; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.25); }
 .dialog-actions .primary { background: var(--ok); border-color: var(--ok); color: #fff; }
 .dialog-actions button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* the same press as Rotate and Reset: the button sinks onto the table, its shadow gone, and springs back */
+.dialog-actions button, .note-foot button:not(.note-skip) { transition: transform 90ms ease-out, box-shadow 90ms ease-out; }
+.dialog-actions button:active, .note-foot button:not(.note-skip):active { transform: translate(2px, 3px); box-shadow: none; }
 @keyframes pop { from { transform: scale(0.94); opacity: 0; } }
 @keyframes fade { from { opacity: 0; } }
 
@@ -356,17 +411,19 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .level:is([data-arrange='stack'], [data-arrange='wing']) .objective { margin-bottom: 10px; padding: 8px 12px 6px 38px; border-radius: 6px 14px 14px 6px; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .objective::before { left: 10px; top: 10px; width: 14px; height: 14px; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .objective::after { display: none; }
-.level:is([data-arrange='stack'], [data-arrange='wing']) .level-title { font-size: 0.95rem; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .level-title { font-size: 0.88rem; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .mini-bar { display: none; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill-label { font-size: 0.58rem; letter-spacing: 0.03em; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill { gap: 4px; padding: 1px 7px; }
-.level:is([data-arrange='stack'], [data-arrange='wing']) .pill-action, .level:is([data-arrange='stack'], [data-arrange='wing']) .pill .max-tag { display: none; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .chaos-bar, .level:is([data-arrange='stack'], [data-arrange='wing']) .pill.weight .mini-bar { display: none; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .pill.chaos b { font-size: 1.1rem; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .pill .of { font-size: 0.74rem; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill b { font-size: 1rem; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .goal-line { height: 34px; margin-bottom: 6px; overflow: hidden; font-size: 0.82rem; line-height: 17px; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pills { min-height: 0; gap: 6px; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill { padding: 1px 8px; font-size: 0.88rem; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .over-note { min-height: 0; margin-top: 4px; }
-.level:is([data-arrange='stack'], [data-arrange='wing']) .over-note:empty { display: none; }
+/* the note's row is always reserved (as on desktop): when a note appears or goes, nothing above the suitcase changes height */
 .level:is([data-arrange='stack'], [data-arrange='wing']) .suitcase { padding: 16px 16px 20px; border-radius: 24px; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .suitcase::before { inset: 6px; border-width: 2px; border-radius: 19px; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .handle { top: -14px; width: 84px; height: 16px; border-width: 2px; }
@@ -388,11 +445,25 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   h1 { font-size: 1.5rem; }
   .brand-mark { width: 34px; height: 31px; }
   .tagline { display: none; }
-  .level-tab { min-height: 40px; padding: 0 12px 0 26px; }
+  .sound-toggle { position: absolute; top: 4px; right: 0; } /* beside the wordmark, so the three level tabs keep their row */
+  /* one line, always: a check mark or a lock arriving must never wrap a tab and make the masthead (and the suitcase under it) jump */
+  .levels { gap: 6px; }
+  .level-tab { min-height: 40px; padding: 0 8px 0 22px; white-space: nowrap; }
+  .level-tab::before { left: 7px; }
   .toolbar button { min-height: 44px; }
 }
+/* Enlarged text: the masthead is a container, and in em terms a 340 px phone (21 em) is narrow once the text is about 110 % or more,
+   so only then may the tabs wrap onto a second line instead of running off the screen. */
+.masthead { container-type: inline-size; }
+@container (max-width: 19.5em) { .levels { flex-wrap: wrap; justify-content: center; } }
+@media (max-width: 340px) {
+  /* the narrowest phones: three one-line tabs (with a check mark or lock) must still fit */
+  .levels { gap: 4px; }
+  .level-tab { padding: 0 5px 0 18px; font-size: 0.82rem; }
+  .level-tab::before { left: 5px; width: 9px; height: 9px; margin-top: -4.5px; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .carried.snapped, .level-tab, .toolbar button { transition: none; }
+  .carried.snapped, .level-tab, .toolbar button, .dialog-actions button, .note-foot button:not(.note-skip) { transition: none; }
   .backdrop, .dialog { animation: none; }
 }
 @media (forced-colors: active) {
@@ -407,3 +478,173 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .wl-dark { color: #2b2433; }
 .wl-light { color: #fff6e6; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); }
 .level[data-cell='xs'] .wlabel .unit, .level[data-cell='sm'] .wlabel .unit { display: none; }
+
+/* ---- Chaos: the number stamped on every item, the meter, and the how-to-play note ---- */
+.chaos-badge {
+  position: absolute; left: calc(var(--cell) * var(--bx)); top: calc(var(--cell) * var(--by)); transform: translate(-50%, -50%) rotate(var(--tilt, -5deg)); z-index: 2;
+  display: grid; place-items: center; width: max(22px, calc(var(--cell) * 0.42)); height: max(22px, calc(var(--cell) * 0.42)); border-radius: 50%;
+  background: #fff4d6; color: var(--chaos-ink);
+  box-shadow: 0 0 0 1.5px var(--chaos-ink), inset 0 0 0 2px #fff4d6, inset 0 0 0 3px var(--chaos), 0 1px 3px rgba(43, 36, 51, 0.5);
+  font: 700 max(12px, calc(var(--cell) * 0.27)) / 1 var(--display); pointer-events: none;
+}
+.chaos-badge:not(.must) { background: none; box-shadow: none; }
+.chaos-badge svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.dot-shadow { fill: rgba(43, 36, 51, 0.38); }
+.dot-paper { fill: #fff4d6; stroke: #d9c79a; stroke-width: 0.8; }
+.dot-ring { fill: none; stroke: var(--chaos-ink); stroke-width: 1.8; stroke-linecap: round; opacity: 0.92; mix-blend-mode: multiply; }
+.dot-ring.thin { stroke-width: 0.9; opacity: 0.7; stroke-dasharray: 2.2 1.4; }
+.dot-num { fill: var(--chaos-ink); stroke: var(--chaos-ink); stroke-width: 0.9; stroke-opacity: 0.45; paint-order: stroke; font: 700 21px var(--display); }
+.chaos-badge.must { width: auto; height: max(17px, calc(var(--cell) * 0.3)); padding: 0 6px; border-radius: 3px; color: var(--ink); font: 800 max(9px, calc(var(--cell) * 0.19)) / 1 var(--ui); letter-spacing: 0.1em; box-shadow: 0 0 0 1.5px var(--ink), inset 0 0 0 1.5px #fff4d6, inset 0 0 0 2.5px var(--ink), 0 1px 3px rgba(43, 36, 51, 0.5); }
+.pill .of { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
+.pill.chaos { flex: 1 1 100%; flex-wrap: wrap; align-items: center; row-gap: 2px; border-color: var(--chaos); }
+.pill.chaos .pill-label { color: var(--chaos); }
+.pill.chaos b { font-size: 1.25rem; }
+.pill.chaos.plain { flex: 0 0 auto; }
+.pill.chaos.ok { border-color: var(--ok); background: #eaf6ec; }
+.pill.chaos.ok .pill-label, .pill.chaos.ok b { color: var(--ok); }
+.pill.chaos.max { border-color: #c9981f; background: #fff3c7; }
+.chaos-bar { position: relative; flex: 1 1 80px; min-width: 70px; height: 12px; border-radius: 3px; background: repeating-linear-gradient(90deg, rgba(43, 36, 51, 0.22) 0 1px, transparent 1px 8px), rgba(43, 36, 51, 0.1); box-shadow: inset 0 1px 2px rgba(43, 36, 51, 0.35); }
+.chaos-bar .fill { display: block; height: 100%; border-radius: 3px; background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0 3px, transparent 3px 6px), var(--chaos); transition: width 120ms ease-out; }
+.pill.chaos.ok .chaos-bar .fill { background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0 3px, transparent 3px 6px), var(--ok); }
+.pill.chaos.max .chaos-bar .fill { background: linear-gradient(180deg, #ffe9a0, #d9a93e 45%, #a8760f); box-shadow: 0 0 0 1px #8a6416; }
+.pill.chaos.max .chaos-bar { box-shadow: inset 0 1px 2px rgba(43, 36, 51, 0.35), 0 0 0 2px rgba(217, 169, 62, 0.4); }
+.pill.chaos.max .of.perfect { color: #7a5200; font-weight: 800; }
+.chaos-bar .sheen { position: absolute; inset: 0; overflow: hidden; border-radius: 3px; pointer-events: none; display: none; }
+.pill.chaos.spark .chaos-bar .sheen { display: block; }
+.chaos-bar .sheen::after { content: ''; position: absolute; top: -2px; bottom: -2px; width: 34%; left: -40%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.85), transparent); animation: sheen 0.55s ease-out 0s 1 both; }
+@keyframes sheen { to { left: 110%; } }
+.chaos-bar .tick { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1px; border-radius: 2px; background: var(--ink); }
+.note-replay { flex: none; min-height: 28px; padding: 0 10px; border: 2px solid rgba(43, 36, 51, 0.5); border-radius: 999px; background: transparent; color: var(--muted); font: 700 0.74rem var(--ui); letter-spacing: 0.04em; cursor: pointer; }
+.note-replay:hover { background: var(--ink); color: var(--paper); }
+.note-replay:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* the how-to-play note: a handwritten page pinned to the table, never a full-screen interruption */
+.intro-note {
+  /* Pinned to the objective card (a layout anchor, not a measured position), so it never moves on its own */
+  position: absolute; z-index: 25; top: 6px; left: 6px; width: min(330px, calc(100% - 12px)); max-height: min(70vh, 300px); overflow: auto; padding: 18px 16px 10px 36px;
+  background: linear-gradient(90deg, transparent 31px, rgba(201, 60, 50, 0.45) 31px 33px, transparent 33px), repeating-linear-gradient(180deg, transparent 0 29px, rgba(66, 110, 180, 0.28) 29px 30px), #fffdf5;
+  border: 1px solid rgba(43, 36, 51, 0.4); box-shadow: 3px 6px 0 rgba(43, 36, 51, 0.2), 0 18px 30px -10px rgba(30, 20, 10, 0.5);
+  color: #2b2433; font-family: var(--hand); transform: rotate(-1.2deg); animation: note-in 320ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.note-tape { position: absolute; top: -12px; width: 64px; height: 22px; background: rgba(238, 220, 150, 0.8); border: 1px dashed rgba(120, 100, 40, 0.4); }
+.note-tape.left { left: 18px; transform: rotate(-6deg); }
+.note-tape.right { right: 18px; transform: rotate(5deg); }
+.note-kicker { display: none; margin: 0 0 2px; color: #6b5f7a; font: 700 0.72rem var(--ui); letter-spacing: 0.12em; text-transform: uppercase; }
+.note-page { min-height: 70px; position: relative; animation: page-in 260ms ease-out both; }
+.note-page h2 { margin: 0 0 2px; font-family: var(--hand); font-size: 1.55rem; font-weight: 600; line-height: 1; color: #3a2a6a; text-decoration: underline wavy rgba(106, 42, 168, 0.5) 2px; text-underline-offset: 6px; }
+.note-page ul { margin: 4px 0 0; padding: 0; list-style: none; font-size: 1.1rem; line-height: 24px; }
+.note-page li::before { content: '– '; color: var(--chaos); }
+.note-foot { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-family: var(--ui); }
+.note-dots { display: flex; gap: 5px; margin-right: auto; }
+.note-dots i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid rgba(43, 36, 51, 0.5); }
+.note-dots i.on { background: var(--chaos); border-color: var(--chaos); }
+.note-foot .note-next { margin-left: auto; }
+.note-foot button { min-height: 38px; padding: 0 14px; border: 2px solid var(--ink); border-radius: 8px; background: #fffdf5; font: 700 0.9rem var(--ui); cursor: pointer; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.25); }
+.note-foot .note-skip { border-color: transparent; background: transparent; box-shadow: none; color: var(--muted); text-decoration: underline; }
+.note-foot .note-next { background: var(--ink); color: var(--paper); }
+.note-foot button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+@keyframes note-in { from { transform: translateY(18px) rotate(3deg); opacity: 0; } }
+@keyframes page-in { from { transform: translateX(14px) rotate(-1.5deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .intro-note, .note-page { animation: none; }
+  .chaos-bar .fill { transition: none; }
+}
+/* a perfect pack is a different card: gold band, gold stamp, first class */
+.dialog.perfect { border-color: #8a6416; }
+.dialog.perfect .dialog-band { background: linear-gradient(90deg, #8a6416, #d8a93e 50%, #8a6416); color: #fff8e0; }
+.dialog.perfect h2 { color: #7a5200; border-color: #c9981f; background: #fff3c7; }
+.dialog.perfect .bonus-result.max { color: #7a5200; }
+
+.note-replay-short { display: none; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .note-replay-long { display: none; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .note-replay-short { display: inline; }
+.level:is([data-arrange='stack'], [data-arrange='wing']) .note-replay { min-width: 34px; min-height: 26px; padding: 0 8px; line-height: 1; margin: -4px 0; align-self: center; }
+
+/* ---- Perfect pack: a gold stitched line drawn round the suitcase, a few sparkles, and the seal on the boarding pass ---- */
+.suitcase { position: relative; }
+.flourish { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+.flourish-ring { position: absolute; inset: -9px; border: 3px dashed #d9a93e; border-radius: 26px; box-shadow: 0 0 0 3px rgba(217, 169, 62, 0.22); opacity: 0; animation: ring-in 0.32s ease-out both, ring-out 0.5s ease-in 1.2s forwards; }
+.twinkle { position: absolute; transform: translate(-50%, -50%) scale(0); fill: #f4d36b; stroke: #8a6416; stroke-width: 1.2; stroke-linejoin: round; animation: twinkle 0.6s ease-out both; }
+@keyframes ring-in { from { opacity: 0; transform: scale(1.05); } to { opacity: 1; transform: scale(1); } }
+@keyframes ring-out { to { opacity: 0; } }
+@keyframes twinkle { 0% { transform: translate(-50%, -50%) scale(0) rotate(0); } 55% { transform: translate(-50%, -50%) scale(1.15) rotate(45deg); } 100% { transform: translate(-50%, -50%) scale(0.85) rotate(60deg); opacity: 0.9; } }
+.perfect-seal { position: absolute; right: -22px; bottom: -26px; width: 88px; height: 88px; z-index: 2; transform: rotate(14deg); filter: drop-shadow(0 2px 2px rgba(43, 36, 51, 0.4)); animation: seal-stamp 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) 0.2s both; pointer-events: none; }
+@keyframes seal-stamp { from { transform: rotate(-8deg) scale(1.8); opacity: 0; } to { transform: rotate(14deg) scale(1); opacity: 1; } }
+@media (max-width: 480px) { .perfect-seal { width: 66px; height: 66px; bottom: -20px; right: -10px; } }
+@media (prefers-reduced-motion: reduce) {
+  .flourish-ring { animation: none; opacity: 0.6; transform: none; }
+  .twinkle { animation: none; transform: translate(-50%, -50%) scale(0.85) rotate(45deg); }
+  .chaos-bar .sheen::after { animation: none; display: none; }
+  .perfect-seal { animation: none; }
+}
+
+/* On a narrow objective card the little weight bar gives way, so "Must pack" and "Weight" stay on one row */
+.pills { container-type: inline-size; }
+@container (max-width: 400px) { .pill.weight .mini-bar { display: none; } }
+
+/*
+ * The opening (see App.tsx): a branded first impression. The real wordmark sits large at the centre of the empty table
+ * (the "It" tile stamps on), a luggage tag carries the tagline and a Play button, and the composition holds, still,
+ * until Play is pressed (no timer, and no other tap or key starts the game). Play moves the wordmark into the masthead
+ * while the packing table fades up, about 0.85 s. Transform and opacity only. --ox/--oy/--os (where the wordmark
+ * starts) are measured in App.tsx. Shown once per browsing session to a new player; reduced motion shows it still.
+ */
+.opening-layer { display: none; }
+.app.opening .opening-layer { display: flex; }
+.app.opening .opening-layer {
+  position: fixed; inset: 0; z-index: 40; flex-direction: column; align-items: center; justify-content: flex-start;
+  padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right);
+}
+.opening-stack { position: absolute; left: 0; right: 0; top: var(--tag-top, 55%); display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.opening-tag {
+  position: relative; margin: 0; padding: 7px 18px 8px 34px; max-width: calc(100vw - 32px); border: 2px solid var(--ink); border-radius: 6px 16px 16px 6px;
+  background: var(--paper); color: var(--ink); font: italic 600 1.1rem / 1.25 var(--display); text-align: center; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.28);
+}
+.opening-tag::before { content: ''; position: absolute; left: 11px; top: 50%; width: 11px; height: 11px; margin-top: -5.5px; border-radius: 50%; background: var(--table); border: 2px solid var(--ink); box-shadow: inset 1px 1px 0 rgba(43, 36, 51, 0.35); }
+.opening-play {
+  min-height: 48px; padding: 0 34px; border: 2px solid var(--ink); border-radius: 8px; background: var(--ink); color: var(--paper); cursor: pointer;
+  font: 700 0.95rem var(--ui); letter-spacing: 0.16em; text-transform: uppercase; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.3);
+}
+.opening-play {
+  transition: transform 150ms cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 150ms ease-out, background-color 150ms ease-out, color 150ms ease-out, outline-offset 150ms ease-out;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+/* hover only where there is a real pointer (touch screens would leave it stuck): it lifts a little and turns to paper */
+@media (hover: hover) {
+  .opening-play:hover:not(:active) { background: var(--paper); color: var(--ink); transform: translateY(-2px); box-shadow: 3px 5px 0 rgba(43, 36, 51, 0.3); }
+}
+/* pressed: a small, controlled compression, on mouse, keyboard and touch */
+.opening-play:active { background: var(--paper); color: var(--ink); transform: translateY(1px) scale(0.97); box-shadow: 1px 1px 0 rgba(43, 36, 51, 0.3); transition-duration: 70ms; }
+.brand-lockup { display: flex; align-items: center; gap: 12px; transform-origin: 0 0; }
+/* waiting for the fonts and the measurements: the table is empty, nothing flashes */
+.app.opening:not(.go) .brand-lockup, .app.opening:not(.go) .opening-stack { opacity: 0; }
+/* the composition holds, still, until Play: the table stays hidden beneath it */
+.app.opening > :not(.masthead):not(.opening-layer), .app.opening .masthead-tools, .app.opening .tagline { opacity: 0; }
+/* the slot holds the wordmark's place in the masthead; the wordmark inside is drawn large and shrinks into it */
+.app.opening.go .brand-slot { position: relative; width: var(--lw); height: var(--lh); }
+.app.opening.go .brand-lockup {
+  position: absolute; left: 0; top: 0; width: max-content; white-space: nowrap; zoom: var(--os); transform-origin: 0 0;
+  transform: translate(calc(var(--ox, 0px) / var(--os, 1)), calc(var(--oy, 0px) / var(--os, 1)));
+  animation: op-in 500ms ease-out both;
+}
+.app.opening.go .wm-it { animation: op-stamp 460ms cubic-bezier(0.3, 1.5, 0.45, 1) 450ms both; }
+.app.opening.go .opening-tag { animation: op-up 420ms ease-out 900ms both; }
+.app.opening.go .opening-play { animation: op-up 380ms ease-out 1100ms backwards; }
+/* Play: the tag and button leave, the wordmark travels home, the table fades up as it settles (about 0.85 s) */
+.app.opening.leaving .brand-lockup { animation: op-in 500ms ease-out both, op-travel 800ms cubic-bezier(0.45, 0, 0.25, 1) both; }
+.app.opening.leaving .opening-tag { animation: op-out 200ms ease-in forwards; pointer-events: none; }
+/* released: it springs back from the press and fades away while the wordmark starts to travel */
+.app.opening.leaving .opening-play { animation: op-release 340ms ease-out forwards; pointer-events: none; }
+.app.opening.leaving > :not(.masthead):not(.opening-layer), .app.opening.leaving .masthead-tools, .app.opening.leaving .tagline { animation: op-reveal 420ms ease-out 430ms both; }
+@keyframes op-in { from { opacity: 0; } }
+@keyframes op-travel { from { transform: translate(calc(var(--ox, 0px) / var(--os, 1)), calc(var(--oy, 0px) / var(--os, 1))) scale(1); } to { transform: translate(0, 0) scale(var(--is, 1)); } }
+@keyframes op-stamp { from { opacity: 0; transform: rotate(-3deg) translateY(-0.45em) scale(1.45); } to { opacity: 1; transform: rotate(-3deg); } }
+@keyframes op-up { from { opacity: 0; transform: translateY(10px); } }
+@keyframes op-out { to { opacity: 0; } }
+@keyframes op-release { 0% { transform: translateY(1px) scale(0.97); opacity: 1; } 35% { transform: translateY(-1px) scale(1.02); opacity: 1; } 100% { transform: translateY(3px) scale(0.98); opacity: 0; } }
+@keyframes op-reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.opening-play:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .app.opening *, .app.opening *::after { animation: none !important; transition: none !important; }
+  .opening-play:active, .opening-play:hover:not(:active) { transform: none; }
+}

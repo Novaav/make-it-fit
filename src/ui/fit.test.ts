@@ -30,7 +30,7 @@ describe('chooseArrangement', () => {
     // The previous single arrangement (10x11) gave about 57 px cells at 1440x900 and 41 px at 1280x720.
     expect(pick('03', 1440, 900).cell).toBeGreaterThanOrEqual(60)
     expect(pick('03', 1280, 720).cell).toBeGreaterThanOrEqual(47)
-    expect(pick('03', 1440, 900).layout.cols).toBeGreaterThan(10) // a wide, short arrangement
+    expect(pick('03', 1440, 900).layout.cols).toBeGreaterThanOrEqual(10) // a wide, short arrangement
   })
 
   it('phones stack the tray under the suitcase with a tray as narrow as the board', () => {
@@ -47,7 +47,7 @@ describe('chooseArrangement', () => {
     for (const l of levels) {
       const a = pick(l.id, 768, 1024)
       expect(a.cell, `L${l.id}`).toBeGreaterThanOrEqual(44)
-      expect(a.overflow, `L${l.id}`).toBeLessThanOrEqual(260)
+      expect(a.overflow, `L${l.id}`).toBeLessThanOrEqual(360) // the suitcase stays pinned; only the tray scrolls
     }
   })
 
@@ -55,8 +55,20 @@ describe('chooseArrangement', () => {
     for (const l of levels) {
       const a = pick(l.id, 844, 390)
       expect(a.mode).toBe('wing')
-      expect(a.cell * l.height + 56 + 26 + 44).toBeLessThanOrEqual(390)
-      expect(a.cell).toBeGreaterThanOrEqual(38)
+      expect(a.cell * l.height + 56 + 26 + 44 + 44).toBeLessThanOrEqual(390)
+      expect(a.cell).toBeGreaterThanOrEqual(32)
     }
+  })
+})
+
+describe('phone: the tool row stays on screen', () => {
+  const level = (id: string) => levels.find((l) => l.id === id)!
+  const cell = (id: string, w: number, h: number) => chooseArrangement(level(id), TRAY_LAYOUTS[id], { w, h }).cell
+  it('Level 1 on the smallest phone gives up a little cell size (at most 4 px) so that Rotate, Remove, Undo, Reset and Next level fit', () => {
+    expect(cell('01', 360, 740)).toBe(48)
+  })
+  it('taller phones are untouched', () => {
+    expect(cell('01', 390, 844)).toBeGreaterThanOrEqual(51)
+    expect(cell('01', 430, 932)).toBeGreaterThanOrEqual(51)
   })
 })

@@ -39,28 +39,71 @@ jobs:
       - name: Type check
         run: npx tsc -b
 
+      - name: Lint
+        run: npm run lint
+
       - name: Unit tests
         run: npm test
 
       - name: Puzzle verification (solver must reproduce the committed puzzle data)
         run: |
           python3 verify_levels.py
-          git diff --exit-code -- VERIFIED_LEVELS.json
+          git diff --exit-code -- VERIFIED_LEVELS.json src/engine/solutions.fixture.json src/dev/explorer.fixture.json
 
       - name: Production build contains no dev tools
         run: npm run check:prod-clean
 
-      - name: Install Chrome and WebKit (the Safari engine) for Playwright
-        run: npx playwright install --with-deps chrome webkit
+  # The browser suite runs as parallel jobs, one per engine (and two shards for the two big ones), so that no job
+  # approaches its time limit and a failure names the engine. Chrome also runs the production-build specs.
+  browser:
+    name: browser (${{ matrix.name }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: chrome 1/2, browser: chrome, args: "--project=dev --project=prod --shard=1/2", perf: "--project=dev" }
+          - { name: chrome 2/2, browser: chrome, args: "--project=dev --project=prod --shard=2/2" }
+          - { name: webkit 1/2, browser: webkit, args: "--project=webkit --shard=1/2", perf: "--project=webkit" }
+          - { name: webkit 2/2, browser: webkit, args: "--project=webkit --shard=2/2" }
+          - { name: firefox, browser: firefox, args: "--project=firefox", firefox: "1", perf: "--project=firefox" }
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies (clean, from lockfile)
+        run: npm ci
+
+      - name: Install ${{ matrix.browser }} for Playwright (WebKit is the Safari engine, not Safari)
+        run: npx playwright install --with-deps ${{ matrix.browser }}
 
       - name: Browser tests
-        run: npx playwright test
+        run: npx playwright test ${{ matrix.args }} --grep-invert @perf
+        env:
+          PW_FIREFOX: ${{ matrix.firefox }}
+
+      # Timing and frame-rate checks (tagged @perf) run alone on one worker: with two workers on a two-CPU runner they
+      # compete for frames and a smooth page measures as a slow one. One job per engine runs them.
+      - name: Timing tests, alone
+        if: ${{ matrix.perf != '' }}
+        run: npx playwright test ${{ matrix.perf }} --grep @perf --workers=1
+        env:
+          PW_FIREFOX: ${{ matrix.firefox }}
 
       - name: Upload browser test report on failure
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report
+          name: playwright-report-${{ strategy.job-index }}
           path: |
             playwright-report/
             test-results/

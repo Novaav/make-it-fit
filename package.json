@@ -1,16 +1,19 @@
 {
   "name": "make-it-fit",
   "private": true,
+  "license": "UNLICENSED",
+  "author": "Nova Zandkarimi",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
+    "lint": "oxlint --deny-warnings src e2e scripts vite.config.ts playwright.config.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "art:sheet": "node scripts/art-sheet.mjs",
-    "check:prod-clean": "vite build && ! grep -rqE \"dev-tools|Fill max bonus|Clear saved progress|Test win|TEST MODE|TEST RUN|test-done|__commits|__artCheck|Art review sheet\" dist && echo prod build has no dev tools"
+    "check:prod-clean": "vite build && ! grep -rqE \"dev-tools|Fill perfect pack|Solution Explorer|Clear saved progress|Test win|TEST MODE|TEST RUN|test-done|__commits|__artCheck|Art review sheet\" dist && echo prod build has no dev tools"
   },
   "dependencies": {
     "react": "^19.3.1",
@@ -21,6 +24,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.88.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^4.1.12"

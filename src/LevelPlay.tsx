@@ -5,11 +5,11 @@ import {
   createGame,
   isOverWeight,
   isWon,
-  optionalPlacedCount,
+  isPerfect,
+  totalChaos,
   totalWeight,
   itemBounds,
   previewPlacement,
-  rotate,
   remove,
   reset,
   rotatePlaced,
@@ -19,28 +19,26 @@ import {
   type Level,
   type Orientation,
   type Placement,
-  type PlacementError,
   place,
 } from './engine'
 import { ItemArt } from './components/ItemArt'
 import { WeightLabel, hasLabelZone } from './art/WeightLabel'
 import { dragTarget, sameTarget, type DragGeometry } from './ui/drag'
 import { TRAY_LAYOUTS } from './ui/trayLayout'
+import { sound } from './sound'
 import { chooseArrangement } from './ui/fit'
 import { useViewport } from './ui/useViewport'
 import TableProps from './components/TableProps'
-import { BEST_OPTIONAL, ITEM_NAMES, LEVEL_TITLES, maxBonusLabel } from './levelMeta'
-import { formatKg, formatWeight } from './weight'
+import { ChaosBadge } from './components/ChaosBadge'
+import PerfectFlourish from './components/PerfectFlourish'
+import PerfectSeal from './components/PerfectSeal'
+import IntroNote from './components/IntroNote'
+import { LEVEL_TITLES } from './levelMeta'
+import { failureMessage, itemName, reasonText, itemSummary, scoreAnnouncement, statusNote, weightChipAnchor } from './status'
+import { formatLoad, formatWeight } from './weight'
+import { restoreGame, snapshot, type SavedBoard } from './boards'
 
-const name = (id: string) => ITEM_NAMES[id] ?? id
-const REASONS: Record<PlacementError, string> = {
-  'out-of-bounds': 'it sticks out of the suitcase',
-  overlap: 'it overlaps another item',
-  'unknown-item': 'unknown item',
-  'already-placed': 'already packed',
-  'not-placed': 'not packed',
-  'nothing-to-undo': 'nothing to undo',
-}
+const name = itemName
 
 type Source = 'tray' | 'board'
 interface Carry {
@@ -63,22 +61,36 @@ interface Pending {
 
 interface Props {
   level: Level
-  onWin: (optionalPacked: number) => void
+  /** Called whenever the current pack is a win, with its Chaos and whether it is perfect. */
+  onWin: (chaos: number, perfect: boolean) => void
+  /** Development only: a win reached through a dev fill counts as a session-only test completion (never saved). */
+  onTestWin?: () => void
   /** Offered on the completion card when there is a next playable level. */
   onNext?: () => void
   /** True when no level follows this one. */
   isLast?: boolean
   /** Development builds only: replace the board with these placements (undoable step by step). */
   devFill?: { nonce: number; placements: readonly Placement[] }
+  /** The saved arrangement for this level, if any. Only a starting point: it is replayed through the engine. */
+  saved?: SavedBoard
+  /** Called with the new arrangement after the player changes it (never for a restore). */
+  onBoardChange?: (board: SavedBoard) => void
+  /** A dev fill is applied once; this tells the app to forget it so a remount can never apply it again. */
+  onDevFillUsed?: () => void
+  /** The how-to-play note: shown on a first visit (`open`), replayable from the objective. */
+  /** `replay` is true when the player asked for the note again; a first-visit note steps aside when they start playing. */
+  intro?: { open: boolean; replay?: boolean; /** a first-visit note that has not been seen yet (it may still be waiting for the entrance) */ pending?: boolean; onOpen: () => void; onClose: () => void }
 }
 
-export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill }: Props) {
+export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLast, devFill, saved, onBoardChange, onDevFillUsed, intro }: Props) {
   const viewport = useViewport()
   const arrangement = useMemo(() => chooseArrangement(LEVEL, TRAY_LAYOUTS[LEVEL.id], viewport), [LEVEL, viewport])
   const layout = arrangement.layout
-  const [game, setGame] = useState<GameState>(() => createGame(LEVEL))
+  const [game, setGame] = useState<GameState>(() => restoreGame(LEVEL, saved))
   const [carry, setCarryState] = useState<Carry | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
+  const [hoverId, setHoverId] = useState<string | null>(null)
+  const [focusId, setFocusId] = useState<string | null>(null)
   const [trayTurns, setTrayTurns] = useState<Record<string, Orientation>>({})
   const [message, setMessage] = useState('')
 
@@ -98,7 +110,11 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const carriedRef = useRef<HTMLDivElement | null>(null)
   const focusAfter = useRef<string | null>(null)
   const devTainted = useRef(false)
-  const celebrated = useRef(false)
+  // A level that comes back already packed (restored) is not a new achievement: no dialog, no fanfare.
+  const celebrated = useRef(isWon(game))
+  const celebratedPerfect = useRef(isPerfect(game))
+  const [dialogKind, setDialogKind] = useState<'normal' | 'perfect'>(isPerfect(game) ? 'perfect' : 'normal')
+  const replayRef = useRef<HTMLButtonElement>(null)
   const dialogOpenRef = useRef(false)
   const returnFocus = useRef<HTMLElement | null>(null)
   const primaryRef = useRef<HTMLButtonElement>(null)
@@ -122,8 +138,8 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const apply = (result: ActionResult, ok: string) => {
     if (result.ok) {
       setGame(result.state)
-      setMessage(ok)
-    } else setMessage(`Can't do that: ${REASONS[result.error]}.`)
+      setMessage(ok + scoreAnnouncement(result.state))
+    } else setMessage(failureMessage(result.error))
     return result.ok
   }
 
@@ -184,7 +200,10 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
 
   const dropRemove = (id: string) => {
     const o = orientationOf(id)
-    if (apply(remove(gameRef.current, id), `${name(id)} taken out.`)) setTrayTurns((t) => ({ ...t, [id]: o }))
+    if (apply(remove(gameRef.current, id), `${name(id)} taken out.`)) {
+      sound.play('remove')
+      setTrayTurns((t) => ({ ...t, [id]: o }))
+    }
     setSelected(null)
   }
 
@@ -192,15 +211,18 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     const c = carryRef.current!
     const orientation = ((c.orientation + 1) % 4) as Orientation
     const turned = { ...c, orientation }
+    sound.play('rotate')
     if (c.mode === 'pointer') setCarry(retarget(turned, pointerPos.current.x, pointerPos.current.y))
     else setCarry({ ...turned, ...clampOrigin(LEVEL, c.itemId, orientation, c.x, c.y) })
   }
 
   const rotateSelected = (id: string | null) => {
+    dismissNote()
     if (carryRef.current) return rotateCarry()
     if (!id) return setMessage('Select an item first, then rotate it.')
-    if (placementOf(id)) apply(rotatePlaced(gameRef.current, id), `${name(id)} rotated.`)
+    if (placementOf(id)) sound.play(apply(rotatePlaced(gameRef.current, id), `${name(id)} rotated.`) ? 'rotate' : 'invalid')
     else {
+      sound.play('rotate')
       setTrayTurns((t) => ({ ...t, [id]: (((t[id] ?? 0) + 1) % 4) as Orientation }))
       setMessage(`${name(id)} rotated.`)
     }
@@ -209,10 +231,12 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const commitCarry = (c: Carry) => {
     const pv = previewPlacement(gameRef.current, c.itemId, c.orientation, c.x, c.y)
     if (pv.error) {
-      setMessage(`${name(c.itemId)} doesn't fit there: ${REASONS[pv.error]}.`)
+      setMessage(`${name(c.itemId)} doesn't fit there: ${reasonText(pv.error)}.`)
+      sound.play('invalid')
       return false
     }
     apply(commitPlacement(gameRef.current, pv.placement), `${name(c.itemId)} packed.`)
+    sound.play('place')
     return true
   }
 
@@ -247,6 +271,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   const doReset = () => {
     devTainted.current = false
     celebrated.current = false
+    celebratedPerfect.current = false
     setDialogOpen(false)
     setGame(reset(gameRef.current))
     setSelected(null)
@@ -258,13 +283,23 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     if (apply(undo(gameRef.current), 'Undone.')) setSelected(null)
   }
 
+  // A first-visit note steps aside as soon as the player starts playing (picks something up or turns it).
+  const dismissNote = () => {
+    if (intro && !intro.replay && (intro.open || intro.pending)) intro.onClose()
+  }
+
   const startPointer = (e: ReactPointerEvent, itemId: string, source: Source) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return
+    dismissNote()
+    sound.unlock()
     if (carryRef.current?.mode === 'keyboard') setCarry(null)
     pending.current = { itemId, source, sx: e.clientX, sy: e.clientY }
   }
 
   const pickUpWithKeyboard = (itemId: string, source: Source) => {
+    dismissNote()
+    sound.unlock()
+    sound.play('pickup')
     const o = orientationOf(itemId)
     const p = placementOf(itemId)
     const b = itemBounds(LEVEL, itemId, o)
@@ -285,6 +320,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
         const p = pending.current
         if (!p || Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 6) return
         setSelected(p.itemId)
+        sound.play('pickup')
         setCarry(
           retarget(
             { itemId: p.itemId, orientation: orientationOf(p.itemId), x: 0, y: 0, source: p.source, mode: 'pointer', snapped: false, overTray: false },
@@ -422,17 +458,57 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carry])
 
-  const winSignal = isWon(game) ? optionalPlacedCount(game) : -1
+  // Report every change the player makes (not the restore itself) so the app can keep and save the arrangement.
+  const reported = useRef(game.placements)
   useEffect(() => {
-    // Dev-tool fills must never write real progress.
-    if (winSignal >= 0 && !devTainted.current) onWin(winSignal)
-    if (winSignal >= 0 && !celebrated.current) {
-      celebrated.current = true
-      returnFocus.current = document.activeElement as HTMLElement | null
-      setDialogOpen(true)
-    }
+    if (game.placements === reported.current) return
+    reported.current = game.placements
+    onBoardChange?.(snapshot(LEVEL, game.placements))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [winSignal])
+  }, [game.placements])
+
+  const won = isWon(game)
+  const perfectNow = isPerfect(game)
+  const chaos = totalChaos(game)
+  // The flourish plays whenever the pack BECOMES perfect (also after taking something out and packing it back),
+  // never for a restored perfect pack or a historical completion. Derived from the current arrangement only.
+  const [spark, setSpark] = useState(false)
+  const [wasPerfect, setWasPerfect] = useState(perfectNow)
+  if (perfectNow !== wasPerfect) {
+    setWasPerfect(perfectNow)
+    setSpark(perfectNow)
+  }
+  useEffect(() => {
+    if (!spark) return
+    const t = window.setTimeout(() => setSpark(false), 1900)
+    return () => window.clearTimeout(t)
+  }, [spark])
+  useEffect(() => {
+    if (!won) return
+    // Dev-tool fills must never write real progress.
+    if (devTainted.current) onTestWin?.()
+    else onWin(chaos, perfectNow)
+    // At most one normal and one perfect completion dialog per visit; a restored winning pack opens none.
+    const kind = perfectNow ? 'perfect' : 'normal'
+    const shown = perfectNow ? celebratedPerfect : celebrated
+    if (shown.current) return
+    shown.current = true
+    sound.play(perfectNow ? 'perfect' : 'complete')
+    celebrated.current = true
+    if (perfectNow) celebratedPerfect.current = true
+    returnFocus.current = document.activeElement as HTMLElement | null
+    setDialogKind(kind)
+    // A perfect pack: the gold meter, its sheen, the gold ring and the sparkles all start at once; the boarding pass is
+    // stamped a beat later (just as the sheen finishes), not after a long pause. With reduced motion there is no wait.
+    const wait = perfectNow && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 420 : 0
+    if (!wait) {
+      setDialogOpen(true)
+      return
+    }
+    const t = window.setTimeout(() => setDialogOpen(true), wait)
+    return () => window.clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [won, chaos, perfectNow])
 
   useEffect(() => {
     if (dialogOpen) primaryRef.current?.focus()
@@ -450,6 +526,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     setGame(next)
     setSelected(null)
     setMessage('Dev: solution loaded.')
+    onDevFillUsed?.() // consumed: returning to this level later must never re-apply it
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [devNonce])
 
@@ -465,25 +542,23 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
   }
   const required = LEVEL.items.filter((i) => i.required)
   const packedCount = required.filter((i) => placedIds.has(i.id)).length
-  const optionalItems = LEVEL.items.filter((i) => !i.required)
-  const optionalCount = optionalPlacedCount(game)
   const limit = LEVEL.weightLimit
   const weight = totalWeight(game)
   const overWeight = isOverWeight(game)
-  const showWin = isWon(game)
-  const requiredDone = packedCount === required.length
-  const bestBonus = BEST_OPTIONAL[LEVEL.id] ?? 0
-  const solved = showWin
-  // "Perfect pack" only for a valid solution: the denominator is the verified maximum, not the optional item count.
-  const bonusMaxed = solved && optionalItems.length > 0 && optionalCount >= bestBonus
-  const goalText =
-    limit === undefined
-      ? `Fit all ${required.length} items into the suitcase. Green = fits, red = doesn't.`
-      : `Pack your items within the allowance. ★ items are optional extras.`
+  const solved = isWon(game)
+  // Chaos is shown on every item from Level 1; only Levels 2-3 have a Chaos target (Level 1 is still won by packing all five).
+  const scored = LEVEL.items.some((i) => i.chaos > 0)
+  const hasChaos = LEVEL.target !== undefined
+  const target = LEVEL.target ?? 0
+  const perfectScore = LEVEL.perfect ?? 0
+  const mandatoryNames = required.map((i) => name(i.id))
+  const goalText = !hasChaos
+    ? `Fit all ${required.length} items into the suitcase. Green = fits, red = doesn't.`
+    : `${required.length ? `${mandatoryNames.join(' and ')} must come. Then reach` : 'Reach'} ${target} Chaos within ${formatWeight(limit ?? 0)}.${required.length ? '' : ` Perfect: ${perfectScore}.`}`
   const liveHint =
     carry && snapped && preview
       ? preview.error
-        ? `Red — ${REASONS[preview.error]}.`
+        ? `Red — ${reasonText(preview.error)}.`
         : 'Green — it fits here.'
       : null
   const overTray = !!carry && carry.mode === 'pointer' && carry.overTray
@@ -494,30 +569,47 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
     return { '--cw': b.width, '--ch': b.height } as React.CSSProperties
   }
   const itemById = (id: string) => LEVEL.items.find((i) => i.id === id)!
-  // Anchor the weight chip on a cell the item really covers (bottom-most, then right-most),
-  // not on the bounding-box corner, which is empty for T/U/L shapes.
   const chips = (id: string, o: Orientation, room = '0px') => {
-    if (limit === undefined) return null
+    const item = itemById(id)
+    const badge = scored ? <ChaosBadge item={item} orientation={o} /> : null
+    if (limit === undefined) return badge
     // Redrawn items print the weight on a label zone built into the illustration; others still use a chip.
-    if (hasLabelZone(id)) return <WeightLabel item={itemById(id)} orientation={o} grams={itemById(id).weight} bonus={!itemById(id).required} />
-    const cells = rotate(itemById(id).cells, o)
-    const anchor = cells.reduce((a, c) => (c.y > a.y || (c.y === a.y && c.x > a.x) ? c : a))
+    if (hasLabelZone(id))
+      return (
+        <>
+          {badge}
+          <WeightLabel item={item} orientation={o} grams={item.weight} />
+        </>
+      )
+    const anchor = weightChipAnchor(item, o)
     return (
-      <span
-        className={`chip-w${itemById(id).required ? '' : ' bonus'}`}
-        data-weight={itemById(id).weight}
-        style={{ '--chip-x': anchor.x + 1, '--chip-y': anchor.y + 1, '--chip-room': room } as React.CSSProperties}
-        aria-hidden="true"
-      >
-        {formatWeight(itemById(id).weight)}
-        {itemById(id).required ? '' : ' ★'}
-      </span>
+      <>
+        {badge}
+        <span
+          className="chip-w"
+          data-weight={item.weight}
+          style={{ '--chip-x': anchor.x + 1, '--chip-y': anchor.y + 1, '--chip-room': room } as React.CSSProperties}
+          aria-hidden="true"
+        >
+          {formatWeight(item.weight)}
+        </span>
+      </>
     )
   }
-  const describe = (id: string) =>
-    limit === undefined
-      ? ''
-      : ` ${itemById(id).required ? 'Required' : 'Optional'}, ${formatWeight(itemById(id).weight)}.`
+  const describe = (id: string) => itemSummary(LEVEL, itemById(id))
+
+  // What the info line shows: the item being carried, else the one under the mouse, else the focused one, else the selected one.
+  const infoId = carry?.itemId ?? hoverId ?? focusId ?? selected
+  const infoItem = infoId ? itemById(infoId) : null
+  const infoHandlers = (id: string) => ({
+    onPointerEnter: (e: ReactPointerEvent) => {
+      if (e.pointerType === 'mouse' && !carryRef.current) setHoverId(id)
+    },
+    onPointerLeave: () => setHoverId(null),
+    onFocus: () => setFocusId(id),
+    onBlur: () => setFocusId((f) => (f === id ? null : f)),
+  })
+  const note = statusNote(game)
 
   return (
     <div
@@ -539,29 +631,77 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
       <main className="stage">
         <section className="case-wrap" aria-label={`Level ${Number(LEVEL.id)} suitcase`}>
           <section className={`objective${solved ? ' solved' : ''}`} aria-label="Objective">
+          {intro?.open && (
+            <IntroNote
+              level={LEVEL}
+              onClose={() => {
+                intro.onClose()
+                requestAnimationFrame(() => replayRef.current?.focus())
+              }}
+            />
+          )}
             <p className="level-title">
               Level {Number(LEVEL.id)} · {LEVEL_TITLES[LEVEL.id]}
-            </p>
-            <p className="goal-line" aria-live="off">
-              {solved ? (
-                <>
-                  <b>✓ Packed!</b>{' '}
-                  {optionalItems.length > 0 ? (bonusMaxed ? `${maxBonusLabel(LEVEL.id)}!` : '★ extras are optional.') : ''}
-                </>
-              ) : (
-                liveHint ?? goalText
+              {intro && (
+                <button type="button" className="note-replay" ref={replayRef} onClick={() => { sound.play('click'); intro.onOpen() }} aria-label="How to play (replay the instructions)">
+                  <span className="note-replay-long">How to play</span>
+                  <span className="note-replay-short" aria-hidden="true">?</span>
+                </button>
               )}
             </p>
-            <div className="pills">
-              <span className={`pill${requiredDone ? ' ok' : ''}`}>
-                <span className="pill-label">Required</span>
-                <b>{packedCount}/{required.length}</b>
-                {requiredDone && <span aria-hidden="true">✓</span>}
+            <p className="goal-line" aria-live="off">
+              <span>
+                {solved ? (
+                  <>
+                    <b>✓ Packed!</b> {hasChaos ? (perfectNow ? `Maximum Chaos: ${chaos}!` : `${chaos} Chaos. Perfect is ${perfectScore}.`) : ''}
+                  </>
+                ) : (
+                  liveHint ?? goalText
+                )}
               </span>
+              {/* invisible copies of the longest things this line can say, so its height (and everything below it) never changes with the state, whatever the text size; the text is generated from an attribute so it is not part of the page's text) */}
+              <span className="goal-size" aria-hidden="true" data-text={goalText} />
+              <span className="goal-size" aria-hidden="true" data-text={`✓ Packed! ${hasChaos ? `${perfectScore} Chaos. Perfect is ${perfectScore}.` : ''}`} />
+            </p>
+            <div className="pills">
+              {hasChaos && (
+                <span className={`pill chaos${solved ? ' ok' : ''}${perfectNow ? ' max' : ''}${spark ? ' spark' : ''}`}>
+                  <span className="pill-label">Chaos</span>
+                  <b>{chaos}</b>
+                  <span className="of">of {target} to win</span>
+                  <span
+                    className="chaos-bar"
+                    role="meter"
+                    aria-label="Chaos"
+                    aria-valuemin={0}
+                    aria-valuemax={perfectScore}
+                    aria-valuenow={chaos}
+                    aria-valuetext={`${chaos} Chaos. ${target} wins, ${perfectScore} is perfect.`}
+                  >
+                    <span className="fill" style={{ width: `${Math.min(100, (chaos / perfectScore) * 100)}%` }} />
+                    {perfectNow && <span className="sheen" aria-hidden="true" />}
+                    <i className="tick win" style={{ left: `${(target / perfectScore) * 100}%` }} aria-hidden="true" />
+                  </span>
+                  <span className="of perfect">{perfectNow ? '★ perfect' : `perfect ${perfectScore}`}</span>
+                </span>
+              )}
+              {required.length > 0 && (
+                <span className={`pill${packedCount === required.length ? ' ok' : ''}`}>
+                  <span className="pill-label">{hasChaos ? 'Must pack' : 'Required'}</span>
+                  <b>{packedCount}/{required.length}</b>
+                  {packedCount === required.length && <span aria-hidden="true">✓</span>}
+                </span>
+              )}
+              {scored && !hasChaos && (
+                <span className="pill chaos plain">
+                  <span className="pill-label">Chaos</span>
+                  <b>{chaos}</b>
+                </span>
+              )}
               {limit !== undefined && (
                 <span className={`pill weight${overWeight ? ' over' : ''}`} title={`Packing allowance: ${formatWeight(limit)}`}>
-                  <span className="pill-label">Allowance</span>
-                  <b>{formatKg(weight)}/{formatWeight(limit)}</b>
+                  <span className="pill-label">Weight</span>
+                  <b>{formatLoad(weight)}/{formatWeight(limit)}</b>
                   <span
                     className="mini-bar"
                     role="meter"
@@ -573,30 +713,18 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                   >
                     <span style={{ width: `${Math.min(100, (weight / limit) * 100)}%` }} />
                   </span>
+                  {!overWeight && <span className="of">{formatWeight(limit - weight)} left</span>}
                 </span>
-              )}
-              {optionalItems.length > 0 && (
-                <span className={`pill bonus${bonusMaxed ? ' max' : ''}`}>
-                  <span className="pill-label">★ Bonus</span>
-                  <b>{optionalCount}/{bestBonus}</b>
-                  {bonusMaxed && <span className="max-tag">{maxBonusLabel(LEVEL.id)}</span>}
-                </span>
-              )}
-              {solved && (
-                <button type="button" className="pill-action" onClick={onNext ?? doReset}>
-                  {onNext ? 'Next level →' : 'Play again'}
-                </button>
               )}
             </div>
-            <p className={`over-note${overWeight ? ' on' : ''}`} role="status">
-              {overWeight ? `Over the allowance by ${formatWeight(weight - (limit ?? 0))} — take something out.` : ''}
+            <p className={`over-note${overWeight ? ' on' : note ? ' missing' : ''}`} role="status">
+              {note}
             </p>
           </section>
           <div className="case-stick">
           <p className="case-strip" aria-hidden="true">
-            <span>Packed {packedCount}/{required.length}</span>
-            {limit !== undefined && <span className={overWeight ? 'over' : ''}>{formatKg(weight)}/{formatWeight(limit)}</span>}
-            {optionalItems.length > 0 && <span>★ {optionalCount}/{bestBonus}</span>}
+            {hasChaos ? <span>Chaos {chaos}/{target}</span> : <span>Packed {packedCount}/{required.length}{scored && ` · Chaos ${chaos}`}</span>}
+            {limit !== undefined && <span className={overWeight ? 'over' : ''}>{formatLoad(weight)}/{formatWeight(limit)}</span>}
           </p>
           <div className={`suitcase${overWeight ? ' strain' : ''}`}>
             <div className="handle" aria-hidden="true" />
@@ -606,6 +734,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
             <span className="hw corner br" aria-hidden="true" />
             <span className="hw latch l" aria-hidden="true" />
             <span className="hw latch r" aria-hidden="true" />
+            {spark && <PerfectFlourish />}
             <div
               ref={boardRef}
               className={`board${carry?.mode === 'keyboard' ? ' keyboard-active' : ''}`}
@@ -623,6 +752,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                     style={{ ...pieceVars(p.itemId, o), '--x': p.x, '--y': p.y } as React.CSSProperties}
                     data-item={p.itemId}
                     aria-label={`${name(p.itemId)}, packed at column ${p.x + 1}, row ${p.y + 1}.${describe(p.itemId)} Enter to move, R to rotate, Delete to take out.`}
+                    {...infoHandlers(p.itemId)}
                     onPointerDown={(e) => startPointer(e, p.itemId, 'board')}
                     onClick={(e) => e.detail === 0 && pickUpWithKeyboard(p.itemId, 'board')}
                   >
@@ -654,6 +784,17 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
               </div>
             </div>
           </div>
+          <p className={`item-info${infoItem ? '' : ' idle'}`} aria-hidden="true">
+            {infoItem ? (
+              <>
+                <b>{name(infoItem.id)}</b>
+                {limit !== undefined && <span>{formatWeight(infoItem.weight)}</span>}
+                <span className={infoItem.required ? 'req' : 'opt'}>{infoItem.required && infoItem.chaos === 0 ? (hasChaos ? 'Mandatory' : 'Required') : `Chaos ${infoItem.chaos}`}</span>
+              </>
+            ) : (
+              'Hover, tap or focus an item to see what it is.'
+            )}
+          </p>
           </div>
         </section>
 
@@ -666,8 +807,10 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                   ? 'Drop here to take it out.'
                   : selected && !placedIds.has(selected)
                     ? name(selected)
-                    : optionalItems.length > 0
-                      ? `${optionalItems.length} optional ★ · at most ${bestBonus} fit`
+                    : scored
+                      ? hasChaos && required.length
+                        ? 'MUST = mandatory · stamps = Chaos'
+                        : 'Stamps show each item’s Chaos'
                       : ''}
               </span>
             </div>
@@ -706,8 +849,8 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
                       className={`piece in-tray${selected === item.id ? ' selected' : ''}`}
                       style={pieceVars(item.id, o)}
                       data-item={item.id}
-                      title={name(item.id)}
                       aria-label={`${name(item.id)}, not packed.${describe(item.id)} Enter to pick up, R to rotate.`}
+                      {...infoHandlers(item.id)}
                       onPointerDown={(e) => startPointer(e, item.id, 'tray')}
                       onClick={(e) => e.detail === 0 && pickUpWithKeyboard(item.id, 'tray')}
                     >
@@ -720,13 +863,19 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
             </div>
           </div>
 
-          <div className="toolbar">
+          <div className={`toolbar${solved && onNext ? ' has-next' : ''}`}>
             <button type="button" onClick={() => rotateSelected(selected)}>Rotate</button>
             <button type="button" onClick={() => selected && dropRemove(selected)} disabled={!selectedPlaced}>Remove</button>
-            <button type="button" onClick={doUndo} disabled={game.history.length === 0}>Undo</button>
-            <button type="button" onClick={doReset} disabled={game.placements.length === 0}>
+            <button type="button" onClick={() => { sound.play('click'); doUndo() }} disabled={game.history.length === 0}>Undo</button>
+            <button type="button" onClick={() => { sound.play('click'); doReset() }} disabled={game.placements.length === 0}>
               Reset
             </button>
+            {/* after a win, in the same row as the other actions (so nothing above it moves): on to the next level, which is unlocked */}
+            {solved && onNext && (
+              <button type="button" className="next" onClick={() => { sound.play('click'); onNext() }}>
+                Next level →
+              </button>
+            )}
           </div>
 
           <details className="help">
@@ -742,7 +891,7 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
       {dialogOpen && (
         <div className="backdrop" onClick={closeDialog}>
           <div
-            className="dialog"
+            className={`dialog${dialogKind === 'perfect' ? ' perfect' : ''}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="done-title"
@@ -751,35 +900,48 @@ export default function LevelPlay({ level: LEVEL, onWin, onNext, isLast, devFill
           >
             <div className="dialog-scroll">
             <div className="dialog-band" aria-hidden="true">
-              <span>Boarding pass</span>
+              <span>{dialogKind === 'perfect' ? 'First class' : 'Boarding pass'}</span>
               <span>Gate {Number(LEVEL.id)}</span>
             </div>
+            {dialogKind === 'perfect' && <PerfectSeal />}
             <p className="dialog-kicker">Level {Number(LEVEL.id)} · {LEVEL_TITLES[LEVEL.id]}</p>
             {import.meta.env.DEV && devTainted.current && <p className="test-tag">TEST RUN — not saved</p>}
-            <h2 id="done-title">Packed!</h2>
+            <h2 id="done-title">{dialogKind === 'perfect' ? 'Maximum Chaos!' : 'Packed!'}</h2>
             <ul className="results">
-              <li>
-                <span className="ok">✓</span> Required items <b>{packedCount}/{required.length}</b>
-              </li>
-              {limit !== undefined && (
+              {required.length > 0 && (
                 <li>
-                  <span className="ok">✓</span> Within the allowance <b>{formatKg(weight)}/{formatWeight(limit)}</b>
+                  <span className="ok">✓</span> {hasChaos ? 'Mandatory items' : 'Required items'} <b>{packedCount}/{required.length}</b>
                 </li>
               )}
-              {optionalItems.length > 0 && (
-                <li className={`bonus-result${bonusMaxed ? ' max' : ''}`}>
-                  <span className="ok" aria-hidden="true">★</span> Bonus <b>{optionalCount}/{bestBonus}</b>
-                  {bonusMaxed ? <span className="max-tag">{maxBonusLabel(LEVEL.id)}!</span> : <span className="sub"> (optional extras)</span>}
+              {hasChaos && (
+                <li>
+                  <span className="ok">✓</span> Chaos <b>{chaos}</b> (needed {target})
+                </li>
+              )}
+              {scored && !hasChaos && (
+                <li>
+                  <span className="ok">✓</span> Chaos packed <b>{chaos}</b>
+                </li>
+              )}
+              {limit !== undefined && (
+                <li>
+                  <span className="ok">✓</span> Within the allowance <b>{formatLoad(weight)}/{formatWeight(limit)}</b>
+                </li>
+              )}
+              {hasChaos && (
+                <li className={`bonus-result${perfectNow ? ' max' : ''}`}>
+                  <span className="ok" aria-hidden="true">★</span>{' '}
+                  {perfectNow ? <b>The most Chaos this suitcase can hold.</b> : <>A perfect pack is <b>{perfectScore}</b> Chaos. Can you find it?</>}
                 </li>
               )}
             </ul>
             {isLast && <p className="sub">That&apos;s every level. Suitcase closed, dignity optional.</p>}
             <div className="barcode" aria-hidden="true" />
             <div className="dialog-actions">
-              <button type="button" ref={primaryRef} className="primary" onClick={onNext ? onNext : () => { closeDialog(); doReset() }}>
+              <button type="button" ref={primaryRef} className="primary" onClick={() => { sound.play('click'); if (onNext) onNext(); else { closeDialog(); doReset() } }}>
                 {onNext ? 'Next level' : 'Play again'}
               </button>
-              <button type="button" onClick={closeDialog}>Keep packing</button>
+              <button type="button" onClick={() => { sound.play('click'); closeDialog() }}>Keep packing</button>
             </div>
             </div>
           </div>

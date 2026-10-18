@@ -2,10 +2,7 @@ import { memo, useId, type CSSProperties, type ReactNode } from 'react'
 import type { Item, Orientation, Shape } from '../engine'
 import { artTransform } from '../ui/geometry'
 import { ITEM_NAMES } from '../levelMeta'
-import { ITEM_ART } from '../art/level1'
-
-const CREAM = '#fff6e6'
-const GOLD = '#e8c96a'
+import { ITEM_ART } from '../art/items'
 
 /** Rounded union of the shape's cells: dark outline pass, then colour pass. */
 function Silhouette({ cells, color, outline }: { cells: Shape; color: string; outline: string }) {
@@ -32,9 +29,6 @@ function Silhouette({ cells, color, outline }: { cells: Shape; color: string; ou
     </>
   )
 }
-
-const line = { strokeLinecap: 'round' as const, fill: 'none' }
-
 
 /** Temporary art for items that are not illustrated yet: a clearly labelled, dashed silhouette (never mistaken for finished art). */
 const PLACEHOLDER_COLORS = ['#cfd8e3', '#e3d4cf', '#d7e3cf', '#e3dccf', '#d9cfe3', '#cfe3df']
@@ -67,90 +61,9 @@ function UnionDash({ cells }: { cells: Shape }) {
   )
 }
 
+/** Every item in the game has final artwork; this only exists so an item added without art still shows up, clearly labelled. */
 function art(item: Item): ReactNode {
-  const s = item.cells
-  switch (item.id) {
-    case 'outfit':
-      return (
-        <>
-          <Silhouette cells={s} color="#d97aa6" outline="#8f3d66" />
-          <path d="M1.27 0.04Q1.5 0.36 1.73 0.04Z" fill={CREAM} />
-          <path d="M1.03 0.14V0.5M1.97 0.14V0.5" stroke="#8f3d66" strokeWidth={0.04} {...line} />
-          <path d="M1.5 0.7l0.06 0.14 0.14 0.06-0.14 0.06-0.06 0.14-0.06-0.14-0.14-0.06 0.14-0.06Z" fill={GOLD} />
-          <path d="M1.5 1.45l0.05 0.11 0.11 0.05-0.11 0.05-0.05 0.11-0.05-0.11-0.11-0.05 0.11-0.05Z" fill={GOLD} />
-          <path d="M1.2 1.82H1.8" stroke="#8f3d66" strokeWidth={0.04} strokeDasharray="0.08 0.08" {...line} />
-        </>
-      )
-    case 'disco_ball':
-      return (
-        <>
-          <path d="M1 0V0.14" stroke="#7a7a8c" strokeWidth={0.05} {...line} />
-          <circle cx={1} cy={1.05} r={0.9} fill="#c9d3e6" stroke="#6b7690" strokeWidth={0.1} />
-          <g stroke="#6b7690" strokeWidth={0.03} fill="none">
-            <ellipse cx={1} cy={1.05} rx={0.45} ry={0.9} />
-            <path d="M0.12 1.05H1.88M0.25 0.6H1.75M0.25 1.5H1.75" />
-          </g>
-          <path d="M0.55 0.55l0.05 0.12 0.12 0.05-0.12 0.05-0.05 0.12-0.05-0.12-0.12-0.05 0.12-0.05Z" fill="#fff" />
-        </>
-      )
-    case 'heels':
-      return (
-        <>
-          <Silhouette cells={s} color="#d9534f" outline="#8e2b29" />
-          <path d="M0.3 0.28h0.4M0.3 0.52h0.4M2.3 0.28h0.4M2.3 0.52h0.4" stroke={CREAM} strokeWidth={0.05} {...line} />
-          <path d="M0.55 1.55V1.9M2.45 1.55V1.9" stroke={CREAM} strokeWidth={0.08} {...line} />
-          <path d="M0.7 0.5Q1.5 1 2.3 0.5" stroke={CREAM} strokeWidth={0.05} {...line} />
-        </>
-      )
-    case 'cutout':
-      return (
-        <>
-          <Silhouette cells={s} color="#cfa66b" outline="#8a6636" />
-          <circle cx={2.5} cy={0.5} r={0.28} fill="#f1d6a8" stroke="#8a6636" strokeWidth={0.04} />
-          <path d="M2.38 0.45h0.02M2.6 0.45h0.02" stroke="#8a6636" strokeWidth={0.06} {...line} />
-          <path d="M2.35 0.6Q2.5 0.72 2.65 0.6" stroke="#8a6636" strokeWidth={0.04} {...line} />
-          <path d="M0.2 0.5H2.1M2.9 0.5H4.8" stroke="#8a6636" strokeWidth={0.03} strokeDasharray="0.1 0.08" {...line} />
-          <path d="M2.5 0.85V1.15M2.5 1.35V1.65" stroke="#8a6636" strokeWidth={0.05} {...line} />
-          <path d="M2.25 1.1h0.5l0.15 0.8h-0.8Z" fill="#e8736a" />
-          <path d="M1.5 3.2V3.8M3.5 3.2V3.8" stroke="#8a6636" strokeWidth={0.05} {...line} />
-        </>
-      )
-    case 'hotel_lamp':
-      return (
-        <>
-          <Silhouette cells={s} color="#f0d36b" outline="#a1862a" />
-          <path d="M0.12 0.9L0.3 0.12H1.7L1.88 0.9Z" fill={CREAM} stroke="#a1862a" strokeWidth={0.04} />
-          <path d="M1.5 1.1V2.6" stroke="#a1862a" strokeWidth={0.1} {...line} />
-          <ellipse cx={1.5} cy={2.8} rx={0.38} ry={0.12} fill="#a1862a" />
-          <path d="M1.5 0.9V1.1" stroke="#a1862a" strokeWidth={0.05} {...line} />
-        </>
-      )
-    case 'emergency_socks':
-      return (
-        <>
-          <Silhouette cells={s} color="#e68aa6" outline="#a24a68" />
-          <path d="M0.15 0.3H0.85M1.15 0.3H1.85M0.15 0.5H0.85M1.15 0.5H1.85" stroke={CREAM} strokeWidth={0.07} {...line} />
-          <path d="M0.2 0.8H0.8M1.2 0.8H1.8" stroke="#a24a68" strokeWidth={0.06} {...line} />
-        </>
-      )
-    case 'ceramic_foot':
-      return (
-        <>
-          <Silhouette cells={s} color="#eef2f8" outline="#5f7aa0" />
-          <g fill="#6d9bd1">
-            <circle cx={0.5} cy={0.5} r={0.1} />
-            <circle cx={1.5} cy={0.5} r={0.1} />
-            <circle cx={2.5} cy={0.5} r={0.1} />
-            <circle cx={0.5} cy={1.5} r={0.1} />
-            <circle cx={2.5} cy={1.5} r={0.1} />
-          </g>
-          <path d="M0.2 0.8Q1.5 1.3 2.8 0.8" stroke="#6d9bd1" strokeWidth={0.05} {...line} />
-          <path d="M0.2 1.88H0.8M2.2 1.88H2.8" stroke="#5f7aa0" strokeWidth={0.06} {...line} />
-        </>
-      )
-    default:
-      return <Placeholder item={item} />
-  }
+  return <Placeholder item={item} />
 }
 
 interface Props {
@@ -160,7 +73,6 @@ interface Props {
   style?: CSSProperties
 }
 
-/** Temporary vector art. Sized by its parent; keeps the cell aspect ratio. */
 /** Rounded union of the occupied cells, inset a little: the only region the redrawn items may paint. */
 function UnionShapes({ cells, inset }: { cells: Shape; inset: number }) {
   const has = (x: number, y: number) => cells.some((c) => c.x === x && c.y === y)
@@ -182,7 +94,7 @@ function UnionShapes({ cells, inset }: { cells: Shape; inset: number }) {
   )
 }
 
-/** Temporary vector art for items not yet redrawn. Sized by its parent; keeps the cell aspect ratio. */
+/** The illustrated item (or the labelled placeholder). Sized by its parent; keeps the cell aspect ratio. */
 export const ItemArt = memo(function ItemArt({ item, orientation, className, style }: Props) {
   const uid = useId().replace(/:/g, '')
   const w = Math.max(...item.cells.map((c) => c.x)) + 1

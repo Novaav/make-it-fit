@@ -6,7 +6,9 @@ export const ITEM_NAMES: Record<string, string> = {
   toiletries: 'Toiletries',
   charger: 'Laptop charger',
   outfit: 'Party outfit',
-  heels: 'Red-soled heels',
+  heels: 'Overpriced Heels',
+  handbag: 'Louis Regretton handbag',
+  dvds: "Mom's Porn Collection",
   vibrator: 'Pocket massager',
   speaker: 'Party speaker',
   disco_ball: 'Disco ball',
@@ -14,16 +16,16 @@ export const ITEM_NAMES: Record<string, string> = {
   flamingo: 'Inflatable flamingo',
   boa: 'Feather boa',
   ringlight: 'Ring light and tripod',
-  cutout: 'Cardboard cutout',
+  painting: 'Hotel Painting',
   laundry: 'Laundry bag',
   hangover: 'Hangover kit',
   hotel_lamp: 'Hotel lamp',
-  ceramic_foot: 'Ceramic foot',
-  gnome: 'Concrete garden gnome',
+  ceramic_foot: 'Marble foot',
+  gnome: 'Garden gnome',
   cheese: 'Wheel of cheese',
-  liquor: 'Bottle of local spirit',
-  robe: 'Hotel bathrobe',
-  emergency_socks: 'Emergency socks',
+  liquor: 'Badcardi Rum',
+  robe: 'Bathrobe',
+  emergency_socks: 'Socks',
 }
 
 /** Levels playable in the UI, in order. */
@@ -34,14 +36,5 @@ export const LEVEL_TITLES: Record<string, string> = {
   '02': 'Carry-On, Questionable Decisions',
   '03': 'Excess Baggage',
 }
-
-/**
- * Most optional items any legal layout can hold. Proved by `verify_levels.py` and independently by
- * `src/engine/enumerate.test.ts`, which fails if these drift from the level data.
- */
-export const BEST_OPTIONAL: Record<string, number> = { '01': 0, '02': 3, '03': 5 }
-
-/** Name of the top bonus tier: an optional achievement, never a requirement. "Perfect pack" is reserved for Level 3. */
-export const maxBonusLabel = (levelId: string): string => (levelId === '03' ? 'Perfect pack' : 'Maximum bonus')
 
 export { WEIGHT_UNIT } from './weight'

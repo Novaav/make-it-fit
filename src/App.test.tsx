@@ -8,7 +8,8 @@ const play = (id: string) =>
   renderToString(<LevelPlay level={loadLevels().find((l) => l.id === id)!} onWin={() => {}} />).replace(/<!-- -->/g, '')
 
 describe('App initial render (Level 1)', () => {
-  const html = renderToString(<App />).replace(/<!-- -->/g, '')
+  // (the goal line carries invisible sizing copies in data-text attributes; they are not page text)
+  const html = renderToString(<App />).replace(/<!-- -->/g, '').replace(/ data-text="[^"]*"/g, '')
 
   it('shows all five Level 1 items in the tray as focusable buttons', () => {
     for (const id of ['shirt', 'jeans', 'charger', 'toiletries', 'shoes']) expect(html).toContain(`data-item="${id}"`)
@@ -22,6 +23,11 @@ describe('App initial render (Level 1)', () => {
     expect(html.match(/<button[^>]*disabled/g)).toHaveLength(5) // remove, undo, reset, locked Level 2 and 3 tabs
   })
 
+  it('has one sound button in the masthead: labelled, not pressed (sound is off by default), and not disabled', () => {
+    expect(html.match(/class="sound-toggle"/g)).toHaveLength(1)
+    expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*aria-label="Sound effects"[^>]*>|<button[^>]*aria-label="Sound effects"[^>]*aria-pressed="false"[^>]*>/)
+  })
+
   it('renders a 5x6 hidden cell grid and the level title', () => {
     expect(html.match(/class="cell /g)).toHaveLength(30)
     expect(html).toContain('Level 1 · Pack Like a Grown-Up')
@@ -33,7 +39,7 @@ describe('App initial render (Level 1)', () => {
 
   it('starts on Level 1 with Level 2 locked and no allowance meter or bonus', () => {
     expect(html).toMatch(/aria-current="page"[^>]*>Level 1/)
-    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Level 2/)
+    expect(html).toMatch(/<button[^>]*aria-disabled="true"[^>]*>Level 2/)
     expect(html).not.toContain('role="meter"')
     expect(html).not.toContain('pill bonus')
     expect(html).not.toContain('Bonus')
@@ -49,64 +55,81 @@ describe('Level 1 copy', () => {
     expect(h).not.toContain('data-weight')
     expect(h).not.toContain('chip-w')
   })
+
+  it('introduces Chaos with no target: every item is stamped, the total counts up, and nothing must be reached', () => {
+    const h = play('01')
+    expect(h.match(/class="chaos-badge"/g)).toHaveLength(5)
+    for (const [value, n] of [['2', 2], ['3', 1], ['1', 2]] as const) expect(h.match(new RegExp(`data-chaos="${value}"`, 'g')), `Chaos ${value}`).toHaveLength(n)
+    expect(h).toMatch(/Chaos<\/span><b>0<\/b>/)
+    expect(h).toMatch(/Required<\/span><b>0\/5<\/b>/)
+    for (const word of ['to win', 'perfect', 'chaos-bar', 'Must pack', 'MUST']) expect(h, word).not.toContain(word)
+    expect(h).toContain('Chaos 2.') // item descriptions mention it for screen readers
+  })
 })
 
 describe('Level 2 markup', () => {
   const l2 = play('02')
 
-  it('shows all ten items in fixed grid areas and an allowance meter in kilograms', () => {
+  it('shows all ten items, nothing mandatory, and the Chaos, target, perfect score and weight right away', () => {
     expect(l2.match(/grid-column:\d+ \/ span \d+;grid-row:\d+ \/ span \d+/g)).toHaveLength(10)
     expect(l2).toContain('Level 2 · Carry-On, Questionable Decisions')
-    expect(l2).toContain('role="meter"')
-    expect(l2).toContain('aria-label="Packing allowance: 7 kg"')
-    expect(l2).toContain('aria-valuemax="7"')
-    expect(l2).toMatch(/Required<\/span><b>0\/4<\/b>/)
-    expect(l2).toMatch(/Allowance<\/span><b>0\/7 kg<\/b>/)
-    expect(l2).toMatch(/Bonus<\/span><b>0\/3<\/b>/)
+    expect(l2).toMatch(/Chaos<\/span><b>0<\/b><span class="of">of 20 to win<\/span>/)
+    expect(l2).toContain('perfect 25')
+    expect(l2).toMatch(/Weight<\/span><b>0\/6.5 kg<\/b>/)
+    expect(l2).toContain('6.5 kg left')
+    expect(l2).toContain('aria-label="Packing allowance: 6.5 kg"')
+    expect(l2).toContain('aria-valuemax="25"')
+    expect(l2).toContain('aria-valuetext="0 Chaos. 20 wins, 25 is perfect."')
+    expect(l2).not.toContain('Must pack') // no mandatory items on this level
+    expect(l2).not.toContain('MUST')
   })
 
-  it('tells the player the rule in plain words, with an inclusive allowance and no claim about the suitcase', () => {
-    expect(l2).toContain('Pack your items within the allowance. ★ items are optional extras.')
-    expect(l2).toContain('title="Packing allowance: 7 kg"')
+  it('states the rule in one plain sentence, without the old optional-star bonus', () => {
+    expect(l2).toContain('Reach 20 Chaos within 6.5 kg. Perfect: 25.')
+    for (const old of ['Bonus', '★', 'optional', 'Required', 'Maximum bonus', 'Perfect pack']) expect(l2, old).not.toContain(old)
     expect(l2).not.toMatch(/under \d/) // exact-limit packing succeeds, so never "under"
-    expect(l2).not.toContain("doesn't weigh")
   })
 
-  it('every item shows its weight in kilograms; optional items are marked', () => {
+  it('every item shows its Chaos in a badge and its weight on its label, without hover', () => {
+    expect(l2.match(/class="chaos-badge"/g)).toHaveLength(10)
+    expect(l2.match(/data-chaos="\d"/g)).toHaveLength(10)
+    expect(l2).toMatch(/data-chaos="6"[^>]*>.*?<text[^>]*>6<\/text>/) // the DVDs and the handbag
     expect(l2.match(/data-weight="\d+"/g)).toHaveLength(10)
-    expect(l2).toContain('Optional, 1.5 kg.')
-    expect(l2).toContain('Required, 0.4 kg.')
+    expect(l2).toContain('Chaos 6, 2.25 kg.')
+    expect(l2).toContain('Chaos 2, 900 g.')
+    expect(l2).toContain('Chaos 3, 300 g.')
+    expect(l2).toContain('Chaos 1, 1 kg.')
     expect(l2).toMatch(/class="wlabel wl-dark"[^>]*data-weight="1000"[^>]*>1<span class="unit"> kg<\/span>/) // toiletries, drawn art
-    expect(l2).toContain('0.85 kg')
   })
 
-  it('the bonus denominator is the verified maximum (3), never the optional item count (6), with no tier claimed before solving', () => {
-    expect(l2).not.toMatch(/Bonus<\/span><b>0\/6<\/b>/)
-    expect(l2).not.toContain('Perfect pack')
-    expect(l2).toContain('6 optional ★ · at most 3 fit')
-  })
-
-  it('keeps the dialog closed and the controls help collapsed by default', () => {
+  it('keeps the dialog closed and the controls help collapsed by default; no placeholder art remains', () => {
     expect(l2).not.toContain('role="dialog"')
     expect(l2).toMatch(/<details class="help">/)
-  })
-
-  it('unfinished artwork is clearly labelled as a placeholder', () => {
-    expect(l2).toContain('placeholder art')
+    expect(l2).not.toContain('placeholder art')
   })
 })
 
 describe('Level 3 markup', () => {
   const l3 = play('03')
-  it('shows all twelve items in fixed slots, a 23 kg allowance and a 0-5 bonus', () => {
+  it('every Level 3 item is illustrated: no placeholder art remains', () => {
+    expect(l3).not.toContain('placeholder art')
+  })
+  it('marks the two mandatory items MUST, and shows Chaos, target, perfect score and weight', () => {
     expect(l3.match(/grid-column:\d+ \/ span \d+;grid-row:\d+ \/ span \d+/g)).toHaveLength(12)
     expect(l3).toContain('Level 3 · Excess Baggage')
-    expect(l3).toContain('aria-label="Packing allowance: 23 kg"')
-    expect(l3).toMatch(/Allowance<\/span><b>0\/23 kg<\/b>/)
-    expect(l3).toMatch(/Required<\/span><b>0\/5<\/b>/)
-    expect(l3).toMatch(/Bonus<\/span><b>0\/5<\/b>/)
+    expect(l3.match(/class="chaos-badge must"/g)).toHaveLength(2)
+    expect(l3.match(/class="chaos-badge"/g)).toHaveLength(10)
+    expect(l3).toContain('Hotel Painting and Laundry bag must come. Then reach 24 Chaos within 20.5 kg.')
+    expect(l3).toMatch(/Must pack<\/span><b>0\/2<\/b>/)
+    expect(l3).toMatch(/Chaos<\/span><b>0<\/b><span class="of">of 24 to win<\/span>/)
+    expect(l3).toContain('perfect 29')
+    expect(l3).toMatch(/Weight<\/span><b>0\/20.5 kg<\/b>/)
+    expect(l3).toContain('aria-label="Packing allowance: 20.5 kg"')
     expect(l3.match(/data-weight="/g)).toHaveLength(12)
-    expect(l3).toContain('Optional, 6.5 kg.')
-    expect(l3).toContain('Optional, 0.15 kg.')
+    expect(l3).toContain('Mandatory, 4 kg.')
+    expect(l3).toContain('Chaos 9, 6.5 kg.') // the gnome
+    expect(l3).toContain('Chaos 3, 150 g.')
+    // (the old star bonus is gone; a ★ may still appear inside artwork such as the rum label)
+    for (const old of ['Bonus', 'Optional']) expect(l3, old).not.toContain(old)
   })
 })

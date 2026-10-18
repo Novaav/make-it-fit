@@ -13,7 +13,10 @@ export interface Item {
   readonly id: string
   readonly cells: Shape
   readonly weight: number
+  /** Must be packed for the level to be won (Level 1 items, Level 3's hotel painting and laundry bag). */
   readonly required: boolean
+  /** What the item adds to the Chaos score (0 on levels without Chaos). */
+  readonly chaos: number
 }
 
 export interface Level {
@@ -21,6 +24,10 @@ export interface Level {
   readonly width: number
   readonly height: number
   readonly weightLimit?: number
+  /** Chaos needed to win (levels with Chaos only). */
+  readonly target?: number
+  /** The maximum Chaos any legal pack can reach: the perfect score. */
+  readonly perfect?: number
   readonly items: readonly Item[]
 }
 

@@ -16,7 +16,7 @@ export default function TableProps() {
             <text x="20" y="21" fontWeight="700">PACK:</text>
             <text x="20" y="58">1. everything</text>
             <text x="20" y="76">2. more things</text>
-            <text x="20" y="94" textDecoration="line-through">3. a plan</text>
+            <text x="20" y="94" textDecoration="line-through">3. good decisions</text>
             <text x="20" y="112">4. socks?? </text>
           </g>
         </g>

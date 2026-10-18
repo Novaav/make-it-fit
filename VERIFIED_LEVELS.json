@@ -27,7 +27,8 @@
           ]
         ],
         "weight": 250,
-        "required": true
+        "required": true,
+        "chaos": 2
       },
       {
         "id": "jeans",
@@ -58,7 +59,8 @@
           ]
         ],
         "weight": 700,
-        "required": true
+        "required": true,
+        "chaos": 2
       },
       {
         "id": "shoes",
@@ -85,7 +87,8 @@
           ]
         ],
         "weight": 1200,
-        "required": true
+        "required": true,
+        "chaos": 3
       },
       {
         "id": "toiletries",
@@ -108,7 +111,8 @@
           ]
         ],
         "weight": 1000,
-        "required": true
+        "required": true,
+        "chaos": 1
       },
       {
         "id": "charger",
@@ -123,7 +127,8 @@
           ]
         ],
         "weight": 400,
-        "required": true
+        "required": true,
+        "chaos": 1
       }
     ]
   },
@@ -133,8 +138,46 @@
       6,
       5
     ],
-    "weight_limit": 7000,
+    "weight_limit": 6500,
+    "target": 20,
+    "perfect": 25,
     "items": [
+      {
+        "id": "handbag",
+        "cells": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "weight": 2250,
+        "required": false,
+        "chaos": 6
+      },
       {
         "id": "outfit",
         "cells": [
@@ -156,7 +199,8 @@
           ]
         ],
         "weight": 900,
-        "required": true
+        "required": false,
+        "chaos": 2
       },
       {
         "id": "toiletries",
@@ -179,122 +223,8 @@
           ]
         ],
         "weight": 1000,
-        "required": true
-      },
-      {
-        "id": "heels",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            0,
-            1
-          ],
-          [
-            1,
-            0
-          ],
-          [
-            2,
-            0
-          ],
-          [
-            2,
-            1
-          ]
-        ],
-        "weight": 1300,
-        "required": true
-      },
-      {
-        "id": "vibrator",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            1,
-            0
-          ],
-          [
-            2,
-            0
-          ]
-        ],
-        "weight": 400,
-        "required": true
-      },
-      {
-        "id": "speaker",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            1,
-            0
-          ]
-        ],
-        "weight": 1500,
-        "required": false
-      },
-      {
-        "id": "disco_ball",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            0,
-            1
-          ],
-          [
-            1,
-            0
-          ],
-          [
-            1,
-            1
-          ]
-        ],
-        "weight": 1500,
-        "required": false
-      },
-      {
-        "id": "frame",
-        "cells": [
-          [
-            0,
-            0
-          ],
-          [
-            0,
-            1
-          ],
-          [
-            0,
-            2
-          ],
-          [
-            1,
-            0
-          ],
-          [
-            1,
-            1
-          ],
-          [
-            1,
-            2
-          ]
-        ],
-        "weight": 1200,
-        "required": false
+        "required": false,
+        "chaos": 1
       },
       {
         "id": "flamingo",
@@ -324,8 +254,61 @@
             1
           ]
         ],
-        "weight": 850,
-        "required": false
+        "weight": 1000,
+        "required": false,
+        "chaos": 5
+      },
+      {
+        "id": "vibrator",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "weight": 400,
+        "required": false,
+        "chaos": 3
+      },
+      {
+        "id": "frame",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "weight": 1000,
+        "required": false,
+        "chaos": 3
       },
       {
         "id": "boa",
@@ -348,7 +331,8 @@
           ]
         ],
         "weight": 300,
-        "required": false
+        "required": false,
+        "chaos": 3
       },
       {
         "id": "ringlight",
@@ -375,32 +359,99 @@
           ]
         ],
         "weight": 800,
-        "required": false
-      }
-    ]
-  },
-  {
-    "id": "03",
-    "board": [
-      8,
-      6
-    ],
-    "weight_limit": 23000,
-    "items": [
+        "required": false,
+        "chaos": 2
+      },
       {
-        "id": "cutout",
+        "id": "disco_ball",
         "cells": [
           [
             0,
             0
           ],
           [
+            0,
+            1
+          ],
+          [
             1,
             0
           ],
           [
             1,
-            3
+            1
+          ]
+        ],
+        "weight": 1500,
+        "required": false,
+        "chaos": 4
+      },
+      {
+        "id": "dvds",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "weight": 1500,
+        "required": false,
+        "chaos": 6
+      }
+    ]
+  },
+  {
+    "id": "03",
+    "board": [
+      7,
+      6
+    ],
+    "weight_limit": 20500,
+    "target": 24,
+    "perfect": 29,
+    "items": [
+      {
+        "id": "painting",
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
           ],
           [
             2,
@@ -413,26 +464,11 @@
           [
             2,
             2
-          ],
-          [
-            2,
-            3
-          ],
-          [
-            3,
-            0
-          ],
-          [
-            3,
-            3
-          ],
-          [
-            4,
-            0
           ]
         ],
         "weight": 4000,
-        "required": true
+        "required": true,
+        "chaos": 0
       },
       {
         "id": "laundry",
@@ -463,7 +499,8 @@
           ]
         ],
         "weight": 5000,
-        "required": true
+        "required": true,
+        "chaos": 0
       },
       {
         "id": "outfit",
@@ -486,7 +523,8 @@
           ]
         ],
         "weight": 900,
-        "required": true
+        "required": false,
+        "chaos": 2
       },
       {
         "id": "hangover",
@@ -509,7 +547,8 @@
           ]
         ],
         "weight": 800,
-        "required": true
+        "required": false,
+        "chaos": 3
       },
       {
         "id": "heels",
@@ -536,7 +575,8 @@
           ]
         ],
         "weight": 1300,
-        "required": true
+        "required": false,
+        "chaos": 3
       },
       {
         "id": "hotel_lamp",
@@ -559,7 +599,8 @@
           ]
         ],
         "weight": 3600,
-        "required": false
+        "required": false,
+        "chaos": 3
       },
       {
         "id": "ceramic_foot",
@@ -585,8 +626,9 @@
             1
           ]
         ],
-        "weight": 3200,
-        "required": false
+        "weight": 3600,
+        "required": false,
+        "chaos": 7
       },
       {
         "id": "gnome",
@@ -617,7 +659,8 @@
           ]
         ],
         "weight": 6500,
-        "required": false
+        "required": false,
+        "chaos": 9
       },
       {
         "id": "cheese",
@@ -640,7 +683,8 @@
           ]
         ],
         "weight": 2800,
-        "required": false
+        "required": false,
+        "chaos": 5
       },
       {
         "id": "liquor",
@@ -659,7 +703,8 @@
           ]
         ],
         "weight": 1500,
-        "required": false
+        "required": false,
+        "chaos": 5
       },
       {
         "id": "robe",
@@ -686,7 +731,8 @@
           ]
         ],
         "weight": 1300,
-        "required": false
+        "required": false,
+        "chaos": 4
       },
       {
         "id": "emergency_socks",
@@ -701,7 +747,8 @@
           ]
         ],
         "weight": 150,
-        "required": false
+        "required": false,
+        "chaos": 3
       }
     ]
   }

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { BEST_OPTIONAL } from '../levelMeta'
 import { loadLevels, uniqueRotations, type Item, type Level } from './index'
 
 /**
@@ -45,67 +44,117 @@ function analyse(level: Level) {
   const limit = level.weightLimit ?? Infinity
   const rows = [...subsets(optional)].map((sub) => {
     const items = [...required, ...sub]
-    return { ids: sub.map((i) => i.id).sort(), size: sub.length, weightOk: items.reduce((n, i) => n + i.weight, 0) <= limit, fits: packs(level, items) }
+    const mask = sub.reduce((m, i) => m | (1 << optional.indexOf(i)), 0)
+    return {
+      mask,
+      ids: sub.map((i) => i.id).sort(),
+      chaos: sub.reduce((n, i) => n + i.chaos, 0),
+      weightOk: items.reduce((n, i) => n + i.weight, 0) <= limit,
+      fits: packs(level, items),
+    }
   })
   const legal = rows.filter((r) => r.weightOk && r.fits)
-  const best = Math.max(...legal.map((r) => r.size))
+  const legalMasks = new Set(legal.map((r) => r.mask))
+  const perfect = Math.max(...legal.map((r) => r.chaos))
+  const chaosOf = (mask: number) => optional.reduce((n, i, k) => n + (mask & (1 << k) ? i.chaos : 0), 0)
+  /** Packs items in the given order, keeping each one only if the pack stays legal (weight and space). */
+  const greedy = (order: (a: Item, b: Item) => number) => {
+    let cur = 0
+    for (const item of [...optional].sort(order)) if (legalMasks.has(cur | (1 << optional.indexOf(item)))) cur |= 1 << optional.indexOf(item)
+    return chaosOf(cur)
+  }
+  const cells = (i: Item) => i.cells.length
   return {
-    rows,
-    best,
-    maxSets: legal.filter((r) => r.size === best).map((r) => r.ids.join('+')).sort(),
-    weightTraps: rows.filter((r) => r.size >= 2 && r.fits && !r.weightOk).length,
-    spaceTraps: rows.filter((r) => r.size >= 2 && r.weightOk && !r.fits).length,
-    legalBySize: (k: number) => legal.filter((r) => r.size === k).length,
+    legal,
+    perfect,
+    optimalSets: legal.filter((r) => r.chaos === perfect).map((r) => r.ids.join('+')).sort(),
+    bestIgnoringWeight: Math.max(...rows.filter((r) => r.fits).map((r) => r.chaos)),
+    bestIgnoringSpace: Math.max(...rows.filter((r) => r.weightOk).map((r) => r.chaos)),
+    passing: (target: number) => legal.filter((r) => r.chaos >= target).length,
+    strategies: {
+      'highest Chaos first': greedy((a, b) => b.chaos - a.chaos),
+      'lowest Chaos first': greedy((a, b) => a.chaos - b.chaos),
+      'lightest first': greedy((a, b) => a.weight - b.weight),
+      'heaviest first': greedy((a, b) => b.weight - a.weight),
+      'smallest first': greedy((a, b) => cells(a) - cells(b)),
+      'biggest first': greedy((a, b) => cells(b) - cells(a)),
+      'Chaos per kg': greedy((a, b) => b.chaos / b.weight - a.chaos / a.weight),
+      'Chaos per cell': greedy((a, b) => b.chaos / cells(b) - a.chaos / cells(a)),
+    },
   }
 }
 
 const levels = loadLevels()
 const lv = (id: string) => levels.find((l) => l.id === id)!
 
-describe('independent enumeration of the three levels', () => {
-  it('level 1: required items fit, rotation is mandatory, and there is no bonus', () => {
+describe('independent enumeration of the three levels (the TypeScript engine against the Python solver)', () => {
+  it('level 1: the items fit, rotation is mandatory, and there is no Chaos', () => {
     const l = lv('01')
     expect(packs(l, l.items)).toBe(true)
     expect(packs(l, l.items, false)).toBe(false) // the 6-long jeans can only stand up on a 5-wide board
-    expect(BEST_OPTIONAL['01']).toBe(0)
+    expect([l.target, l.perfect]).toEqual([undefined, undefined])
   })
 
-  it('level 2: maximum bonus 3 with eight legal sets; both the allowance and the board genuinely constrain', () => {
-    const a = analyse(lv('02'))
-    expect(a.best).toBe(3)
-    expect(BEST_OPTIONAL['02']).toBe(a.best)
-    expect(a.maxSets).toEqual(
-      [
-        'boa+disco_ball+speaker', 'boa+frame+speaker', 'boa+flamingo+speaker', 'flamingo+ringlight+speaker', 'boa+ringlight+speaker',
-        'boa+disco_ball+frame', 'boa+disco_ball+flamingo', 'boa+disco_ball+ringlight',
-      ].map((s) => s.split('+').sort().join('+')).sort(),
+  it('level 2: perfect 25 Chaos with two optimal packs; 20 wins; weight and space both bind', () => {
+    const l = lv('02')
+    const a = analyse(l)
+    expect(a.perfect).toBe(25)
+    expect(l.perfect).toBe(a.perfect)
+    expect(l.target).toBe(Math.ceil(0.8 * a.perfect)) // the win threshold is 80% of the best possible
+    expect(a.optimalSets).toEqual(
+      ['handbag+outfit+flamingo+vibrator+boa+dvds', 'handbag+flamingo+vibrator+boa+ringlight+dvds'].map((x) => x.split('+').sort().join('+')).sort(),
     )
-    expect(a.legalBySize(2)).toBe(15) // every pair fits and is light enough
-    expect(a.legalBySize(3)).toBe(8) // of 20 triples
-    expect(a.legalBySize(4)).toBe(0)
-    expect(a.weightTraps).toBe(5) // fit on the board but over 7 kg
-    expect(a.spaceTraps).toBe(6) // within 7 kg but cannot be packed
+    expect(a.legal).toHaveLength(719) // of 1,024 packs, every one a legal pack
+    expect(a.passing(20)).toBe(102)
+    expect(a.bestIgnoringWeight).toBe(27) // both rules matter: dropping either one raises the best score
+    expect(a.bestIgnoringSpace).toBe(26)
   })
 
-  it('level 3: maximum bonus 5 with exactly three legal "perfect pack" sets; weight and space both bind', () => {
-    const a = analyse(lv('03'))
-    expect(a.best).toBe(5)
-    expect(BEST_OPTIONAL['03']).toBe(a.best)
-    expect(a.maxSets).toEqual(
-      ['hotel_lamp+ceramic_foot+liquor+robe+emergency_socks', 'hotel_lamp+cheese+liquor+robe+emergency_socks', 'ceramic_foot+cheese+liquor+robe+emergency_socks']
-        .map((s) => s.split('+').sort().join('+')).sort(),
-    )
-    expect(a.legalBySize(4)).toBe(17)
-    expect(a.legalBySize(3)).toBe(29) // of 35 triples
-    expect(a.weightTraps).toBe(23)
-    expect(a.spaceTraps).toBe(0)
+  it('level 2: no simple strategy reaches the perfect score, "pack the most chaotic first" wins, ignoring Chaos does not', () => {
+    const { strategies: s } = analyse(lv('02'))
+    expect(s).toEqual({
+      'highest Chaos first': 21, 'lowest Chaos first': 14, 'lightest first': 16, 'heaviest first': 17,
+      'smallest first': 21, 'biggest first': 18, 'Chaos per kg': 24, 'Chaos per cell': 22,
+    })
+    expect(Math.max(...Object.values(s))).toBeLessThan(25)
+    expect(s['highest Chaos first']).toBeGreaterThanOrEqual(20)
+    for (const dumb of ['lowest Chaos first', 'lightest first', 'heaviest first', 'biggest first'] as const) expect(s[dumb]).toBeLessThan(20)
   })
 
-  it('the bonus never requires anything: every level is completable with required items only', () => {
+  it('level 3: perfect 29 Chaos with one optimal pack that fills the board; 24 wins; the gnome is a decoy', () => {
+    const l = lv('03')
+    const a = analyse(l)
+    expect(a.perfect).toBe(29)
+    expect(l.perfect).toBe(a.perfect)
+    expect(l.target).toBe(Math.ceil(0.8 * a.perfect))
+    expect(a.optimalSets).toEqual(['outfit+hangover+ceramic_foot+cheese+liquor+robe+emergency_socks'].map((x) => x.split('+').sort().join('+')))
+    expect(a.legal).toHaveLength(532)
+    expect(a.passing(24)).toBe(37)
+    expect(a.bestIgnoringWeight).toBe(33)
+    expect(a.bestIgnoringSpace).toBe(30)
+    // the most chaotic item (the 9-Chaos, 6.5 kg gnome) is in no perfect pack
+    expect(a.optimalSets.every((x) => !x.includes('gnome'))).toBe(true)
+    const gnome = l.items.find((i) => i.id === 'gnome')!
+    expect(Math.max(...l.items.map((i) => i.chaos))).toBe(gnome.chaos)
+  })
+
+  it('level 3: no simple strategy reaches the perfect score, and "most chaotic first" no longer wins', () => {
+    const { strategies: s } = analyse(lv('03'))
+    expect(s).toEqual({
+      'highest Chaos first': 20, 'lowest Chaos first': 23, 'lightest first': 25, 'heaviest first': 15,
+      'smallest first': 24, 'biggest first': 19, 'Chaos per kg': 25, 'Chaos per cell': 22,
+    })
+    expect(Math.max(...Object.values(s))).toBeLessThan(29)
+    expect(s['highest Chaos first']).toBeLessThan(24) // the Level 2 shortcut fails here
+    for (const dumb of ['lowest Chaos first', 'heaviest first', 'biggest first', 'Chaos per cell'] as const) expect(s[dumb]).toBeLessThan(24)
+  })
+
+  it('every mandatory item fits together with the lightest pack, and mandatory items carry no Chaos', () => {
     for (const l of levels) {
       const required = l.items.filter((i) => i.required)
-      expect(packs(l, required), `level ${l.id} required items fit`).toBe(true)
+      expect(packs(l, required), `level ${l.id} mandatory items fit`).toBe(true)
       expect(required.reduce((n, i) => n + i.weight, 0)).toBeLessThanOrEqual(l.weightLimit ?? Infinity)
+      if (l.target !== undefined) for (const i of required) expect(i.chaos).toBe(0)
     }
   })
 })

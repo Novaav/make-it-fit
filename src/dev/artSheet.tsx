@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import type { CSSProperties } from 'react'
 import { ItemArt } from '../components/ItemArt'
 import { WeightLabel } from '../art/WeightLabel'
+import { ITEM_ART } from '../art/items'
 import { loadLevels, uniqueRotations, type Item, type Orientation } from '../engine'
 import '../styles.css'
 
@@ -9,9 +10,10 @@ import '../styles.css'
  * Development-only contact sheets for visual review of the illustrated items (`npm run art:sheet`).
  * Not part of the production build: it is reached only through art-sheet.html, which Vite does not bundle.
  */
-const level = loadLevels().find((l) => l.id === '01')!
-const IDS = ['shirt', 'jeans', 'charger', 'toiletries', 'shoes']
-const items = IDS.map((id) => level.items.find((i) => i.id === id)!)
+const levelId = new URLSearchParams(location.search).get('level') ?? '01'
+const level = loadLevels().find((l) => l.id === levelId)!
+// every item of the level that has final artwork (placeholders are not reviewed here)
+const items = level.items.filter((i) => i.id in ITEM_ART)
 const LININGS = [
   { name: 'Tide lining', bg: '#f3e3c3', line: '#c9ae78' },
   { name: 'Marmalade lining', bg: '#f7e2b0', line: '#d8b46a' },
@@ -30,7 +32,7 @@ interface PieceProps {
   orientation?: Orientation
   cell: number
   lining?: (typeof LININGS)[number]
-  weight?: { grams: number; bonus?: boolean }
+  weight?: { grams: number }
   style?: CSSProperties
   carried?: 'plain' | 'good' | 'bad'
   silhouette?: boolean
@@ -66,7 +68,7 @@ function Piece({ item, orientation = 0, cell, lining = LININGS[0], weight, style
     >
       <div style={{ position: 'absolute', left: cell / 2, top: cell / 2, width: b.w * cell, height: b.h * cell, filter }}>
         <ItemArt item={item} orientation={orientation} />
-        {weight && <WeightLabel item={item} orientation={orientation} grams={weight.grams} bonus={!!weight.bonus} />}
+        {weight && <WeightLabel item={item} orientation={orientation} grams={weight.grams} />}
       </div>
     </div>
   )
@@ -85,7 +87,8 @@ function Labelled({ name, children }: { name: string; children: React.ReactNode 
   )
 }
 
-const WEIGHTS: Record<string, number> = { shirt: 250, jeans: 700, charger: 400, toiletries: 1000, shoes: 1200 }
+const longItem = items.find((i) => i.id === 'jeans') ?? items.find((i) => i.id === 'boa') ?? items[0]
+const WEIGHTS: Record<string, number> = Object.fromEntries(level.items.map((i) => [i.id, i.weight]))
 
 const sections: Record<string, () => React.ReactNode> = {
   desktop: () => (
@@ -144,8 +147,8 @@ const sections: Record<string, () => React.ReactNode> = {
       ))}
       <div style={row}>
         {[0, 1, 2, 3].map((o) => (
-          <Labelled key={o} name={`shirt, bonus ★, ${o * 90}° turn: the number stays upright`}>
-            <Piece item={items[0]} orientation={o as Orientation} cell={56} weight={{ grams: 250, bonus: true }} />
+          <Labelled key={o} name={`${items[0].id}, ${o * 90}° turn: the number stays upright`}>
+            <Piece item={items[0]} orientation={o as Orientation} cell={56} weight={{ grams: items[0].weight }} />
           </Labelled>
         ))}
       </div>
@@ -177,18 +180,18 @@ const sections: Record<string, () => React.ReactNode> = {
       </div>
     </>
   ),
-  jeans: () => (
+  long: () => (
     <>
-      <h2 style={h2}>G. Jeans at 72, 56, 48 and 40 px cells, and standing (rotated) at 56 px.</h2>
+      <h2 style={h2}>G. The longest item ({longItem.id}) at 72, 56, 48 and 40 px cells, and rotated at 56 px.</h2>
       <div style={{ ...row, alignItems: 'flex-end' }}>
         {[72, 56, 48, 40].map((px) => (
-          <Labelled key={px} name={`jeans · ${px}px`}>
-            <Piece item={items[1]} cell={px} weight={{ grams: 700 }} />
+          <Labelled key={px} name={`${longItem.id} · ${px}px`}>
+            <Piece item={longItem} cell={px} weight={{ grams: longItem.weight }} />
           </Labelled>
         ))}
         {[1].map((o) => (
-          <Labelled key={o} name="jeans · 90° turn · 56px">
-            <Piece item={items[1]} orientation={o as Orientation} cell={56} weight={{ grams: 700 }} />
+          <Labelled key={o} name={`${longItem.id} · 90° turn · 56px`}>
+            <Piece item={longItem} orientation={o as Orientation} cell={56} weight={{ grams: longItem.weight }} />
           </Labelled>
         ))}
       </div>

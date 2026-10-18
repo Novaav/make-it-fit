@@ -2,6 +2,8 @@ import { useState } from 'react'
 import './devtools.css'
 import { allLevels } from './solutions'
 import { referenceSolution } from './solutions'
+import { explorerExamples, explorerSummary } from './explorer'
+import { formatWeight } from '../weight'
 import type { Placement } from '../engine'
 
 interface Props {
@@ -19,6 +21,10 @@ export default function DevTools({ levelId, onJump, onFill, onTestWin, testMode,
   const [open, setOpen] = useState(() => window.innerWidth > 760)
   const levels = allLevels()
   const level = levels.find((l) => l.id === levelId)!
+  const examples = explorerExamples(level)
+  const summary = explorerSummary(levelId)
+  const [picked, setPicked] = useState(0)
+  const example = examples[Math.min(picked, examples.length - 1)]
   return (
     <>
       {testMode && (
@@ -33,7 +39,7 @@ export default function DevTools({ levelId, onJump, onFill, onTestWin, testMode,
       {open && (
         <>
       <small>Nothing here is saved.</small>
-      <button type="button" className="primary" onClick={() => onTestWin(referenceSolution(level, true))}>
+      <button type="button" className="primary" onClick={() => onTestWin(referenceSolution(level, 'perfect'))}>
         Test win &amp; continue
       </button>
       <div>
@@ -45,9 +51,25 @@ export default function DevTools({ levelId, onJump, onFill, onTestWin, testMode,
         ))}
       </div>
       <div>
-        <button type="button" onClick={() => onFill(referenceSolution(level, false))}>Fill required only</button>
-        <button type="button" onClick={() => onFill(referenceSolution(level, true))}>Fill max bonus</button>
+        <button type="button" onClick={() => onFill(referenceSolution(level, 'normal'))}>Fill normal win</button>
+        <button type="button" onClick={() => onFill(referenceSolution(level, 'perfect'))}>Fill perfect pack</button>
       </div>
+      {example && (
+        <div className="explorer">
+          <label>
+            Solution Explorer
+            <select value={examples.indexOf(example)} onChange={(e) => setPicked(Number(e.target.value))}>
+              {examples.map((x, i) => (
+                <option key={x.id} value={i}>
+                  {x.perfect ? '★ ' : ''}{x.label}: {x.chaos} Chaos, {formatWeight(x.weight)}, {x.count} items, {x.rotated} turned
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="button" onClick={() => onFill(example.placements)}>Fill selected example</button>
+          {summary && <small>{summary.legal} legal, {summary.winning} winning, {summary.perfect} perfect item sets (not layouts)</small>}
+        </div>
+      )}
       <button type="button" onClick={onClearProgress}>Clear saved progress</button>
         </>
       )}

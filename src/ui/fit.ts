@@ -29,19 +29,23 @@ interface Chrome {
   trayX: number // tray: horizontal chrome around its cells
   head: number // masthead
   objective: number // objective tag above the suitcase
+  chaosExtra: number // extra objective height on Chaos levels (goal sentence and the Chaos / weight pills)
   caseY: number // suitcase shell: vertical chrome around the board
   trayY: number // tray heading and padding above/below its cells
   tools: number // toolbar, help and status under the tray
 }
 
-const WIDE: Chrome = { pageX: 48, gap: 44, caseX: 76, trayX: 44, head: 72, objective: 196, caseY: 102, trayY: 76, tools: 152 }
+const WIDE: Chrome = { pageX: 48, gap: 44, caseX: 76, trayX: 44, head: 72, objective: 212, chaosExtra: 0, caseY: 146, trayY: 76, tools: 152 }
 /** The suitcase column is never narrower than this, so the objective tag keeps its pills on one row. */
 const MIN_CASE = 440
-const COMPACT: Chrome = { pageX: 20, gap: 0, caseX: 32, trayX: 16, head: 58, objective: 104, caseY: 44, trayY: 44, tools: 118 }
+/** (The phone figure includes the hint row under the pills, 23 px, which is now always reserved so it cannot shift the suitcase; tablets scroll anyway and keep their cell sizes.) */
+const COMPACT: Chrome = { pageX: 20, gap: 0, caseX: 32, trayX: 16, head: 58, objective: 167, chaosExtra: 52, caseY: 80, trayY: 44, tools: 130 }
 
 /** Stacked layout on a tablet: wide page margins, the masthead wraps to two rows, compact tag and suitcase. */
-const TABLET_STACK: Chrome = { pageX: 48, gap: 0, caseX: 32, trayX: 16, head: 112, objective: 146, caseY: 108, trayY: 60, tools: 120 }
+const TABLET_STACK: Chrome = { pageX: 48, gap: 0, caseX: 32, trayX: 16, head: 112, objective: 146, chaosExtra: 10, caseY: 144, trayY: 60, tools: 120 }
 
+/** Height under the suitcase's shell down to the bottom of the tool row, in the stacked phone layout. */
+const TOOLBAR_CLEARANCE = 147
 export const COMPACT_MAX_WIDTH = 760
 /** Landscape phones are short, so they also get the compact chrome. */
 export const COMPACT_MAX_HEIGHT = 480
@@ -58,19 +62,20 @@ const cap = (boardCols: number) => (boardCols > 6 ? 72 : 80)
 
 /** Landscape phones: the suitcase is pinned on the left, the objective, tray and tools scroll on the right. */
 function evaluateWing(board: { width: number; height: number }, layout: TrayLayout, { w, h }: Viewport): Arrangement[] {
-  const byHeight = (h - 56 - 26 - 44 - 12) / board.height
+  const byHeight = (h - 56 - 26 - 44 - 12 - 44) / board.height
   const byWidth = (w - COMPACT.pageX - 16 - COMPACT.caseX - COMPACT.trayX - 20) / (board.width + layout.cols)
   const cell = Math.max(1, Math.floor(Math.min(MAX_STACK_CELL, cap(board.width), byHeight, byWidth)))
   return [{ layout, mode: 'wing', cell, fits: false, overflow: 0 }]
 }
 
 function evaluate(
-  board: { width: number; height: number },
+  board: { width: number; height: number; target?: number },
   layout: TrayLayout,
   mode: 'side' | 'stack',
   { w, h }: Viewport,
 ): Arrangement[] {
-  const c = mode === 'side' ? WIDE : w <= COMPACT_MAX_WIDTH ? COMPACT : TABLET_STACK
+  const base = mode === 'side' ? WIDE : w <= COMPACT_MAX_WIDTH ? COMPACT : TABLET_STACK
+  const c = board.target === undefined ? base : { ...base, objective: base.objective + base.chaosExtra }
   const maxCell = mode === 'side' ? cap(board.width) : Math.min(cap(board.width), MAX_STACK_CELL)
   const byBoardHeight = (h - c.head - c.objective - c.caseY) / board.height
   let needed: (cell: number) => number
@@ -84,7 +89,13 @@ function evaluate(
   } else {
     const byWidth = (w - c.pageX - Math.max(c.caseX, c.trayX)) / Math.max(board.width, layout.cols)
     // The suitcase itself must always be fully visible, even when the tray below scrolls.
-    const full = Math.floor(Math.min(maxCell, byWidth, (h - c.caseY - 90) / board.height))
+    let full = Math.floor(Math.min(maxCell, byWidth, (h - c.caseY - 90) / board.height))
+    if (base === COMPACT) {
+      // On a phone the tool row should be on screen without scrolling when that costs only a little cell size (at most 4 px):
+      // masthead, objective, suitcase and the tray's header above it take TOOLBAR_CLEARANCE more.
+      const byToolbar = Math.floor((h - c.head - c.objective - c.caseY - TOOLBAR_CLEARANCE) / board.height)
+      full = Math.min(full, Math.max(byToolbar, full - 4))
+    }
     needed = (k) => c.head + c.objective + c.caseY + board.height * k + c.trayY + layout.rows * k + c.tools
     cells.push(full)
     // A slightly smaller cell may let the whole page fit without scrolling (tablets): offer it as a second candidate.
@@ -98,7 +109,7 @@ function evaluate(
   })
 }
 
-export function chooseArrangement(board: { width: number; height: number }, layouts: readonly TrayLayout[], vp: Viewport): Arrangement {
+export function chooseArrangement(board: { width: number; height: number; target?: number }, layouts: readonly TrayLayout[], vp: Viewport): Arrangement {
   const landscapePhone = vp.h <= COMPACT_MAX_HEIGHT && vp.w >= 600
   const all = layouts.flatMap((l) => (landscapePhone ? evaluateWing(board, l, vp) : (['side', 'stack'] as const).flatMap((m) => evaluate(board, l, m, vp))))
   // Comfortable cells first; then the biggest cell, discounted by how far the page would scroll; then prefer fitting, then side by side, then the smaller tray.
