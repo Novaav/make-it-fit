@@ -60,3 +60,15 @@ describe('chooseArrangement', () => {
     }
   })
 })
+
+describe('phone: the tool row stays on screen', () => {
+  const level = (id: string) => levels.find((l) => l.id === id)!
+  const cell = (id: string, w: number, h: number) => chooseArrangement(level(id), TRAY_LAYOUTS[id], { w, h }).cell
+  it('Level 1 on the smallest phone gives up a little cell size (at most 4 px) so that Rotate, Remove, Undo, Reset and Next level fit', () => {
+    expect(cell('01', 360, 740)).toBe(48)
+  })
+  it('taller phones are untouched', () => {
+    expect(cell('01', 390, 844)).toBeGreaterThanOrEqual(51)
+    expect(cell('01', 430, 932)).toBeGreaterThanOrEqual(51)
+  })
+})

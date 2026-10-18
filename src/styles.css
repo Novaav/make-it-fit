@@ -160,7 +160,7 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
   font-size: 0.9rem;
   white-space: nowrap;
 }
-.pill b { font-family: var(--display); font-size: 1.05rem; font-weight: 700; }
+.pill b { font-family: var(--display); font-size: 1.05rem; font-weight: 700; line-height: 1.2; } /* fixed, so a digit missing from the font (the 0 in WebKit) cannot change the pill's height when a number changes */
 .pill-label { color: var(--muted); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
 .pill.ok { border-color: var(--ok); }
 .pill.ok b, .pill.ok > span:last-child { color: var(--ok); }
@@ -171,8 +171,6 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .mini-bar > span { display: block; height: 100%; background: var(--ok); }
 .pill.over .mini-bar > span { background: var(--warn); }
 .sub { color: var(--muted); font-size: 0.85em; }
-.pill-action { min-height: 36px; padding: 0 16px; border: 2px solid var(--ok); border-radius: 8px; background: var(--ok); color: #fff; font-weight: 700; cursor: pointer; box-shadow: 2px 3px 0 rgba(43, 36, 51, 0.25); }
-.pill-action:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .over-note { margin: 4px 0 0; height: 1.3em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--warn); font-weight: 700; font-size: 0.9rem; }
 .over-note.missing { color: var(--muted); font-weight: 400; font-style: italic; }
 
@@ -310,6 +308,10 @@ h1 { margin: 0; font-size: 1.9rem; font-weight: 800; line-height: 1; letter-spac
 .toolbar button:active:not(:disabled) { transform: translate(2px, 3px); box-shadow: none; }
 .toolbar button:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
 .toolbar button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Next level joins the row after a win: the other four give up a little width, nothing moves vertically */
+.toolbar.has-next { grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.7fr); }
+.toolbar button.next { background: var(--ok); border-color: var(--ok); color: #fff; }
+.toolbar button.next:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); }
 .status { min-height: 1.4em; margin: 0 0 4px; font-family: var(--display); font-style: italic; font-size: 0.92rem; }
 .help { font-size: 0.88rem; color: var(--muted); }
 .help summary { cursor: pointer; width: max-content; padding: 2px 0; }
@@ -349,8 +351,8 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .dialog-actions .primary { background: var(--ok); border-color: var(--ok); color: #fff; }
 .dialog-actions button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 /* the same press as Rotate and Reset: the button sinks onto the table, its shadow gone, and springs back */
-.dialog-actions button, .pill-action, .note-foot button:not(.note-skip) { transition: transform 90ms ease-out, box-shadow 90ms ease-out; }
-.dialog-actions button:active, .pill-action:active, .note-foot button:not(.note-skip):active { transform: translate(2px, 3px); box-shadow: none; }
+.dialog-actions button, .note-foot button:not(.note-skip) { transition: transform 90ms ease-out, box-shadow 90ms ease-out; }
+.dialog-actions button:active, .note-foot button:not(.note-skip):active { transform: translate(2px, 3px); box-shadow: none; }
 @keyframes pop { from { transform: scale(0.94); opacity: 0; } }
 @keyframes fade { from { opacity: 0; } }
 
@@ -386,7 +388,6 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .level:is([data-arrange='stack'], [data-arrange='wing']) .mini-bar { display: none; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill-label { font-size: 0.58rem; letter-spacing: 0.03em; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill { gap: 4px; padding: 1px 7px; }
-.level:is([data-arrange='stack'], [data-arrange='wing']) .pill-action { display: none; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .chaos-bar, .level:is([data-arrange='stack'], [data-arrange='wing']) .pill.weight .mini-bar { display: none; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill.chaos b { font-size: 1.1rem; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill .of { font-size: 0.74rem; }
@@ -395,7 +396,7 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pills { min-height: 0; gap: 6px; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .pill { padding: 1px 8px; font-size: 0.88rem; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .over-note { min-height: 0; margin-top: 4px; }
-.level:is([data-arrange='stack'], [data-arrange='wing']) .over-note:empty { display: none; }
+/* the note's row is always reserved (as on desktop): when a note appears or goes, nothing above the suitcase changes height */
 .level:is([data-arrange='stack'], [data-arrange='wing']) .suitcase { padding: 16px 16px 20px; border-radius: 24px; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .suitcase::before { inset: 6px; border-width: 2px; border-radius: 19px; }
 .level:is([data-arrange='stack'], [data-arrange='wing']) .handle { top: -14px; width: 84px; height: 16px; border-width: 2px; }
@@ -418,11 +419,15 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   .brand-mark { width: 34px; height: 31px; }
   .tagline { display: none; }
   .sound-toggle { position: absolute; top: 4px; right: 0; } /* beside the wordmark, so the three level tabs keep their row */
-  .level-tab { min-height: 40px; padding: 0 12px 0 26px; }
+  /* one line, always: a check mark or a lock arriving must never wrap a tab and make the masthead (and the suitcase under it) jump */
+  .levels { gap: 6px; }
+  .level-tab { min-height: 40px; padding: 0 8px 0 22px; white-space: nowrap; }
+  .level-tab::before { left: 7px; }
+  .toolbar.has-next button { font-size: 0.7rem; letter-spacing: 0.02em; padding-inline: 2px; }
   .toolbar button { min-height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .carried.snapped, .level-tab, .toolbar button, .dialog-actions button, .pill-action, .note-foot button:not(.note-skip) { transition: none; }
+  .carried.snapped, .level-tab, .toolbar button, .dialog-actions button, .note-foot button:not(.note-skip) { transition: none; }
   .backdrop, .dialog { animation: none; }
 }
 @media (forced-colors: active) {

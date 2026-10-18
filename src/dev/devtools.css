@@ -13,3 +13,5 @@
 .dev-tools .explorer label { display: grid; gap: 2px; font-weight: 700; }
 .dev-tools .explorer select { width: 100%; max-width: 100%; font: inherit; font-size: 0.78rem; padding: 3px; }
 .dev-tools .explorer small { opacity: 0.8; }
+/* "✓ test" on a level tab is wider than the one-line phone tab, so in development it may wrap */
+@media (max-width: 760px) { .level-tab.test-done { white-space: normal; } }

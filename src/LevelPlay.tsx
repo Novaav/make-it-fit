@@ -711,11 +711,6 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
                   {!overWeight && <span className="of">{formatWeight(limit - weight)} left</span>}
                 </span>
               )}
-              {solved && (
-                <button type="button" className="pill-action" onClick={() => { sound.play('click'); (onNext ?? doReset)() }}>
-                  {onNext ? 'Next level →' : 'Play again'}
-                </button>
-              )}
             </div>
             <p className={`over-note${overWeight ? ' on' : note ? ' missing' : ''}`} role="status">
               {note}
@@ -863,13 +858,19 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
             </div>
           </div>
 
-          <div className="toolbar">
+          <div className={`toolbar${solved && onNext ? ' has-next' : ''}`}>
             <button type="button" onClick={() => rotateSelected(selected)}>Rotate</button>
             <button type="button" onClick={() => selected && dropRemove(selected)} disabled={!selectedPlaced}>Remove</button>
             <button type="button" onClick={() => { sound.play('click'); doUndo() }} disabled={game.history.length === 0}>Undo</button>
             <button type="button" onClick={() => { sound.play('click'); doReset() }} disabled={game.placements.length === 0}>
               Reset
             </button>
+            {/* after a win, in the same row as the other actions (so nothing above it moves): on to the next level, which is unlocked */}
+            {solved && onNext && (
+              <button type="button" className="next" onClick={() => { sound.play('click'); onNext() }}>
+                Next level →
+              </button>
+            )}
           </div>
 
           <details className="help">

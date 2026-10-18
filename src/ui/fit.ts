@@ -38,11 +38,14 @@ interface Chrome {
 const WIDE: Chrome = { pageX: 48, gap: 44, caseX: 76, trayX: 44, head: 72, objective: 212, chaosExtra: 0, caseY: 146, trayY: 76, tools: 152 }
 /** The suitcase column is never narrower than this, so the objective tag keeps its pills on one row. */
 const MIN_CASE = 440
-const COMPACT: Chrome = { pageX: 20, gap: 0, caseX: 32, trayX: 16, head: 58, objective: 144, chaosExtra: 52, caseY: 80, trayY: 44, tools: 130 }
+/** (The phone figure includes the hint row under the pills, 23 px, which is now always reserved so it cannot shift the suitcase; tablets scroll anyway and keep their cell sizes.) */
+const COMPACT: Chrome = { pageX: 20, gap: 0, caseX: 32, trayX: 16, head: 58, objective: 167, chaosExtra: 52, caseY: 80, trayY: 44, tools: 130 }
 
 /** Stacked layout on a tablet: wide page margins, the masthead wraps to two rows, compact tag and suitcase. */
 const TABLET_STACK: Chrome = { pageX: 48, gap: 0, caseX: 32, trayX: 16, head: 112, objective: 146, chaosExtra: 10, caseY: 144, trayY: 60, tools: 120 }
 
+/** Height under the suitcase's shell down to the bottom of the tool row, in the stacked phone layout. */
+const TOOLBAR_CLEARANCE = 147
 export const COMPACT_MAX_WIDTH = 760
 /** Landscape phones are short, so they also get the compact chrome. */
 export const COMPACT_MAX_HEIGHT = 480
@@ -86,7 +89,13 @@ function evaluate(
   } else {
     const byWidth = (w - c.pageX - Math.max(c.caseX, c.trayX)) / Math.max(board.width, layout.cols)
     // The suitcase itself must always be fully visible, even when the tray below scrolls.
-    const full = Math.floor(Math.min(maxCell, byWidth, (h - c.caseY - 90) / board.height))
+    let full = Math.floor(Math.min(maxCell, byWidth, (h - c.caseY - 90) / board.height))
+    if (base === COMPACT) {
+      // On a phone the tool row should be on screen without scrolling when that costs only a little cell size (at most 4 px):
+      // masthead, objective, suitcase and the tray's header above it take TOOLBAR_CLEARANCE more.
+      const byToolbar = Math.floor((h - c.head - c.objective - c.caseY - TOOLBAR_CLEARANCE) / board.height)
+      full = Math.min(full, Math.max(byToolbar, full - 4))
+    }
     needed = (k) => c.head + c.objective + c.caseY + board.height * k + c.trayY + layout.rows * k + c.tools
     cells.push(full)
     // A slightly smaller cell may let the whole page fit without scrolling (tablets): offer it as a second candidate.

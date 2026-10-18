@@ -13,11 +13,11 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: { headless: true, viewport: { width: 1280, height: 900 }, trace: 'off' },
   projects: [
-    { name: 'dev', testMatch: /(game|arrangement-game|onboarding|progression|reliability|chaos|explorer|opening|drag-performance|art|sound)\.spec\.ts/, use: { channel: 'chrome', baseURL: DEV } },
+    { name: 'dev', testMatch: /(game|arrangement-game|onboarding|progression|reliability|chaos|explorer|opening|drag-performance|art|sound|next-level)\.spec\.ts/, use: { channel: 'chrome', baseURL: DEV } },
     // Safari/WebKit: drag rendering bugs have been Safari-specific, so the drag spec also runs on the WebKit engine.
-    { name: 'webkit', testMatch: /(drag-performance|art|chaos|opening|sound)\.spec\.ts/, use: { browserName: 'webkit', baseURL: DEV } },
+    { name: 'webkit', testMatch: /(drag-performance|art|chaos|opening|sound|next-level)\.spec\.ts/, use: { browserName: 'webkit', baseURL: DEV } },
     // Firefox smoke test: opt in with PW_FIREFOX=1 (CI does; locally run `npx playwright install firefox` first)
-    ...(process.env.PW_FIREFOX ? [{ name: 'firefox', testMatch: /(opening|reliability|art|chaos)\.spec\.ts/, use: { browserName: 'firefox' as const, baseURL: DEV } }] : []),
+    ...(process.env.PW_FIREFOX ? [{ name: 'firefox', testMatch: /(opening|reliability|art|chaos|next-level)\.spec\.ts/, use: { browserName: 'firefox' as const, baseURL: DEV } }] : []),
     { name: 'prod', testMatch: /prod\.spec\.ts/, use: { channel: 'chrome', baseURL: PROD } },
   ],
   webServer: [

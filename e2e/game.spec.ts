@@ -131,7 +131,7 @@ test('success dialog: focus is managed, Escape keeps packing, and it does not re
   await expect(page.locator(':focus')).toBeVisible() // focus returned somewhere real
   const objective = page.getByRole('region', { name: 'Objective' })
   await expect(objective).toContainText('Packed!')
-  await expect(objective.getByRole('button', { name: 'Next level →' })).toBeVisible()
+  await expect(page.locator('.toolbar').getByRole('button', { name: 'Next level →' })).toBeVisible() // beside Rotate, Remove, Undo and Reset
   // undo + redo the last item: still solved again, but the dialog is not shown a second time
   await page.getByRole('button', { name: 'Undo' }).click()
   await expect(objective).not.toContainText('Packed!')

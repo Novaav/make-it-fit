@@ -88,7 +88,7 @@ test('a restored, still complete level does not reopen its completion dialog', a
   await expect(objective(page)).toContainText('Packed!')
   await expect(page.getByRole('dialog')).toHaveCount(0)
   // the Next level shortcut still belongs to the valid current arrangement
-  await expect(objective(page).getByRole('button', { name: /Next level/ })).toBeVisible()
+  await expect(page.locator('.toolbar').getByRole('button', { name: /Next level/ })).toBeVisible()
 })
 
 test('corrupt, outdated or impossible saved boards are ignored safely', async ({ page }) => {

@@ -355,14 +355,12 @@ for (const reduced of [false, true]) {
     const b = (await next.boundingBox())!
     await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2)
     await page.mouse.down()
-    await page.waitForTimeout(200)
-    const pressed = await probe()
-    expect(pressed.transform).toBe('matrix(1, 0, 0, 1, 2, 3)')
-    expect(pressed.shadow).toBe('none')
+    // wait for the browser to get there (a software-rendered CI browser can take whole frames to start a transition)
+    await expect.poll(async () => (await probe()).transform).toBe('matrix(1, 0, 0, 1, 2, 3)')
+    expect((await probe()).shadow).toBe('none')
     await page.mouse.move(b.x - 40, b.y - 40) // slide off to cancel the press
     await page.mouse.up()
     await expect(next).toBeVisible()
-    await page.waitForTimeout(200)
-    expect((await probe()).transform).toBe('none')
+    await expect.poll(async () => (await probe()).transform).toBe('none')
   })
 }
