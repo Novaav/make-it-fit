@@ -6,9 +6,9 @@ A browser puzzle game about packing an open suitcase for a trip you should not b
 
 **[Play it: make-it-fit.pages.dev](https://make-it-fit.pages.dev/)** · [40-second video](assets/demo/make-it-fit-demo.mp4) (silent MP4)
 
-| Level 1 · packed | Level 2 · perfect pack | Level 3 · maximum Chaos |
+| Level 1 · packed | Level 2 · mid-pack | Level 3 · maximum Chaos |
 |---|---|---|
-| [![Level 1 packed](assets/demo/level-1-packed.png)](assets/demo/level-1-packed.png) | [![Level 2, a perfect pack](assets/demo/level-2-perfect.png)](assets/demo/level-2-perfect.png) | [![Level 3, maximum Chaos](assets/demo/level-3-maximum-chaos.png)](assets/demo/level-3-maximum-chaos.png) |
+| [![Level 1 packed](assets/demo/level-1-packed.png)](assets/demo/level-1-packed.png) | [![Level 2, partway through packing](assets/demo/level-2-in-progress.png)](assets/demo/level-2-in-progress.png) | [![Level 3, maximum Chaos](assets/demo/level-3-maximum-chaos.png)](assets/demo/level-3-maximum-chaos.png) |
 
 Captured from the live site. Built with React 19, TypeScript, Vite, a Python puzzle solver, Vitest, Playwright and GitHub Actions. All artwork is original SVG drawn in code.
 
