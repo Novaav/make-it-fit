@@ -1,4 +1,4 @@
-import { lazy, Profiler, Suspense, useEffect, useState } from 'react'
+import { lazy, Profiler, Suspense, useEffect, useRef, useState } from 'react'
 import { loadLevels, type Placement } from './engine'
 import LevelPlay from './LevelPlay'
 import { loadBoards, saveBoards, type Boards, type SavedBoard } from './boards'
@@ -6,6 +6,7 @@ import { PLAYABLE_LEVEL_IDS } from './levelMeta'
 import { loadIntroSeen, saveIntroSeen, type IntroSeen } from './intro'
 import { useOpening } from './useOpening'
 import { sound } from './sound'
+import { startOver } from './startOver'
 import { loadMuted, saveMuted } from './soundPref'
 import {
   browserStorage,
@@ -58,6 +59,34 @@ export default function App() {
     if (!next) {
       sound.unlock()
       sound.play('pickup') // a small tick, so turning sound on is confirmed by ear as well
+    }
+  }
+  // "Start over": a deliberate, confirmed reset of everything saved (never triggered by an address or on load).
+  const [confirmingReset, setConfirmingReset] = useState(false)
+  const startOverRef = useRef<HTMLButtonElement>(null)
+  const keepRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (confirmingReset) keepRef.current?.focus()
+  }, [confirmingReset])
+  const cancelReset = () => {
+    setConfirmingReset(false)
+    startOverRef.current?.focus()
+  }
+  const resetKeys = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.stopPropagation()
+      cancelReset()
+    } else if (e.key === 'Tab') {
+      const buttons = [...e.currentTarget.querySelectorAll<HTMLElement>('button')]
+      const first = buttons[0]
+      const last = buttons[buttons.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
     }
   }
   // Why a locked level is locked, shown briefly when its tab is pressed (a disabled button would stay silent, especially on touch).
@@ -116,6 +145,11 @@ export default function App() {
         },
       }}
       isLast={!next}
+      corner={
+        <button type="button" className="start-over" ref={startOverRef} disabled={!returning || inTestMode} onClick={() => setConfirmingReset(true)}>
+          Start over
+        </button>
+      }
       devFill={import.meta.env.DEV && devFill?.levelId === levelId ? devFill : undefined}
       onNext={next && isUnlocked(effective, IDS, next) ? () => setLevelId(next) : undefined}
     />
@@ -209,6 +243,35 @@ export default function App() {
         </Profiler>
       ) : (
         levelView
+      )}
+      {confirmingReset && (
+        <div className="backdrop" onClick={cancelReset}>
+          <div
+            className="dialog confirm"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="restart-title"
+            aria-describedby="restart-desc"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={resetKeys}
+          >
+            <div className="dialog-scroll">
+              <h2 id="restart-title">Start over?</h2>
+              <p id="restart-desc" className="sub">
+                This clears your completed levels, your saved arrangements and the how-to-play notes you have seen, on this device only.
+                The game then starts again from the opening. Your sound setting is kept.
+              </p>
+              <div className="dialog-actions">
+                <button type="button" className="primary" ref={keepRef} onClick={cancelReset}>
+                  Keep my progress
+                </button>
+                <button type="button" className="danger" onClick={startOver}>
+                  Start over
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       {DevTools && (
         <Suspense fallback={null}>
