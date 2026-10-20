@@ -23,7 +23,7 @@ Captured from the live site. Built with React 19, TypeScript, Vite, a Python puz
 
 ## How it plays
 
-Every item is a set of grid cells, so collision and rotation are exact. Drag items onto the suitcase (rotate in 90° steps); an item fits only if all its cells are on the board and none overlap. Each item shows its weight and a stamped **Chaos** value. You win when the total weight is within the allowance and the Chaos target is met. Undo and reset are unlimited, and progress is saved in the browser only.
+Every item is a set of grid cells, so collision and rotation are exact. Drag items onto the suitcase (rotate in 90° steps); an item fits only if all its cells are on the board and none overlap. Each item shows its weight and a stamped **Chaos** value. You win when the total weight is within the allowance and the Chaos target is met. Undo and reset are unlimited, and progress is saved in the browser only. A quiet **Start over** link under the game, behind a confirmation, clears it and replays the opening.
 
 - **Level 1** (5×6): pack all five items. There is no allowance, and the solver shows it cannot be done without rotating.
 - **Level 2** (6×5, 6.5 kg): choose from ten items and reach 20 Chaos. A perfect pack reaches 25.

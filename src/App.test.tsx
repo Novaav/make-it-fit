@@ -20,7 +20,7 @@ describe('App initial render (Level 1)', () => {
   it('starts empty, with undo/reset disabled and no completion message', () => {
     expect(html).toMatch(/Required<\/span><b>0\/5<\/b>/)
     expect(html).not.toContain('Packed!')
-    expect(html.match(/<button[^>]*disabled/g)).toHaveLength(5) // remove, undo, reset, locked Level 2 and 3 tabs
+    expect(html.match(/<button[^>]*disabled/g)).toHaveLength(6) // remove, undo, reset, locked Level 2 and 3 tabs, and Start over (nothing saved yet)
   })
 
   it('has one sound button in the masthead: labelled, not pressed (sound is off by default), and not disabled', () => {

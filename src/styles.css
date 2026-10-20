@@ -648,3 +648,23 @@ kbd { border: 1px solid rgba(0, 0, 0, 0.25); border-bottom-width: 2px; border-ra
   .app.opening *, .app.opening *::after { animation: none !important; transition: none !important; }
   .opening-play:active, .opening-play:hover:not(:active) { transform: none; }
 }
+
+/* ---- Start over: a quiet pill at the bottom right of the game, and its confirmation ---- */
+.status-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.status-row .status { flex: 1; min-width: 0; }
+.start-over { position: relative; flex: none; margin: -4px 0; min-height: 30px; padding: 0 14px; border: 2px solid var(--ink); border-radius: 6px; background: var(--paper); color: var(--ink); cursor: pointer; font-family: var(--ui); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.74rem; transition: transform 90ms ease-out, box-shadow 90ms ease-out; }
+.start-over::after { content: ''; position: absolute; inset: -9px -4px; } /* 44 px hit area around the smaller visible button */
+.start-over:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+.start-over:disabled { opacity: 0.45; cursor: default; }
+.start-over:disabled::after { display: none; }
+.start-over:active:not(:disabled) { transform: translate(1px, 2px); }
+.start-over:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Side-by-side layout: Start over sits at the stage's bottom right, at the same place on every level (the stage has one minimum height, so
+   a shorter level does not lift it, and the offset from the right edge does not depend on the level's tray width). */
+.level[data-arrange='side'] .stage { min-height: calc(100vh - 103px); min-height: calc(100dvh - 103px); }
+.level[data-arrange='side'] .start-over { position: absolute; right: 38px; bottom: 0; z-index: 1; margin: 0; }
+@media (prefers-reduced-motion: reduce) { .start-over { transition: none; } }
+.dialog.confirm::before, .dialog.confirm::after { display: none; }
+.dialog.confirm h2 { display: block; margin: 0 0 10px; padding: 0; border: 0; border-radius: 0; transform: none; color: var(--ink); font-size: 1.5rem; }
+.dialog.confirm .sub { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.45; }
+.dialog-actions .danger { border-color: var(--warn); color: var(--warn); }

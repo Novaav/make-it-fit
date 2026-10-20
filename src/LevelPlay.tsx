@@ -69,6 +69,8 @@ interface Props {
   onNext?: () => void
   /** True when no level follows this one. */
   isLast?: boolean
+  /** An optional control shown at the right end of the status line (App uses it for Start over). */
+  corner?: React.ReactNode
   /** Development builds only: replace the board with these placements (undoable step by step). */
   devFill?: { nonce: number; placements: readonly Placement[] }
   /** The saved arrangement for this level, if any. Only a starting point: it is replayed through the engine. */
@@ -82,7 +84,7 @@ interface Props {
   intro?: { open: boolean; replay?: boolean; /** a first-visit note that has not been seen yet (it may still be waiting for the entrance) */ pending?: boolean; onOpen: () => void; onClose: () => void }
 }
 
-export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLast, devFill, saved, onBoardChange, onDevFillUsed, intro }: Props) {
+export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLast, corner, devFill, saved, onBoardChange, onDevFillUsed, intro }: Props) {
   const viewport = useViewport()
   const arrangement = useMemo(() => chooseArrangement(LEVEL, TRAY_LAYOUTS[LEVEL.id], viewport), [LEVEL, viewport])
   const layout = arrangement.layout
@@ -884,7 +886,10 @@ export default function LevelPlay({ level: LEVEL, onWin, onTestWin, onNext, isLa
               Drag items into the suitcase. Rotate with <kbd>R</kbd>, right-click, or the Rotate button. Keyboard: <kbd>Tab</kbd> to an item, <kbd>Enter</kbd> to pick up, arrows to move, <kbd>Enter</kbd> to place, <kbd>Esc</kbd> to cancel. <kbd>Delete</kbd> removes, <kbd>Ctrl/⌘ Z</kbd> undoes.
             </p>
           </details>
-          <p className="status" role="status" aria-live="polite">{message}</p>
+          <div className="status-row">
+            <p className="status" role="status" aria-live="polite">{message}</p>
+            {corner}
+          </div>
         </aside>
       </main>
 
