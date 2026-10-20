@@ -66,7 +66,7 @@ All storage is the visitor's own browser; every key is versioned and every read 
 
 - **A saved board is a starting point, not truth.** `restoreGame` replays the saved placements through the engine; if the level's signature changed (`levelSignature` covers board size, allowance, targets, items, shapes, weights, Chaos and required flags) or any placement is now illegal, the level starts empty. A corrupt or outdated save cannot put an invalid layout on screen.
 - **Progression.** A level is playable when it is first or the one before it is completed (`isUnlocked`). `recordCompletion` keeps the best Chaos and never un-completes a level.
-- **Starting over is deliberate.** The "Start over" link (shown only when something is saved, never in TEST MODE) opens a confirmation whose default is to keep everything. Confirming removes the progress, boards and intro keys (not the sound choice) and the session's opening flag, then reloads on the plain address, so the opening and the first-visit note play again. Nothing is cleared by an address or on load (`startOver.ts`).
+- **Starting over is deliberate.** The "Start over" button (always visible, but disabled when nothing is saved or TEST MODE is active) opens a confirmation whose default is to keep everything. Confirming removes the progress, boards and intro keys (not the sound choice) and the session's opening flag, then reloads on the plain address, so the opening and the first-visit note play again. Nothing is cleared by an address or on load (`startOver.ts`).
 - **Failure is quiet.** Missing or blocked storage (private mode) falls back to in-memory state; the game still plays.
 - **Developer test mode** (development builds only) keeps its wins and boards in memory and never writes storage.
 
